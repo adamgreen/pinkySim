@@ -1,1 +1,18 @@
 ==Work in Progress!
+
+==How to Clone
+This project uses submodules (CppUTest for unit testing).  Cloning
+requires a few more steps to get all of the necessary code.
+
+{{{
+git clone git@github.com:adamgreen/pinkySim.git
+cd pinkSim
+git submodule init
+git submodule update
+}}}
+
+**- or -**
+
+{{{
+git clone --recursive git@github.com:adamgreen/pinkySim.git
+}}}
