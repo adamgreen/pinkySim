@@ -43,7 +43,8 @@ typedef struct ShiftResults
 
 
 /* Function Prototypes */
-static void lslImmediate(PinkySimContext* pContext);
+static int shiftAddSubtractMoveCompare(PinkySimContext* pContext, uint16_t instr);
+static int lslImmediate(PinkySimContext* pContext, uint16_t instr);
 static int ConditionPassedForNonBranchInstr(const PinkySimContext* pContext);
 static int InITBlock(const PinkySimContext* pContext);
 static DecodedImmShift DecodeImmShift(uint32_t typeBits, uint32_t imm5);
@@ -53,21 +54,26 @@ static ShiftResults LSL_C(uint32_t x, uint32_t shift);
 
 int pinkySimStep(PinkySimContext* pContext)
 {
-    pContext->instr1 = (uint16_t)pContext->memory;
-    if (pContext->instr1)
-    {
-        lslImmediate(pContext);
-        return PINKYSIM_STEP_OK;
-    }
+    uint16_t instr = (uint16_t)pContext->memory;
+    pContext->instr1 = instr;
+    if ((instr & 0xC000) == 0x0000)
+        return shiftAddSubtractMoveCompare(pContext, instr);
 
     return PINKYSIM_STEP_UNDEFINED;
 }
 
-static void lslImmediate(PinkySimContext* pContext)
+static int shiftAddSubtractMoveCompare(PinkySimContext* pContext, uint16_t instr)
+{
+    if ((instr & 0xD000) == 0x0000)
+        return lslImmediate(pContext, instr);
+    else
+        return PINKYSIM_STEP_UNDEFINED;
+}
+
+static int lslImmediate(PinkySimContext* pContext, uint16_t instr)
 {
     if (ConditionPassedForNonBranchInstr(pContext))
     {
-        uint32_t        instr = pContext->instr1;
         uint32_t        imm5 = (instr & (0x1F << 6)) >> 6;
         uint32_t        d = instr & 0x7;
         uint32_t        m = (instr & (0x7 << 3)) >> 3;
@@ -88,6 +94,8 @@ static void lslImmediate(PinkySimContext* pContext)
                 pContext->xPSR |= APSR_C;
         }
     }
+
+    return PINKYSIM_STEP_OK;
 }
 
 static int ConditionPassedForNonBranchInstr(const PinkySimContext* pContext)
