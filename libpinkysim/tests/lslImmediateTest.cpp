@@ -15,6 +15,7 @@
 
 // Immediate values used for shift amount in tests.
 #define IMM_0  0
+#define IMM_1  1
 #define IMM_3  3
 #define IMM_4  4
 #define IMM_31 31
@@ -100,4 +101,32 @@ TEST(lslImmediate, R0by31)
     CHECK_TRUE(m_context.xPSR & APSR_N);
     CHECK_FALSE(m_context.xPSR & APSR_Z);
     CHECK_FALSE(m_context.xPSR & APSR_C);
+}
+
+TEST(lslImmediate, R0by1WithCarryOut)
+{
+    emitInstruction16("00000cccccbbbaaa", R0, R0, IMM_1);
+    setXPSRbits(APSR_NZ);
+    m_context.R[R0] = 0xA0000000U;
+        m_stepReturn = pinkySimStep(&m_context);
+    CHECK_EQUAL(PINKYSIM_STEP_OK, m_stepReturn);
+    CHECK_EQUAL(0xA0000000U << 1, m_context.R[0]);
+    validateUnchangedRegisters(SKIP(R0));
+    CHECK_FALSE(m_context.xPSR & APSR_N);
+    CHECK_FALSE(m_context.xPSR & APSR_Z);
+    CHECK_TRUE(m_context.xPSR & APSR_C);
+}
+
+TEST(lslImmediate, R0by31WithCarryOut)
+{
+    emitInstruction16("00000cccccbbbaaa", R0, R0, IMM_31);
+    setXPSRbits(APSR_N);
+    m_context.R[R0] = 0x2U;
+        m_stepReturn = pinkySimStep(&m_context);
+    CHECK_EQUAL(PINKYSIM_STEP_OK, m_stepReturn);
+    CHECK_EQUAL(0x2U << 31, m_context.R[0]);
+    validateUnchangedRegisters(SKIP(R0));
+    CHECK_FALSE(m_context.xPSR & APSR_N);
+    CHECK_TRUE(m_context.xPSR & APSR_Z);
+    CHECK_TRUE(m_context.xPSR & APSR_C);
 }
