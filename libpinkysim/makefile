@@ -2,7 +2,7 @@
 SILENCE = @
 
 #---- Outputs ----#
-COMPONENT_NAME = psim
+COMPONENT_NAME = pinkysim
 CPPUTEST_LIB_DIR = ../lib
 
 #--- Inputs ----#
