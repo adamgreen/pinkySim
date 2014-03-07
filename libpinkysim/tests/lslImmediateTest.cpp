@@ -36,7 +36,7 @@ TEST_GROUP_BASE(lslImmediate, pinkySimBase)
 
 /* LSL - Immediate (Logical Shift Left)
    Encoding: 000 00 imm:5 Rm:3 Rd:3 */
-TEST(lslImmediate, lslImmediateMovR7toR0NoCarryNotZeroNotNegative)
+TEST(lslImmediate, MovR7toR0NoCarryNotZeroNotNegative)
 {
     emitInstruction16("00000cccccbbbaaa", R0, R7, IMM_0);
     setXPSRbits(APSR_NZC);
@@ -49,7 +49,7 @@ TEST(lslImmediate, lslImmediateMovR7toR0NoCarryNotZeroNotNegative)
     CHECK_FALSE(m_context.xPSR & APSR_C);
 }
 
-TEST(lslImmediate, lslImmediateMovR0toR7IsZero)
+TEST(lslImmediate, MovR0toR7IsZero)
 {
     emitInstruction16("00000cccccbbbaaa", R7, R0, IMM_0);
     setXPSRbits(APSR_NC);
@@ -62,7 +62,7 @@ TEST(lslImmediate, lslImmediateMovR0toR7IsZero)
     CHECK_FALSE(m_context.xPSR & APSR_C);
 }
 
-TEST(lslImmediate, lslImmediateR1by3toR0IsNegative)
+TEST(lslImmediate, R1by3toR0IsNegative)
 {
     emitInstruction16("00000cccccbbbaaa", R0, R1, IMM_3);
     setXPSRbits(APSR_ZC);
@@ -75,7 +75,7 @@ TEST(lslImmediate, lslImmediateR1by3toR0IsNegative)
     CHECK_FALSE(m_context.xPSR & APSR_C);
 }
 
-TEST(lslImmediate, lslImmediateR1by4toR0HasCarryOut)
+TEST(lslImmediate, R1by4toR0HasCarryOut)
 {
     emitInstruction16("00000cccccbbbaaa", R0, R1, IMM_4);
     setXPSRbits(APSR_NZ);
@@ -88,7 +88,7 @@ TEST(lslImmediate, lslImmediateR1by4toR0HasCarryOut)
     CHECK_TRUE(m_context.xPSR & APSR_C);
 }
 
-TEST(lslImmediate, lslImmediateR0by31)
+TEST(lslImmediate, R0by31)
 {
     emitInstruction16("00000cccccbbbaaa", R0, R0, IMM_31);
     setXPSRbits(APSR_ZC);
