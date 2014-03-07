@@ -50,6 +50,8 @@ static int InITBlock(const PinkySimContext* pContext);
 static DecodedImmShift DecodeImmShift(uint32_t typeBits, uint32_t imm5);
 static ShiftResults Shift_C(uint32_t value, SRType type, uint32_t amount, uint32_t carry_in);
 static ShiftResults LSL_C(uint32_t x, uint32_t shift);
+static uint32_t getReg(const PinkySimContext* pContext, uint32_t reg);
+static void setReg(PinkySimContext* pContext, uint32_t reg, uint32_t value);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -81,8 +83,8 @@ static int lslImmediate(PinkySimContext* pContext, uint16_t instr)
         DecodedImmShift decodedShift = DecodeImmShift(0x0, imm5);
         ShiftResults  shiftResults;
 
-        shiftResults = Shift_C(pContext->R[m], SRType_LSL, decodedShift.n, pContext->xPSR & APSR_C);
-        pContext->R[d] = shiftResults.result;
+        shiftResults = Shift_C(getReg(pContext, m), SRType_LSL, decodedShift.n, pContext->xPSR & APSR_C);
+        setReg(pContext, d, shiftResults.result);
         if (setFlags)
         {
             pContext->xPSR &= ~APSR_NZC;
@@ -153,4 +155,18 @@ static ShiftResults LSL_C(uint32_t x, uint32_t shift)
     results.carryOut = (x & (1 << (32 - shift)));
     results.result = x << shift;
     return results;
+}
+
+static uint32_t getReg(const PinkySimContext* pContext, uint32_t reg)
+{
+    assert (reg < sizeof(pContext->R)/sizeof(pContext->R[0]));
+    
+    return pContext->R[reg];
+}
+
+static void setReg(PinkySimContext* pContext, uint32_t reg, uint32_t value)
+{
+    assert (reg < sizeof(pContext->R)/sizeof(pContext->R[0]));
+
+    pContext->R[reg] = value;
 }
