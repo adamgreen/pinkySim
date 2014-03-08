@@ -51,9 +51,11 @@ static DecodedImmShift DecodeImmShift(uint32_t typeBits, uint32_t imm5);
 static ShiftResults Shift_C(uint32_t value, SRType type, uint32_t amount, uint32_t carry_in);
 static ShiftResults LSL_C(uint32_t x, uint32_t shift);
 static ShiftResults LSR_C(uint32_t x, uint32_t shift);
+static ShiftResults ASR_C(uint32_t x, uint32_t shift);
 static uint32_t getReg(const PinkySimContext* pContext, uint32_t reg);
 static void setReg(PinkySimContext* pContext, uint32_t reg, uint32_t value);
 static int lsrImmediate(PinkySimContext* pContext, uint16_t instr);
+static int asrImmediate(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -72,6 +74,8 @@ static int shiftAddSubtractMoveCompare(PinkySimContext* pContext, uint16_t instr
         return lslImmediate(pContext, instr);
     else if ((instr & 0x3800) == 0x0800)
         return lsrImmediate(pContext, instr);
+    else if ((instr & 0x3800) == 0x1000)
+        return asrImmediate(pContext, instr);
     else
         return PINKYSIM_STEP_UNDEFINED;
 }
@@ -132,6 +136,10 @@ static DecodedImmShift DecodeImmShift(uint32_t typeBits, uint32_t imm5)
         results.type = SRType_LSR;
         results.n = (imm5 == 0) ? 32 : imm5;
         break;
+    case 0x2:
+        results.type = SRType_ASR;
+        results.n = (imm5 == 0) ? 32 : imm5;
+        break;
     default:
         assert (FALSE);
     }
@@ -143,6 +151,8 @@ static ShiftResults Shift_C(uint32_t value, SRType type, uint32_t amount, uint32
 {
     ShiftResults results;
 
+    assert (type != SRType_RRX || amount == 1);
+    
     if (amount == 0)
     {
         results.result = value;
@@ -159,6 +169,8 @@ static ShiftResults Shift_C(uint32_t value, SRType type, uint32_t amount, uint32
             results = LSR_C(value, amount);
             break;
         case SRType_ASR:
+            results = ASR_C(value, amount);
+            break;
         case SRType_RRX:
         case SRType_ROR:
             // UNDONE: Actually implement these modes as tests progress.
@@ -187,6 +199,27 @@ static ShiftResults LSR_C(uint32_t x, uint32_t shift)
 
     results.carryOut = (x & (1 << (shift - 1)));
     results.result = (shift == 32) ? 0 : x >> shift;
+    return results;
+}
+
+static ShiftResults ASR_C(uint32_t x, uint32_t shift)
+{
+    ShiftResults results;
+    
+    assert (shift > 0 && shift <= 32);
+
+    results.carryOut = (x & (1 << (shift - 1)));
+    if (shift == 32)
+    {
+        if (x & 0x80000000)
+            results.result = 0xFFFFFFFF;
+        else
+            results.result = 0x00000000;
+    }
+    else
+    {
+        results.result = (uint32_t)((int32_t)x >> shift);
+    }
     return results;
 }
 
@@ -221,6 +254,35 @@ static int lsrImmediate(PinkySimContext* pContext, uint16_t instr)
         {
             pContext->xPSR &= ~APSR_NZC;
             // The N flag is always cleared from a logical right shift.
+            if (shiftResults.result == 0)
+                pContext->xPSR |= APSR_Z;
+            if (shiftResults.carryOut)
+                pContext->xPSR |= APSR_C;
+        }
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int asrImmediate(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        imm5 = (instr & (0x1F << 6)) >> 6;
+        uint32_t        d = instr & 0x7;
+        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+        int             setFlags = !InITBlock(pContext);
+        DecodedImmShift decodedShift = DecodeImmShift(0x2, imm5);
+        ShiftResults    shiftResults;
+
+        (void)d; (void)m; (void)setFlags; (void)decodedShift; (void)shiftResults;
+        shiftResults = Shift_C(getReg(pContext, m), SRType_ASR, decodedShift.n, pContext->xPSR & APSR_C);
+        setReg(pContext, d, shiftResults.result);
+        if (setFlags)
+        {
+            pContext->xPSR &= ~APSR_NZC;
+            if (shiftResults.result & (1 << 31))
+                pContext->xPSR |= APSR_N;
             if (shiftResults.result == 0)
                 pContext->xPSR |= APSR_Z;
             if (shiftResults.carryOut)
