@@ -99,6 +99,13 @@ protected:
         m_expectedRegisterValues[index] = expectedValue;
     }
     
+    void setRegisterValue(int index, uint32_t value)
+    {
+        assert (index >= 0 && index < sizeof(m_context.R)/sizeof(m_context.R[0]));
+        setExpectedRegisterValue(index, value);
+        m_context.R[index] = value;
+    }
+    
     void initContext()
     {
         memset(&m_context, 0, sizeof(m_context));

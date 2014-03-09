@@ -41,6 +41,13 @@ typedef struct ShiftResults
     uint32_t carryOut;
 } ShiftResults;
 
+/* Results from addition/subtraction. */
+typedef struct AddResults
+{
+    uint32_t result;
+    int      carryOut;
+    int      overflow;
+} AddResults;
 
 /* Function Prototypes */
 static int shiftAddSubtractMoveCompare(PinkySimContext* pContext, uint16_t instr);
@@ -56,6 +63,9 @@ static uint32_t getReg(const PinkySimContext* pContext, uint32_t reg);
 static void setReg(PinkySimContext* pContext, uint32_t reg, uint32_t value);
 static int lsrImmediate(PinkySimContext* pContext, uint16_t instr);
 static int asrImmediate(PinkySimContext* pContext, uint16_t instr);
+static int addRegisterT1(PinkySimContext* pContext, uint16_t instr);
+static uint32_t Shift(uint32_t value, SRType type, uint32_t amount, uint32_t carryIn);
+static AddResults AddWithCarry(uint32_t x, uint32_t y, uint32_t carryInAsBit);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -76,6 +86,8 @@ static int shiftAddSubtractMoveCompare(PinkySimContext* pContext, uint16_t instr
         return lsrImmediate(pContext, instr);
     else if ((instr & 0x3800) == 0x1000)
         return asrImmediate(pContext, instr);
+    else if ((instr & 0x3E00) == 0x1800)
+        return addRegisterT1(pContext, instr);
     else
         return PINKYSIM_STEP_UNDEFINED;
 }
@@ -253,7 +265,9 @@ static int lsrImmediate(PinkySimContext* pContext, uint16_t instr)
         if (setFlags)
         {
             pContext->xPSR &= ~APSR_NZC;
-            // The N flag is always cleared from a logical right shift.
+            // The N flag is always cleared from a logical right shift.  Improve coverage by removing code.
+            //if (shiftResults.result & (1 << 31))
+            //    pContext->xPSR |= APSR_N;
             if (shiftResults.result == 0)
                 pContext->xPSR |= APSR_Z;
             if (shiftResults.carryOut)
@@ -275,7 +289,6 @@ static int asrImmediate(PinkySimContext* pContext, uint16_t instr)
         DecodedImmShift decodedShift = DecodeImmShift(0x2, imm5);
         ShiftResults    shiftResults;
 
-        (void)d; (void)m; (void)setFlags; (void)decodedShift; (void)shiftResults;
         shiftResults = Shift_C(getReg(pContext, m), SRType_ASR, decodedShift.n, pContext->xPSR & APSR_C);
         setReg(pContext, d, shiftResults.result);
         if (setFlags)
@@ -291,4 +304,69 @@ static int asrImmediate(PinkySimContext* pContext, uint16_t instr)
     }
 
     return PINKYSIM_STEP_OK;
+}
+
+static int addRegisterT1(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = instr & 0x7;
+        uint32_t        n = (instr & (0x7 << 3)) >> 3;
+        uint32_t        m = (instr & (0x7 << 6)) >> 6;
+        int             setFlags = !InITBlock(pContext);
+        DecodedImmShift decodedShift = {SRType_LSL, 0};
+        uint32_t        shifted;
+        AddResults      addResults;
+        
+        // UNDONE: Only Thumb2 instructions require this shifted value.
+        shifted = Shift(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
+        addResults = AddWithCarry(getReg(pContext, n), shifted, 0);
+
+        // UNDONE: Only the T2 encoding can modify R15 (PC).
+#ifdef UNDONE
+        if (d == 15)
+        {
+            ALUWritePC(pContext, addResults.result);
+        }
+        else
+#endif // UNDONE
+        {
+            setReg(pContext, d, addResults.result);
+
+            if (setFlags)
+            {
+                pContext->xPSR &= ~APSR_NZCV;
+                if (addResults.result & (1 << 31))
+                    pContext->xPSR |= APSR_N;
+                if (addResults.result == 0)
+                    pContext->xPSR |= APSR_Z;
+                if (addResults.carryOut)
+                    pContext->xPSR |= APSR_C;
+                if (addResults.overflow)
+                    pContext->xPSR |= APSR_V;
+            }
+        }
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static uint32_t Shift(uint32_t value, SRType type, uint32_t amount, uint32_t carryIn)
+{
+    ShiftResults results = Shift_C(value, type, amount, carryIn);
+    return results.result;
+}
+
+static AddResults AddWithCarry(uint32_t x, uint32_t y, uint32_t carryInAsBit)
+{
+    int        carryIn = carryInAsBit ? 1 : 0;
+    uint64_t   unsignedSum = (uint64_t)x + (uint64_t)y + (uint64_t)carryIn;
+    int64_t    signedSum = (int64_t)(int32_t)x + (int64_t)(int32_t)y + (int64_t)carryIn;
+    uint32_t   result = (uint32_t)unsignedSum;
+    AddResults results;
+
+    results.result = result;
+    results.carryOut = ((uint64_t)result == unsignedSum) ? 0 : 1;
+    results.overflow = ((int64_t)result == signedSum) ? 0 : 1;
+    return results;
 }
