@@ -23,26 +23,80 @@ extern "C"
 // Include C++ headers for test harness.
 #include "CppUTest/TestHarness.h"
 
-// Register to skip in validateUnchangedRegisters.
-#define SKIP(R) (1 << (R))
-
 
 class pinkySimBase : public Utest
 {
 protected:
-    int             m_stepReturn;
+    int             m_expectedStepReturn;
+    int             m_expectedAPSRflags;
+    uint32_t        m_expectedRegisterValues[13];
     PinkySimContext m_context;
     
     void setup()
     {
-        m_stepReturn = -1;
+        m_expectedStepReturn = PINKYSIM_STEP_OK;
         initContext();
     }
 
     void teardown()
     {
-        CHECK_TRUE(m_context.xPSR & EPSR_T);
-        CHECK_EQUAL(0, m_context.xPSR & IPSR_MASK);
+    }
+    
+    void setExpectedStepReturn(int expectedStepReturn)
+    {
+        m_expectedStepReturn = expectedStepReturn;
+    }
+    
+    void setExpectedAPSRflags(const char* pExpectedFlags)
+    {
+        // Remember what expected APSR flags should be after instruction execution and flip initial flag state to make
+        // sure that simular correctly flips the state and doesn't just get lucky to match a pre-existing condition.
+        while (*pExpectedFlags)
+        {
+            switch (*pExpectedFlags)
+            {
+            case 'n':
+                m_expectedAPSRflags &= ~APSR_N;
+                m_context.xPSR |= APSR_N;
+                break;
+            case 'N':
+                m_expectedAPSRflags |= APSR_N;
+                m_context.xPSR &= ~APSR_N;
+                break;
+            case 'z':
+                m_expectedAPSRflags &= ~APSR_Z;
+                m_context.xPSR |= APSR_Z;
+                break;
+            case 'Z':
+                m_expectedAPSRflags |= APSR_Z;
+                m_context.xPSR &= ~APSR_Z;
+                break;
+            case 'c':
+                m_expectedAPSRflags &= ~APSR_C;
+                m_context.xPSR |= APSR_C;
+                break;
+            case 'C':
+                m_expectedAPSRflags |= APSR_C;
+                m_context.xPSR &= ~APSR_C;
+                break;
+            case 'v':
+                m_expectedAPSRflags &= ~APSR_V;
+                m_context.xPSR |= APSR_V;
+                break;
+            case 'V':
+                m_expectedAPSRflags |= APSR_V;
+                m_context.xPSR &= ~APSR_V;
+                break;
+            }
+            
+            pExpectedFlags++;
+        }
+    }
+    
+    void setExpectedRegisterValue(int index, uint32_t expectedValue)
+    {
+        assert (index >= 0 && index < sizeof(m_context.R)/sizeof(m_context.R[0]));
+        m_expectedRegisterValues[index] = expectedValue;
     }
     
     void initContext()
@@ -51,13 +105,15 @@ protected:
         
         /* By default we will place processor in Thumb mode. */
         m_context.xPSR = EPSR_T;
-        
+        m_expectedAPSRflags = 0;
+ 
         /* Place 0x11111111 in R1, 0x22222222 in R2, etc. */
         uint32_t value = 0;
         assert ( 13 == sizeof(m_context.R) / sizeof(m_context.R[0]) );
         for (int i = 0 ; i < 13 ; i++)
         {
             m_context.R[i] = value;
+            m_expectedRegisterValues[i] = value;
             value += 0x11111111;
         }
     }
@@ -104,22 +160,23 @@ protected:
         m_context.memory = (uint32_t)instr;
     }
     
-    void setXPSRbits(uint32_t bits)
+    void pinkySimStep(PinkySimContext* pContext)
     {
-        m_context.xPSR |= bits;
+        CHECK_EQUAL(m_expectedStepReturn, ::pinkySimStep(pContext));
+        validateXPSR();
+        validateRegisters();
     }
     
-    void validateUnchangedRegisters(uint32_t registersToSkip)
+    void validateXPSR()
     {
-        uint32_t value = 0;
+        CHECK_EQUAL(m_expectedAPSRflags, m_context.xPSR & APSR_NZCV);
+        CHECK_TRUE(m_context.xPSR & EPSR_T);
+        CHECK_EQUAL(0, m_context.xPSR & IPSR_MASK);
+    }
+    
+    void validateRegisters()
+    {
         for (int i = 0 ; i < 13 ; i++)
-        {
-            if (!(registersToSkip & 1))
-            {
-                CHECK_EQUAL(value, m_context.R[i]);
-            }
-            value += 0x11111111;
-            registersToSkip >>= 1;
-        }
+            CHECK_EQUAL(m_expectedRegisterValues[i], m_context.R[i]);
     }
 };

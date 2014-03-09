@@ -40,93 +40,58 @@ TEST_GROUP_BASE(lslImmediate, pinkySimBase)
 TEST(lslImmediate, MovR7toR0NoCarryNotZeroNotNegative)
 {
     emitInstruction16("00000cccccbbbaaa", R0, R7, IMM_0);
-    setXPSRbits(APSR_NZC);
-        m_stepReturn = pinkySimStep(&m_context);
-    CHECK_EQUAL(PINKYSIM_STEP_OK, m_stepReturn);
-    CHECK_EQUAL(0x77777777U, m_context.R[0]);
-    validateUnchangedRegisters(SKIP(R0));
-    CHECK_FALSE(m_context.xPSR & APSR_N);
-    CHECK_FALSE(m_context.xPSR & APSR_Z);
-    CHECK_FALSE(m_context.xPSR & APSR_C);
+    setExpectedAPSRflags("nzc");
+    setExpectedRegisterValue(R0, 0x77777777U);
+    pinkySimStep(&m_context);
 }
 
 TEST(lslImmediate, MovR0toR7IsZero)
 {
     emitInstruction16("00000cccccbbbaaa", R7, R0, IMM_0);
-    setXPSRbits(APSR_NC);
-        m_stepReturn = pinkySimStep(&m_context);
-    CHECK_EQUAL(PINKYSIM_STEP_OK, m_stepReturn);
-    CHECK_EQUAL(0x0, m_context.R[7]);
-    validateUnchangedRegisters(SKIP(R7));
-    CHECK_FALSE(m_context.xPSR & APSR_N);
-    CHECK_TRUE(m_context.xPSR & APSR_Z);
-    CHECK_FALSE(m_context.xPSR & APSR_C);
+    setExpectedAPSRflags("nZc");
+    setExpectedRegisterValue(R7, 0x0);
+    pinkySimStep(&m_context);
 }
 
 TEST(lslImmediate, R1by3toR0IsNegative)
 {
     emitInstruction16("00000cccccbbbaaa", R0, R1, IMM_3);
-    setXPSRbits(APSR_ZC);
-        m_stepReturn = pinkySimStep(&m_context);
-    CHECK_EQUAL(PINKYSIM_STEP_OK, m_stepReturn);
-    CHECK_EQUAL(0x11111111U << 3, m_context.R[0]);
-    validateUnchangedRegisters(SKIP(R0));
-    CHECK_TRUE(m_context.xPSR & APSR_N);
-    CHECK_FALSE(m_context.xPSR & APSR_Z);
-    CHECK_FALSE(m_context.xPSR & APSR_C);
+    setExpectedAPSRflags("Nzc");
+    setExpectedRegisterValue(R0, 0x11111111U << 3);
+    pinkySimStep(&m_context);
 }
 
 TEST(lslImmediate, R1by4toR0HasCarryOut)
 {
     emitInstruction16("00000cccccbbbaaa", R0, R1, IMM_4);
-    setXPSRbits(APSR_NZ);
-        m_stepReturn = pinkySimStep(&m_context);
-    CHECK_EQUAL(PINKYSIM_STEP_OK, m_stepReturn);
-    CHECK_EQUAL(0x11111111U << 4, m_context.R[0]);
-    validateUnchangedRegisters(SKIP(R0));
-    CHECK_FALSE(m_context.xPSR & APSR_N);
-    CHECK_FALSE(m_context.xPSR & APSR_Z);
-    CHECK_TRUE(m_context.xPSR & APSR_C);
+    setExpectedAPSRflags("nzC");
+    setExpectedRegisterValue(R0, 0x11111111U << 4);
+    pinkySimStep(&m_context);
 }
 
 TEST(lslImmediate, R0by31)
 {
     emitInstruction16("00000cccccbbbaaa", R0, R0, IMM_31);
-    setXPSRbits(APSR_ZC);
+    setExpectedAPSRflags("Nzc");
+    setExpectedRegisterValue(R0, 1U << 31);
     m_context.R[R0] = 1U;
-        m_stepReturn = pinkySimStep(&m_context);
-    CHECK_EQUAL(PINKYSIM_STEP_OK, m_stepReturn);
-    CHECK_EQUAL(1U << 31, m_context.R[0]);
-    validateUnchangedRegisters(SKIP(R0));
-    CHECK_TRUE(m_context.xPSR & APSR_N);
-    CHECK_FALSE(m_context.xPSR & APSR_Z);
-    CHECK_FALSE(m_context.xPSR & APSR_C);
+    pinkySimStep(&m_context);
 }
 
 TEST(lslImmediate, R0by1WithCarryOut)
 {
     emitInstruction16("00000cccccbbbaaa", R0, R0, IMM_1);
-    setXPSRbits(APSR_NZ);
+    setExpectedAPSRflags("nzC");
+    setExpectedRegisterValue(R0, 0xA0000000U << 1);
     m_context.R[R0] = 0xA0000000U;
-        m_stepReturn = pinkySimStep(&m_context);
-    CHECK_EQUAL(PINKYSIM_STEP_OK, m_stepReturn);
-    CHECK_EQUAL(0xA0000000U << 1, m_context.R[0]);
-    validateUnchangedRegisters(SKIP(R0));
-    CHECK_FALSE(m_context.xPSR & APSR_N);
-    CHECK_FALSE(m_context.xPSR & APSR_Z);
-    CHECK_TRUE(m_context.xPSR & APSR_C);
+    pinkySimStep(&m_context);
 }
 
 TEST(lslImmediate, R0by31WithCarryOut)
 {
     emitInstruction16("00000cccccbbbaaa", R0, R0, IMM_31);
-    setXPSRbits(APSR_N);
+    setExpectedAPSRflags("nZC");
+    setExpectedRegisterValue(R0, 0x2U << 31);
     m_context.R[R0] = 0x2U;
-        m_stepReturn = pinkySimStep(&m_context);
-    CHECK_EQUAL(PINKYSIM_STEP_OK, m_stepReturn);
-    CHECK_EQUAL(0x2U << 31, m_context.R[0]);
-    validateUnchangedRegisters(SKIP(R0));
-    CHECK_FALSE(m_context.xPSR & APSR_N);
-    CHECK_TRUE(m_context.xPSR & APSR_Z);
-    CHECK_TRUE(m_context.xPSR & APSR_C);
+    pinkySimStep(&m_context);
 }

@@ -29,6 +29,6 @@ TEST_GROUP_BASE(pinkySim, pinkySimBase)
 TEST(pinkySim, InvalidOpcodeShouldProduceUndefinedError)
 {
     emitInstruction16("1101111000000000");
-    m_stepReturn = pinkySimStep(&m_context);
-    CHECK_EQUAL(PINKYSIM_STEP_UNDEFINED, m_stepReturn);
+    setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
+    pinkySimStep(&m_context);
 }

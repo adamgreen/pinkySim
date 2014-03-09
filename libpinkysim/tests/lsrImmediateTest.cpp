@@ -37,52 +37,32 @@ TEST_GROUP_BASE(lsrImmediate, pinkySimBase)
 TEST(lsrImmediate, R2by1toR0NoCarryNotZeroNotNegative)
 {
     emitInstruction16("00001cccccbbbaaa", R0, R2, IMM_1);
-    setXPSRbits(APSR_NZC);
-        m_stepReturn = pinkySimStep(&m_context);
-    CHECK_EQUAL(PINKYSIM_STEP_OK, m_stepReturn);
-    CHECK_EQUAL(0x22222222U >> 1, m_context.R[0]);
-    validateUnchangedRegisters(SKIP(R0));
-    CHECK_FALSE(m_context.xPSR & APSR_N);
-    CHECK_FALSE(m_context.xPSR & APSR_Z);
-    CHECK_FALSE(m_context.xPSR & APSR_C);
+    setExpectedAPSRflags("nzc");
+    setExpectedRegisterValue(R0, 0x22222222U >> 1);
+    pinkySimStep(&m_context);
 }
 
 TEST(lsrImmediate, R7by32toR0IsZero)
 {
     emitInstruction16("00001cccccbbbaaa", R0, R7, IMM_32);
-    setXPSRbits(APSR_NC);
-        m_stepReturn = pinkySimStep(&m_context);
-    CHECK_EQUAL(PINKYSIM_STEP_OK, m_stepReturn);
-    CHECK_EQUAL(0x0, m_context.R[0]);
-    validateUnchangedRegisters(SKIP(R0));
-    CHECK_FALSE(m_context.xPSR & APSR_N);
-    CHECK_TRUE(m_context.xPSR & APSR_Z);
-    CHECK_FALSE(m_context.xPSR & APSR_C);
+    setExpectedAPSRflags("nZc");
+    setExpectedRegisterValue(R0, 0x0);
+    pinkySimStep(&m_context);
 }
 
 TEST(lsrImmediate, R1by1toR7HasCarryOut)
 {
     emitInstruction16("00001cccccbbbaaa", R7, R1, IMM_1);
-    setXPSRbits(APSR_NZ);
-        m_stepReturn = pinkySimStep(&m_context);
-    CHECK_EQUAL(PINKYSIM_STEP_OK, m_stepReturn);
-    CHECK_EQUAL(0x11111111U >> 1, m_context.R[7]);
-    validateUnchangedRegisters(SKIP(R7));
-    CHECK_FALSE(m_context.xPSR & APSR_N);
-    CHECK_FALSE(m_context.xPSR & APSR_Z);
-    CHECK_TRUE(m_context.xPSR & APSR_C);
+    setExpectedAPSRflags("nzC");
+    setExpectedRegisterValue(R7, 0x11111111U >> 1); 
+    pinkySimStep(&m_context);
 }
 
 TEST(lsrImmediate, R0by32HasCarryOutAndIsZero)
 {
     emitInstruction16("00001cccccbbbaaa", R0, R0, IMM_32);
     m_context.R[R0] = 0x80000000U;
-    setXPSRbits(APSR_N);
-        m_stepReturn = pinkySimStep(&m_context);
-    CHECK_EQUAL(PINKYSIM_STEP_OK, m_stepReturn);
-    CHECK_EQUAL(0U, m_context.R[0]);
-    validateUnchangedRegisters(SKIP(R0));
-    CHECK_FALSE(m_context.xPSR & APSR_N);
-    CHECK_TRUE(m_context.xPSR & APSR_Z);
-    CHECK_TRUE(m_context.xPSR & APSR_C);
+    setExpectedAPSRflags("nZC");
+    setExpectedRegisterValue(R0, 0U);
+    pinkySimStep(&m_context);
 }
