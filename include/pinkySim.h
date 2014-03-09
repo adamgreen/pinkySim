@@ -23,6 +23,7 @@
 #define EPSR_T      (1 << 24)   /* Thumb mode flag */
 
 /* Useful xPSR flag combinations for masking off at runtime. */
+#define APSR_NZCV   (APSR_N | APSR_Z | APSR_C | APSR_V)
 #define APSR_NZC    (APSR_N | APSR_Z | APSR_C)
 #define APSR_NZ     (APSR_N | APSR_Z)
 #define APSR_NC     (APSR_N | APSR_C)
