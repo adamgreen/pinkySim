@@ -121,19 +121,58 @@ protected:
     void emitInstruction16(const char* pEncoding, ...)
     {
         uint16_t    instr = 0;
-        const char* p = pEncoding + 15;
-        char        curr = '\0';
-        uint32_t    field = 0;
+        size_t      i = 0;
+        char        last = '\0';
+        const char* p;
         va_list     valist;
+        struct Field
+        {
+            uint32_t value;
+            char     c;
+        } fields[6];
         
         assert (16 == strlen(pEncoding));
+        memset(fields, 0, sizeof(fields));
         va_start(valist, pEncoding);
+
+        // Go through pEncoding from left to right and find all fields to be inserted.
+        p = pEncoding;
+        while (*p)
+        {
+            char c = *p++;
+            
+            if (c != '1' && c != '0' && c != last)
+            {
+                // Determine if we already saw this field earlier.
+                bool found = false;
+                for (size_t j = 0 ; j < i ; j++)
+                {
+                    if (fields[j].c == c)
+                        found = true;
+                }
+                
+                // If this is the first time we have seen the field, then save its value in fields array.
+                if (!found)
+                {
+                    assert (i < sizeof(fields)/sizeof(fields[0]));
+                    
+                    fields[i].value = va_arg(valist, uint32_t);
+                    fields[i].c = c;
+                    last = c;
+                    i++;
+                }
+            }
+        }
+        va_end(valist);
+        
+        // Go through pEncoding again from right to left and insert field bits.
+        p = pEncoding + 15;
         while (p >= pEncoding)
         {
-            char c = *p;
+            char c = *p--;
             
             instr >>= 1;
-            field >>= 1;
+            
             if (c == '1')
             {
                 instr |= (1 << 15);
@@ -142,21 +181,21 @@ protected:
             {
                 instr |= (0 << 15);
             }
-            else if (c != curr)
+            else
             {
-                field = va_arg(valist, uint32_t);
-                instr |= ((field & 1) << 15);
-                curr = c;
+                size_t j;
+                for (j = 0 ; j < i ; j++)
+                {
+                    if (fields[j].c == c)
+                        break;
+                }
+                assert (j != i);
+                
+                instr |= (fields[j].value & 1) << 15;
+                fields[j].value >>= 1;
             }
-            else if (c == curr)
-            {
-                instr |= ((field & 1) << 15);
-            }
-            
-            p--;
-            
         }
-        va_end(valist);
+        
         m_context.memory = (uint32_t)instr;
     }
     

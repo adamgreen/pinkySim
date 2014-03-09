@@ -36,7 +36,7 @@ TEST_GROUP_BASE(lsrImmediate, pinkySimBase)
    Encoding: 000 01 imm:5 Rm:3 Rd:3 */
 TEST(lsrImmediate, R2by1toR0NoCarryNotZeroNotNegative)
 {
-    emitInstruction16("00001cccccbbbaaa", R0, R2, IMM_1);
+    emitInstruction16("00001iiiiimmmddd", IMM_1, R2, R0);
     setExpectedAPSRflags("nzc");
     setExpectedRegisterValue(R0, 0x22222222U >> 1);
     pinkySimStep(&m_context);
@@ -44,7 +44,7 @@ TEST(lsrImmediate, R2by1toR0NoCarryNotZeroNotNegative)
 
 TEST(lsrImmediate, R7by32toR0IsZero)
 {
-    emitInstruction16("00001cccccbbbaaa", R0, R7, IMM_32);
+    emitInstruction16("00001iiiiimmmddd", IMM_32, R7, R0);
     setExpectedAPSRflags("nZc");
     setExpectedRegisterValue(R0, 0x0);
     pinkySimStep(&m_context);
@@ -52,7 +52,7 @@ TEST(lsrImmediate, R7by32toR0IsZero)
 
 TEST(lsrImmediate, R1by1toR7HasCarryOut)
 {
-    emitInstruction16("00001cccccbbbaaa", R7, R1, IMM_1);
+    emitInstruction16("00001iiiiimmmddd", IMM_1, R1, R7);
     setExpectedAPSRflags("nzC");
     setExpectedRegisterValue(R7, 0x11111111U >> 1); 
     pinkySimStep(&m_context);
@@ -60,7 +60,7 @@ TEST(lsrImmediate, R1by1toR7HasCarryOut)
 
 TEST(lsrImmediate, R0by32HasCarryOutAndIsZero)
 {
-    emitInstruction16("00001cccccbbbaaa", R0, R0, IMM_32);
+    emitInstruction16("00001iiiiimmmddd", IMM_32, R0, R0);
     m_context.R[R0] = 0x80000000U;
     setExpectedAPSRflags("nZC");
     setExpectedRegisterValue(R0, 0U);

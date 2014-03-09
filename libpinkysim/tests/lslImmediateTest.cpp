@@ -39,7 +39,7 @@ TEST_GROUP_BASE(lslImmediate, pinkySimBase)
    Encoding: 000 00 imm:5 Rm:3 Rd:3 */
 TEST(lslImmediate, MovR7toR0NoCarryNotZeroNotNegative)
 {
-    emitInstruction16("00000cccccbbbaaa", R0, R7, IMM_0);
+    emitInstruction16("00000iiiiimmmddd", IMM_0, R7, R0);
     setExpectedAPSRflags("nzc");
     setExpectedRegisterValue(R0, 0x77777777U);
     pinkySimStep(&m_context);
@@ -47,7 +47,7 @@ TEST(lslImmediate, MovR7toR0NoCarryNotZeroNotNegative)
 
 TEST(lslImmediate, MovR0toR7IsZero)
 {
-    emitInstruction16("00000cccccbbbaaa", R7, R0, IMM_0);
+    emitInstruction16("00000iiiiimmmddd", IMM_0, R0, R7);
     setExpectedAPSRflags("nZc");
     setExpectedRegisterValue(R7, 0x0);
     pinkySimStep(&m_context);
@@ -55,7 +55,7 @@ TEST(lslImmediate, MovR0toR7IsZero)
 
 TEST(lslImmediate, R1by3toR0IsNegative)
 {
-    emitInstruction16("00000cccccbbbaaa", R0, R1, IMM_3);
+    emitInstruction16("00000iiiiimmmddd", IMM_3, R1, R0);
     setExpectedAPSRflags("Nzc");
     setExpectedRegisterValue(R0, 0x11111111U << 3);
     pinkySimStep(&m_context);
@@ -63,7 +63,7 @@ TEST(lslImmediate, R1by3toR0IsNegative)
 
 TEST(lslImmediate, R1by4toR0HasCarryOut)
 {
-    emitInstruction16("00000cccccbbbaaa", R0, R1, IMM_4);
+    emitInstruction16("00000iiiiimmmddd", IMM_4, R1, R0);
     setExpectedAPSRflags("nzC");
     setExpectedRegisterValue(R0, 0x11111111U << 4);
     pinkySimStep(&m_context);
@@ -71,7 +71,7 @@ TEST(lslImmediate, R1by4toR0HasCarryOut)
 
 TEST(lslImmediate, R0by31)
 {
-    emitInstruction16("00000cccccbbbaaa", R0, R0, IMM_31);
+    emitInstruction16("00000iiiiimmmddd", IMM_31, R0, R0);
     setExpectedAPSRflags("Nzc");
     setExpectedRegisterValue(R0, 1U << 31);
     m_context.R[R0] = 1U;
@@ -80,7 +80,7 @@ TEST(lslImmediate, R0by31)
 
 TEST(lslImmediate, R0by1WithCarryOut)
 {
-    emitInstruction16("00000cccccbbbaaa", R0, R0, IMM_1);
+    emitInstruction16("00000iiiiimmmddd", IMM_1, R0, R0);
     setExpectedAPSRflags("nzC");
     setExpectedRegisterValue(R0, 0xA0000000U << 1);
     m_context.R[R0] = 0xA0000000U;
@@ -89,7 +89,7 @@ TEST(lslImmediate, R0by1WithCarryOut)
 
 TEST(lslImmediate, R0by31WithCarryOut)
 {
-    emitInstruction16("00000cccccbbbaaa", R0, R0, IMM_31);
+    emitInstruction16("00000iiiiimmmddd", IMM_31, R0, R0);
     setExpectedAPSRflags("nZC");
     setExpectedRegisterValue(R0, 0x2U << 31);
     m_context.R[R0] = 0x2U;
