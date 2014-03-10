@@ -28,7 +28,7 @@ TEST_GROUP_BASE(addRegister, pinkySimBase)
 
 
 /* ADD - Register
-   Encoding: 000 11 0 0 Rm: Rn:3 Rd:3 */
+   Encoding: 000 11 0 0 Rm:3 Rn:3 Rd:3 */
 TEST(addRegister, UseR1ForAllArgsAndCarryOverflowZeroNegativeFlagsShouldBeClear)
 {
     emitInstruction16("0001100mmmnnnddd", R1, R1, R1);
@@ -45,10 +45,10 @@ TEST(addRegister, UseLowestRegisterForAllArgsAndOnlyZeroFlagShouldBeSet)
     pinkySimStep(&m_context);
 }
 
-TEST(addRegister, UseHigestRegisterForAllArgsAndOnlyNegativeFlagShouldBeSet)
+TEST(addRegister, UseHigestRegisterForAllArgsAndWillBeNegativeBecauseOfOverflow)
 {
     emitInstruction16("0001100mmmnnnddd", R7, R7, R7);
-    setExpectedAPSRflags("Nzcv");
+    setExpectedAPSRflags("NzcV");
     setExpectedRegisterValue(R7, 0x77777777U + 0x77777777U);
     pinkySimStep(&m_context);
 }
@@ -61,7 +61,7 @@ TEST(addRegister, UseDifferentRegistersForEachArg)
     pinkySimStep(&m_context);
 }
 
-TEST(addRegister, ForceCarryWithNoSignedOverflow)
+TEST(addRegister, ForceCarryWithNoOverflow)
 {
     emitInstruction16("0001100mmmnnnddd", R1, R2, R0);
     setExpectedAPSRflags("nZCv");
@@ -71,7 +71,7 @@ TEST(addRegister, ForceCarryWithNoSignedOverflow)
     pinkySimStep(&m_context);
 }
 
-TEST(addRegister, ForceCarryWithSignedOverflow)
+TEST(addRegister, ForceCarryAndOverflow)
 {
     emitInstruction16("0001100mmmnnnddd", R1, R2, R0);
     setExpectedAPSRflags("nzCV");

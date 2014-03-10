@@ -66,6 +66,7 @@ static int asrImmediate(PinkySimContext* pContext, uint16_t instr);
 static int addRegisterT1(PinkySimContext* pContext, uint16_t instr);
 static uint32_t Shift(uint32_t value, SRType type, uint32_t amount, uint32_t carryIn);
 static AddResults AddWithCarry(uint32_t x, uint32_t y, uint32_t carryInAsBit);
+static int subRegister(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -88,6 +89,8 @@ static int shiftAddSubtractMoveCompare(PinkySimContext* pContext, uint16_t instr
         return asrImmediate(pContext, instr);
     else if ((instr & 0x3E00) == 0x1800)
         return addRegisterT1(pContext, instr);
+    else if ((instr & 0x3E00) == 0x1A00)
+        return subRegister(pContext, instr);
     else
         return PINKYSIM_STEP_UNDEFINED;
 }
@@ -367,6 +370,41 @@ static AddResults AddWithCarry(uint32_t x, uint32_t y, uint32_t carryInAsBit)
 
     results.result = result;
     results.carryOut = ((uint64_t)result == unsignedSum) ? 0 : 1;
-    results.overflow = ((int64_t)result == signedSum) ? 0 : 1;
+    results.overflow = ((int64_t)(int32_t)result == signedSum) ? 0 : 1;
     return results;
+}
+
+static int subRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = instr & 0x7;
+        uint32_t        n = (instr & (0x7 << 3)) >> 3;
+        uint32_t        m = (instr & (0x7 << 6)) >> 6;
+        int             setFlags = !InITBlock(pContext);
+        DecodedImmShift decodedShift = {SRType_LSL, 0};
+        uint32_t        shifted;
+        AddResults      addResults;
+        
+        // UNDONE: Only Thumb2 instructions require this shifted value.
+        shifted = Shift(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
+        addResults = AddWithCarry(getReg(pContext, n), ~shifted, 1);
+
+        setReg(pContext, d, addResults.result);
+
+        if (setFlags)
+        {
+            pContext->xPSR &= ~APSR_NZCV;
+            if (addResults.result & (1 << 31))
+                pContext->xPSR |= APSR_N;
+            if (addResults.result == 0)
+                pContext->xPSR |= APSR_Z;
+            if (addResults.carryOut)
+                pContext->xPSR |= APSR_C;
+            if (addResults.overflow)
+                pContext->xPSR |= APSR_V;
+        }
+    }
+
+    return PINKYSIM_STEP_OK;
 }
