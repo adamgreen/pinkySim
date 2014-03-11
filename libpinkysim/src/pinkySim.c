@@ -68,6 +68,7 @@ static uint32_t Shift(uint32_t value, SRType type, uint32_t amount, uint32_t car
 static AddResults AddWithCarry(uint32_t x, uint32_t y, uint32_t carryInAsBit);
 static int subRegister(PinkySimContext* pContext, uint16_t instr);
 static int addImmediateT1(PinkySimContext* pContext, uint16_t instr);
+static int subImmediateT1(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -94,6 +95,8 @@ static int shiftAddSubtractMoveCompare(PinkySimContext* pContext, uint16_t instr
         return subRegister(pContext, instr);
     else if ((instr & 0x3E00) == 0x1C00)
         return addImmediateT1(pContext, instr);
+    else if ((instr & 0x3E00) == 0x1E00)
+        return subImmediateT1(pContext, instr);
     else
         return PINKYSIM_STEP_UNDEFINED;
 }
@@ -423,6 +426,35 @@ static int addImmediateT1(PinkySimContext* pContext, uint16_t instr)
         AddResults      addResults;
         
         addResults = AddWithCarry(getReg(pContext, n), imm32, 0);
+        setReg(pContext, d, addResults.result);
+        if (setFlags)
+        {
+            pContext->xPSR &= ~APSR_NZCV;
+            if (addResults.result & (1 << 31))
+                pContext->xPSR |= APSR_N;
+            if (addResults.result == 0)
+                pContext->xPSR |= APSR_Z;
+            if (addResults.carryOut)
+                pContext->xPSR |= APSR_C;
+            if (addResults.overflow)
+                pContext->xPSR |= APSR_V;
+        }
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int subImmediateT1(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = instr & 0x7;
+        uint32_t        n = (instr & (0x7 << 3)) >> 3;
+        uint32_t        imm32 = (instr & (0x7 << 6)) >> 6;
+        int             setFlags = !InITBlock(pContext);
+        AddResults      addResults;
+        
+        addResults = AddWithCarry(getReg(pContext, n), ~imm32, 1);
         setReg(pContext, d, addResults.result);
         if (setFlags)
         {
