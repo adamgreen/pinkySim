@@ -69,6 +69,7 @@ static AddResults AddWithCarry(uint32_t x, uint32_t y, uint32_t carryInAsBit);
 static int subRegister(PinkySimContext* pContext, uint16_t instr);
 static int addImmediateT1(PinkySimContext* pContext, uint16_t instr);
 static int subImmediateT1(PinkySimContext* pContext, uint16_t instr);
+static int movImmediate(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -97,6 +98,8 @@ static int shiftAddSubtractMoveCompare(PinkySimContext* pContext, uint16_t instr
         return addImmediateT1(pContext, instr);
     else if ((instr & 0x3E00) == 0x1E00)
         return subImmediateT1(pContext, instr);
+    else if ((instr & 0x3800) == 0x2000)
+        return movImmediate(pContext, instr);
     else
         return PINKYSIM_STEP_UNDEFINED;
 }
@@ -467,6 +470,32 @@ static int subImmediateT1(PinkySimContext* pContext, uint16_t instr)
                 pContext->xPSR |= APSR_C;
             if (addResults.overflow)
                 pContext->xPSR |= APSR_V;
+        }
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int movImmediate(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = (instr & (0x7 << 8)) >> 8;
+        int             setFlags = !InITBlock(pContext);
+        uint32_t        imm32 = instr & 0xFF;
+        uint32_t        carry = pContext->xPSR & APSR_C;
+        uint32_t        result = imm32;
+
+        setReg(pContext, d, result);
+        if (setFlags)
+        {
+            pContext->xPSR &= ~APSR_NZC;
+            if (result & (1 << 31))
+                pContext->xPSR |= APSR_N;
+            if (result == 0)
+                pContext->xPSR |= APSR_Z;
+            if (carry)
+                pContext->xPSR |= APSR_C;
         }
     }
 

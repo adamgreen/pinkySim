@@ -225,4 +225,14 @@ protected:
         for (int i = 0 ; i < 13 ; i++)
             CHECK_EQUAL(m_expectedRegisterValues[i], m_context.R[i]);
     }
+    
+    void setCarry()
+    {
+        m_context.xPSR |= APSR_C;
+    }
+    
+    void clearCarry()
+    {
+        m_context.xPSR &= ~APSR_C;
+    }
 };
