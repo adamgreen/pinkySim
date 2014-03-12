@@ -85,6 +85,16 @@ TEST(lslRegister, ShiftR0byR7WithValues1and255_MaximumShift)
     pinkySimStep(&m_context);
 }
 
+TEST(lslRegister, ShiftR0byR7WithValues1and256_ShouldBeTreatedAs0Shift)
+{
+    emitInstruction16("0100000010mmmddd", R7, R0);
+    setRegisterValue(R0, 1);
+    setRegisterValue(R7, 256);
+    setExpectedAPSRflags("nzc");
+    setExpectedRegisterValue(R0, 1);
+    pinkySimStep(&m_context);
+}
+
 TEST(lslRegister, ShiftR4byR3_CarryOutFromMSB)
 {
     emitInstruction16("0100000010mmmddd", R3, R4);
