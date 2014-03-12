@@ -29,7 +29,7 @@ TEST_GROUP_BASE(addImmediate, pinkySimBase)
 
 /* ADD - Immediate - Encoding T1
    Encoding: 000 11 1 0 Imm:3 Rn:3 Rd:3 */
-TEST(addImmediate, UseLowestRegisterOnlyAddSmallestImmediateWithZeroResult)
+TEST(addImmediate, T1UseLowestRegisterOnlyAddSmallestImmediateWithZeroResult)
 {
     emitInstruction16("0001110iiinnnddd", 0, R0, R0);
     setExpectedAPSRflags("nZcv");
@@ -37,7 +37,7 @@ TEST(addImmediate, UseLowestRegisterOnlyAddSmallestImmediateWithZeroResult)
     pinkySimStep(&m_context);
 }
 
-TEST(addImmediate, UseHigestRegisterOnlyAddLargestImmediate)
+TEST(addImmediate, T1UseHigestRegisterOnlyAddLargestImmediate)
 {
     emitInstruction16("0001110iiinnnddd", 7, R7, R7);
     setExpectedAPSRflags("nzcv");
@@ -45,7 +45,7 @@ TEST(addImmediate, UseHigestRegisterOnlyAddLargestImmediate)
     pinkySimStep(&m_context);
 }
 
-TEST(addImmediate, UseDifferentRegistersForEachArgAdd3AndAllAPSRFlagsShouldBeClear)
+TEST(addImmediate, T1UseDifferentRegistersForEachArgAdd3AndAllAPSRFlagsShouldBeClear)
 {
     emitInstruction16("0001110iiinnnddd", 3, R2, R0);
     setExpectedAPSRflags("nzcv");
@@ -53,7 +53,7 @@ TEST(addImmediate, UseDifferentRegistersForEachArgAdd3AndAllAPSRFlagsShouldBeCle
     pinkySimStep(&m_context);
 }
 
-TEST(addImmediate, ForceCarryByAdding1ToLargestInteger)
+TEST(addImmediate, T1ForceCarryByAdding1ToLargestInteger)
 {
     emitInstruction16("0001110iiinnnddd", 1, R7, R0);
     setExpectedAPSRflags("nZCv");
@@ -62,11 +62,49 @@ TEST(addImmediate, ForceCarryByAdding1ToLargestInteger)
     pinkySimStep(&m_context);
 }
 
-TEST(addImmediate, ForceOverflowPastLargestPositiveInteger)
+TEST(addImmediate, T1ForceOverflowPastLargestPositiveInteger)
 {
     emitInstruction16("0001110iiinnnddd", 1, R0, R7);
     setExpectedAPSRflags("NzcV");
     setRegisterValue(R0, 0x7FFFFFFFU);
     setExpectedRegisterValue(R7, 0x7FFFFFFFU + 1);
+    pinkySimStep(&m_context);
+}
+
+
+
+/* ADD - Immediate - Encoding T2
+   Encoding: 001 10 Rdn:3 Imm:8 */
+TEST(addImmediate, T2UseLowestRegisterAndAddSmallestImmediateWithZeroResult)
+{
+    emitInstruction16("00110dddiiiiiiii", R0, 0);
+    setExpectedAPSRflags("nZcv");
+    setExpectedRegisterValue(R0, 0U);
+    pinkySimStep(&m_context);
+}
+
+TEST(addImmediate, T2UseHigestRegisterAndAddLargestImmediate)
+{
+    emitInstruction16("00110dddiiiiiiii", R7, 255);
+    setExpectedAPSRflags("nzcv");
+    setExpectedRegisterValue(R7, 0x77777777U + 255U);
+    pinkySimStep(&m_context);
+}
+
+TEST(addImmediate, T2ForceCarryByAdding1ToLargestInteger)
+{
+    emitInstruction16("00110dddiiiiiiii", R3, 1);
+    setExpectedAPSRflags("nZCv");
+    setRegisterValue(R3, 0xFFFFFFFFU);
+    setExpectedRegisterValue(R3, 0);
+    pinkySimStep(&m_context);
+}
+
+TEST(addImmediate, T2ForceOverflowPastLargestPositiveInteger)
+{
+    emitInstruction16("00110dddiiiiiiii", R3, 1);
+    setExpectedAPSRflags("NzcV");
+    setRegisterValue(R3, 0x7FFFFFFFU);
+    setExpectedRegisterValue(R3, 0x7FFFFFFFU + 1);
     pinkySimStep(&m_context);
 }
