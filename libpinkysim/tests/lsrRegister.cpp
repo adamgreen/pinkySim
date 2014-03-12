@@ -13,13 +13,6 @@
 
 #include "pinkySimBaseTest.h"
 
-// Immediate values used for shift amount in tests.
-#define IMM_0  0
-#define IMM_1  1
-#define IMM_3  3
-#define IMM_4  4
-#define IMM_31 31
-
 
 TEST_GROUP_BASE(lsrRegister, pinkySimBase)
 {
