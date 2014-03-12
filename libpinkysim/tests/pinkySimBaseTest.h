@@ -110,9 +110,25 @@ protected:
     {
         memset(&m_context, 0, sizeof(m_context));
         
-        /* By default we will place processor in Thumb mode. */
+        /* By default we will place the processor in Thumb mode. */
         m_context.xPSR = EPSR_T;
-        m_expectedAPSRflags = 0;
+        
+        /* Randomly initialize each APSR flag to help verify that the simulator doesn't clear/set a bit that the 
+           specification indicates shouldn't be modified by an instruction. */
+        for (uint32_t bit = APSR_N ; bit >= APSR_V ; bit >>= 1)
+        {
+            int setOrClear = rand() & 1;
+            if (setOrClear)
+            {
+                m_context.xPSR |= bit;
+                m_expectedAPSRflags |= bit;
+            }
+            else
+            {
+                m_context.xPSR &= ~bit;
+                m_expectedAPSRflags &= ~bit;
+            }
+        }
  
         /* Place 0x11111111 in R1, 0x22222222 in R2, etc. */
         uint32_t value = 0;
