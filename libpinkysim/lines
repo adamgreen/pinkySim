@@ -1,0 +1,2 @@
+#! /usr/bin/env bash
+wc -l `find . \( -name "*.c" -or -name "*.cpp" -or -name "*.h" \) | grep -v "^\./CppUTest.*"`
