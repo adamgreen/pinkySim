@@ -37,10 +37,10 @@ TEST_GROUP_BASE(lslRegister, pinkySimBase)
 
 /* LSL - Register (Logical Shift Left)
    Encoding: 010000 0010 Rm:3 Rdn:3 */
-TEST(lslRegister, ShiftR7byR0_MinimumShift)
+TEST(lslRegister, ShiftR7byR0_MinimumShift_CarryUnmodified)
 {
     emitInstruction16("0100000010mmmddd", R0, R7);
-    setExpectedAPSRflags("nzc");
+    setExpectedAPSRflags("nz");
     setExpectedRegisterValue(R7, 0x77777777U);
     pinkySimStep(&m_context);
 }
@@ -90,7 +90,7 @@ TEST(lslRegister, ShiftR0byR7WithValues1and256_ShouldBeTreatedAs0Shift)
     emitInstruction16("0100000010mmmddd", R7, R0);
     setRegisterValue(R0, 1);
     setRegisterValue(R7, 256);
-    setExpectedAPSRflags("nzc");
+    setExpectedAPSRflags("nz");
     setExpectedRegisterValue(R0, 1);
     pinkySimStep(&m_context);
 }

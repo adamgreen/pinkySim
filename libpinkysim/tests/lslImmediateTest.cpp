@@ -37,18 +37,18 @@ TEST_GROUP_BASE(lslImmediate, pinkySimBase)
 
 /* LSL - Immediate (Logical Shift Left)
    Encoding: 000 00 imm:5 Rm:3 Rd:3 */
-TEST(lslImmediate, MovR7toR0NoCarryNotZeroNotNegative)
+TEST(lslImmediate, MovR7toR0_CarryUnmodified)
 {
     emitInstruction16("00000iiiiimmmddd", IMM_0, R7, R0);
-    setExpectedAPSRflags("nzc");
+    setExpectedAPSRflags("nz");
     setExpectedRegisterValue(R0, 0x77777777U);
     pinkySimStep(&m_context);
 }
 
-TEST(lslImmediate, MovR0toR7IsZero)
+TEST(lslImmediate, MovR0toR7IsZeroAndCarryUnmodified)
 {
     emitInstruction16("00000iiiiimmmddd", IMM_0, R0, R7);
-    setExpectedAPSRflags("nZc");
+    setExpectedAPSRflags("nZ");
     setExpectedRegisterValue(R7, 0x0);
     pinkySimStep(&m_context);
 }

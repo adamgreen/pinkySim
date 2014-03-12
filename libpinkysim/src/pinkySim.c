@@ -55,7 +55,7 @@ static int lslImmediate(PinkySimContext* pContext, uint16_t instr);
 static int ConditionPassedForNonBranchInstr(const PinkySimContext* pContext);
 static int InITBlock(const PinkySimContext* pContext);
 static DecodedImmShift DecodeImmShift(uint32_t typeBits, uint32_t imm5);
-static ShiftResults Shift_C(uint32_t value, SRType type, uint32_t amount, uint32_t carry_in);
+static ShiftResults Shift_C(uint32_t value, SRType type, uint32_t amount, uint32_t carryIn);
 static ShiftResults LSL_C(uint32_t x, uint32_t shift);
 static ShiftResults LSR_C(uint32_t x, uint32_t shift);
 static ShiftResults ASR_C(uint32_t x, uint32_t shift);
@@ -77,6 +77,7 @@ static int dataProcessing(PinkySimContext* pContext, uint16_t instr);
 static int andRegister(PinkySimContext* pContext, uint16_t instr);
 static int eorRegister(PinkySimContext* pContext, uint16_t instr);
 static int lslRegister(PinkySimContext* pContext, uint16_t instr);
+static int lsrRegister(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -186,7 +187,7 @@ static DecodedImmShift DecodeImmShift(uint32_t typeBits, uint32_t imm5)
     return results;
 }
 
-static ShiftResults Shift_C(uint32_t value, SRType type, uint32_t amount, uint32_t carry_in)
+static ShiftResults Shift_C(uint32_t value, SRType type, uint32_t amount, uint32_t carryIn)
 {
     ShiftResults results;
 
@@ -195,7 +196,7 @@ static ShiftResults Shift_C(uint32_t value, SRType type, uint32_t amount, uint32
     if (amount == 0)
     {
         results.result = value;
-        results.carryOut = 0;
+        results.carryOut = carryIn;
     }
     else
     {
@@ -232,10 +233,10 @@ static ShiftResults LSR_C(uint32_t x, uint32_t shift)
 {
     ShiftResults results;
     
-    assert (shift > 0 && shift <= 32);
+    assert (shift > 0);
 
-    results.carryOut = (x & (1 << (shift - 1)));
-    results.result = (shift == 32) ? 0 : x >> shift;
+    results.carryOut = (shift > 32) ? 0 : (x & (1 << (shift - 1)));
+    results.result = (shift > 31) ? 0 : x >> shift;
     return results;
 }
 
@@ -608,6 +609,8 @@ static int dataProcessing(PinkySimContext* pContext, uint16_t instr)
         return eorRegister(pContext, instr);
     case 2:
         return lslRegister(pContext, instr);
+    case 3:
+        return lsrRegister(pContext, instr);
     default:
         return PINKYSIM_STEP_UNDEFINED;
     }
@@ -690,6 +693,36 @@ static int lslRegister(PinkySimContext* pContext, uint16_t instr)
 
         shiftN = getReg(pContext, m) & 0xFF;
         shiftResults = Shift_C(getReg(pContext, n), SRType_LSL, shiftN, pContext->xPSR & APSR_C);
+        setReg(pContext, d, shiftResults.result);
+        if (setFlags)
+        {
+            pContext->xPSR &= ~APSR_NZC;
+            if (shiftResults.result & (1 << 31))
+                pContext->xPSR |= APSR_N;
+            if (shiftResults.result == 0)
+                pContext->xPSR |= APSR_Z;
+            if (shiftResults.carryOut)
+                pContext->xPSR |= APSR_C;
+        }
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+
+static int lsrRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = instr & 0x7;
+        uint32_t        n = d;
+        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+        int             setFlags = !InITBlock(pContext);
+        uint32_t        shiftN;
+        ShiftResults    shiftResults;
+
+        shiftN = getReg(pContext, m) & 0xFF;
+        shiftResults = Shift_C(getReg(pContext, n), SRType_LSR, shiftN, pContext->xPSR & APSR_C);
         setReg(pContext, d, shiftResults.result);
         if (setFlags)
         {
