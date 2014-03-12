@@ -76,6 +76,7 @@ static int subImmediateT2(PinkySimContext* pContext, uint16_t instr);
 static int dataProcessing(PinkySimContext* pContext, uint16_t instr);
 static int andRegister(PinkySimContext* pContext, uint16_t instr);
 static int eorRegister(PinkySimContext* pContext, uint16_t instr);
+static int lslRegister(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -222,10 +223,8 @@ static ShiftResults LSL_C(uint32_t x, uint32_t shift)
 {
     ShiftResults results;
     
-    assert (shift < 32);
-
-    results.carryOut = (x & (1 << (32 - shift)));
-    results.result = x << shift;
+    results.carryOut = (shift > 32) ? 0 : x & (1 << (32 - shift));
+    results.result = (shift > 31) ? 0 : x << shift;
     return results;
 }
 
@@ -607,6 +606,8 @@ static int dataProcessing(PinkySimContext* pContext, uint16_t instr)
         return andRegister(pContext, instr);
     case 1:
         return eorRegister(pContext, instr);
+    case 2:
+        return lslRegister(pContext, instr);
     default:
         return PINKYSIM_STEP_UNDEFINED;
     }
@@ -670,6 +671,35 @@ static int eorRegister(PinkySimContext* pContext, uint16_t instr)
             // UNDONE: Carry will always be 0 since it is the result of Rn << 0.
             //if (shiftResults.carryOut)
             //    pContext->xPSR |= APSR_C;
+        }
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int lslRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = instr & 0x7;
+        uint32_t        n = d;
+        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+        int             setFlags = !InITBlock(pContext);
+        uint32_t        shiftN;
+        ShiftResults    shiftResults;
+
+        shiftN = getReg(pContext, m) & 0xFF;
+        shiftResults = Shift_C(getReg(pContext, n), SRType_LSL, shiftN, pContext->xPSR & APSR_C);
+        setReg(pContext, d, shiftResults.result);
+        if (setFlags)
+        {
+            pContext->xPSR &= ~APSR_NZC;
+            if (shiftResults.result & (1 << 31))
+                pContext->xPSR |= APSR_N;
+            if (shiftResults.result == 0)
+                pContext->xPSR |= APSR_Z;
+            if (shiftResults.carryOut)
+                pContext->xPSR |= APSR_C;
         }
     }
 
