@@ -73,6 +73,8 @@ static int movImmediate(PinkySimContext* pContext, uint16_t instr);
 static int cmpImmediate(PinkySimContext* pContext, uint16_t instr);
 static int addImmediateT2(PinkySimContext* pContext, uint16_t instr);
 static int subImmediateT2(PinkySimContext* pContext, uint16_t instr);
+static int dataProcessing(PinkySimContext* pContext, uint16_t instr);
+static int andRegister(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -81,6 +83,8 @@ int pinkySimStep(PinkySimContext* pContext)
     pContext->instr1 = instr;
     if ((instr & 0xC000) == 0x0000)
         return shiftAddSubtractMoveCompare(pContext, instr);
+    else if ((instr & 0xFC00) == 0x4000)
+        return dataProcessing(pContext, instr);
 
     return PINKYSIM_STEP_UNDEFINED;
 }
@@ -588,6 +592,46 @@ static int subImmediateT2(PinkySimContext* pContext, uint16_t instr)
                 pContext->xPSR |= APSR_C;
             if (addResults.overflow)
                 pContext->xPSR |= APSR_V;
+        }
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int dataProcessing(PinkySimContext* pContext, uint16_t instr)
+{
+    if ((instr & 0x03C0) == 0x0000)
+        return andRegister(pContext, instr);
+    else
+        return PINKYSIM_STEP_UNDEFINED;
+}
+
+static int andRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = instr & 0x7;
+        uint32_t        n = d;
+        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+        int             setFlags = !InITBlock(pContext);
+        DecodedImmShift decodedShift = {SRType_LSL, 0};
+        ShiftResults    shiftResults;
+        uint32_t        result;
+        
+        // UNDONE: Only Thumb2 instructions require this shifted value.
+        shiftResults = Shift_C(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
+        result = getReg(pContext, n) & shiftResults.result;
+        setReg(pContext, d, result);
+        if (setFlags)
+        {
+            pContext->xPSR &= ~APSR_NZC;
+            if (result & (1 << 31))
+                pContext->xPSR |= APSR_N;
+            if (result == 0)
+                pContext->xPSR |= APSR_Z;
+            // UNDONE: Carry will always be 0 since it is the result of Rn << 0.
+            //if (shiftResults.carryOut)
+            //    pContext->xPSR |= APSR_C;
         }
     }
 
