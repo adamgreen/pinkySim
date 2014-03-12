@@ -280,7 +280,7 @@ static int lsrImmediate(PinkySimContext* pContext, uint16_t instr)
         if (setFlags)
         {
             pContext->xPSR &= ~APSR_NZC;
-            // The N flag is always cleared from a logical right shift.  Improve coverage by removing code.
+            // UNDONE: The N flag is always cleared from a logical right shift.  Improve coverage by removing code.
             //if (shiftResults.result & (1 << 31))
             //    pContext->xPSR |= APSR_N;
             if (shiftResults.result == 0)
@@ -493,8 +493,10 @@ static int movImmediate(PinkySimContext* pContext, uint16_t instr)
         if (setFlags)
         {
             pContext->xPSR &= ~APSR_NZC;
-            if (result & (1 << 31))
-                pContext->xPSR |= APSR_N;
+            
+            // UNDONE: Can't move negative values with MOV immedate (only immediates 0 - 255).
+            //if (result & (1 << 31))
+            //    pContext->xPSR |= APSR_N;
             if (result == 0)
                 pContext->xPSR |= APSR_Z;
             if (carry)
