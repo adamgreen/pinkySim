@@ -29,10 +29,11 @@ TEST_GROUP_BASE(eorRegister, pinkySimBase)
 
 /* EOR - Register
    Encoding: 010000 0001 Rm:3 Rdn:3 */
+/* NOTE: APSR_C state is maintained by this instruction. */
 TEST(eorRegister, UseLowestRegisterForBothArgsAndResultShouldBeZero)
 {
     emitInstruction16("0100000001mmmddd", R0, R0);
-    setExpectedAPSRflags("nZc");
+    setExpectedAPSRflags("nZ");
     setExpectedRegisterValue(R0, 0);
     pinkySimStep(&m_context);
 }
@@ -40,7 +41,7 @@ TEST(eorRegister, UseLowestRegisterForBothArgsAndResultShouldBeZero)
 TEST(eorRegister, UseHighestRegisterForBothArgsAndResultShouldBeZero)
 {
     emitInstruction16("0100000001mmmddd", R7, R7);
-    setExpectedAPSRflags("nZc");
+    setExpectedAPSRflags("nZ");
     setExpectedRegisterValue(R7, 0);
     pinkySimStep(&m_context);
 }
@@ -48,7 +49,7 @@ TEST(eorRegister, UseHighestRegisterForBothArgsAndResultShouldBeZero)
 TEST(eorRegister, XorR3andR7)
 {
     emitInstruction16("0100000001mmmddd", R3, R7);
-    setExpectedAPSRflags("nzc");
+    setExpectedAPSRflags("nz");
     setExpectedRegisterValue(R7, 0x33333333 ^ 0x77777777);
     pinkySimStep(&m_context);
 }
@@ -57,7 +58,7 @@ TEST(eorRegister, UseXorToJustFlipNegativeSignBitOn)
 {
     emitInstruction16("0100000001mmmddd", R7, R3);
     setRegisterValue(R7, 0x80000000);
-    setExpectedAPSRflags("Nzc");
+    setExpectedAPSRflags("Nz");
     setExpectedRegisterValue(R3, 0x33333333 ^ 0x80000000);
     pinkySimStep(&m_context);
 }

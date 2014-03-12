@@ -639,9 +639,8 @@ static int andRegister(PinkySimContext* pContext, uint16_t instr)
                 pContext->xPSR |= APSR_N;
             if (result == 0)
                 pContext->xPSR |= APSR_Z;
-            // UNDONE: Carry will always be 0 since it is the result of Rn << 0.
-            //if (shiftResults.carryOut)
-            //    pContext->xPSR |= APSR_C;
+            if (shiftResults.carryOut)
+                pContext->xPSR |= APSR_C;
         }
     }
 
@@ -671,9 +670,8 @@ static int eorRegister(PinkySimContext* pContext, uint16_t instr)
                 pContext->xPSR |= APSR_N;
             if (result == 0)
                 pContext->xPSR |= APSR_Z;
-            // UNDONE: Carry will always be 0 since it is the result of Rn << 0.
-            //if (shiftResults.carryOut)
-            //    pContext->xPSR |= APSR_C;
+            if (shiftResults.carryOut)
+                pContext->xPSR |= APSR_C;
         }
     }
 
