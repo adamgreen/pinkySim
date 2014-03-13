@@ -80,6 +80,7 @@ static int lslRegister(PinkySimContext* pContext, uint16_t instr);
 static int lsrRegister(PinkySimContext* pContext, uint16_t instr);
 static int asrRegister(PinkySimContext* pContext, uint16_t instr);
 static int adcRegister(PinkySimContext* pContext, uint16_t instr);
+static int sbcRegister(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -627,6 +628,8 @@ static int dataProcessing(PinkySimContext* pContext, uint16_t instr)
         return asrRegister(pContext, instr);
     case 5:
         return adcRegister(pContext, instr);
+    case 6:
+        return sbcRegister(pContext, instr);
     default:
         return PINKYSIM_STEP_UNDEFINED;
     }
@@ -796,6 +799,39 @@ static int adcRegister(PinkySimContext* pContext, uint16_t instr)
         // UNDONE: Only Thumb2 instructions require this shifted value.
         shifted = Shift(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
         addResults = AddWithCarry(getReg(pContext, n), shifted, pContext->xPSR & APSR_C);
+        setReg(pContext, d, addResults.result);
+        if (setFlags)
+        {
+            pContext->xPSR &= ~APSR_NZCV;
+            if (addResults.result & (1 << 31))
+                pContext->xPSR |= APSR_N;
+            if (addResults.result == 0)
+                pContext->xPSR |= APSR_Z;
+            if (addResults.carryOut)
+                pContext->xPSR |= APSR_C;
+            if (addResults.overflow)
+                pContext->xPSR |= APSR_V;
+        }
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int sbcRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = instr & 0x7;
+        uint32_t        n = d;
+        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+        int             setFlags = !InITBlock(pContext);
+        DecodedImmShift decodedShift = {SRType_LSL, 0};
+        uint32_t        shifted;
+        AddResults      addResults;
+        
+        // UNDONE: Only Thumb2 instructions require this shifted value.
+        shifted = Shift(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
+        addResults = AddWithCarry(getReg(pContext, n), ~shifted, pContext->xPSR & APSR_C);
         setReg(pContext, d, addResults.result);
         if (setFlags)
         {
