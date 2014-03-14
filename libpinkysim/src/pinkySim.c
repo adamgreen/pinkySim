@@ -88,6 +88,7 @@ static int rorRegister(PinkySimContext* pContext, uint16_t instr);
 static int tstRegister(PinkySimContext* pContext, uint16_t instr);
 static int rsbRegister(PinkySimContext* pContext, uint16_t instr);
 static int cmpRegisterT1(PinkySimContext* pContext, uint16_t instr);
+static int cmnRegister(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -686,6 +687,8 @@ static int dataProcessing(PinkySimContext* pContext, uint16_t instr)
         return rsbRegister(pContext, instr);
     case 10:
         return cmpRegisterT1(pContext, instr);
+    case 11:
+        return cmnRegister(pContext, instr);
     default:
         return PINKYSIM_STEP_UNDEFINED;
     }
@@ -1002,6 +1005,33 @@ static int cmpRegisterT1(PinkySimContext* pContext, uint16_t instr)
         // UNDONE: Only Thumb2 instructions require this shifted value.
         shifted = Shift(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
         addResults = AddWithCarry(getReg(pContext, n), ~shifted, 1);
+        pContext->xPSR &= ~APSR_NZCV;
+        if (addResults.result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (addResults.result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (addResults.carryOut)
+            pContext->xPSR |= APSR_C;
+        if (addResults.overflow)
+            pContext->xPSR |= APSR_V;
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int cmnRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        n = instr & 0x7;
+        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+        DecodedImmShift decodedShift = {SRType_LSL, 0};
+        uint32_t        shifted;
+        AddResults      addResults;
+        
+        // UNDONE: Only Thumb2 instructions require this shifted value.
+        shifted = Shift(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
+        addResults = AddWithCarry(getReg(pContext, n), shifted, 0);
         pContext->xPSR &= ~APSR_NZCV;
         if (addResults.result & (1 << 31))
             pContext->xPSR |= APSR_N;
