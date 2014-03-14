@@ -718,7 +718,7 @@ static int andRegister(PinkySimContext* pContext, uint16_t instr)
         ShiftResults    shiftResults;
         uint32_t        result;
         
-        // UNDONE: Only Thumb2 instructions require this shifted value.
+        // UNDONE: Only Thumb2 instructions require this shifted value but it is used to make carryOut == carryIn
         shiftResults = Shift_C(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
         result = getReg(pContext, n) & shiftResults.result;
         setReg(pContext, d, result);
@@ -749,7 +749,7 @@ static int eorRegister(PinkySimContext* pContext, uint16_t instr)
         ShiftResults    shiftResults;
         uint32_t        result;
         
-        // UNDONE: Only Thumb2 instructions require this shifted value.
+        // UNDONE: Only Thumb2 instructions require this shifted value but it is used to make carryOut == carryIn
         shiftResults = Shift_C(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
         result = getReg(pContext, n) ^ shiftResults.result;
         setReg(pContext, d, result);
@@ -960,7 +960,7 @@ static int tstRegister(PinkySimContext* pContext, uint16_t instr)
         ShiftResults    shiftResults;
         uint32_t        result;
         
-        // UNDONE: Only Thumb2 instructions require this shifted value but the carry is used below.
+        // UNDONE: Only Thumb2 instructions require this shifted value but it is used to make carryOut == carryIn
         shiftResults = Shift_C(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
         result = getReg(pContext, n) & shiftResults.result;
         pContext->xPSR &= ~APSR_NZC;
@@ -1070,7 +1070,7 @@ static int orrRegister(PinkySimContext* pContext, uint16_t instr)
         ShiftResults    shiftResults;
         uint32_t        result;
         
-        // UNDONE: Only Thumb2 instructions require this shifted value but the carry is passed through it.
+        // UNDONE: Only Thumb2 instructions require this shifted value but it is used to make carryOut == carryIn
         shiftResults = Shift_C(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
         result = getReg(pContext, n) | shiftResults.result;
         setReg(pContext, d, result);
@@ -1127,7 +1127,7 @@ static int bicRegister(PinkySimContext* pContext, uint16_t instr)
         ShiftResults    shiftResults;
         uint32_t        result;
         
-        // UNDONE: Only Thumb2 instructions require this shifted value.
+        // UNDONE: Only Thumb2 instructions require this shifted value but it is used to make carryOut == carryIn
         shiftResults = Shift_C(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
         result = getReg(pContext, n) & ~shiftResults.result;
         setReg(pContext, d, result);
@@ -1157,7 +1157,7 @@ static int mvnRegister(PinkySimContext* pContext, uint16_t instr)
         ShiftResults    shiftResults;
         uint32_t        result;
         
-        // UNDONE: Only Thumb2 instructions require this shifted value.
+        // UNDONE: Only Thumb2 instructions require this shifted value but it is used to make carryOut == carryIn
         shiftResults = Shift_C(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
         result = ~shiftResults.result;
         setReg(pContext, d, result);
