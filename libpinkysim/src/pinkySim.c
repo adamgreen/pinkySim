@@ -90,6 +90,7 @@ static int rsbRegister(PinkySimContext* pContext, uint16_t instr);
 static int cmpRegisterT1(PinkySimContext* pContext, uint16_t instr);
 static int cmnRegister(PinkySimContext* pContext, uint16_t instr);
 static int orrRegister(PinkySimContext* pContext, uint16_t instr);
+static int mulRegister(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -692,6 +693,8 @@ static int dataProcessing(PinkySimContext* pContext, uint16_t instr)
         return cmnRegister(pContext, instr);
     case 12:
         return orrRegister(pContext, instr);
+    case 13:
+        return mulRegister(pContext, instr);
     default:
         return PINKYSIM_STEP_UNDEFINED;
     }
@@ -1074,6 +1077,32 @@ static int orrRegister(PinkySimContext* pContext, uint16_t instr)
                 pContext->xPSR |= APSR_Z;
             if (shiftResults.carryOut)
                 pContext->xPSR |= APSR_C;
+        }
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int mulRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = instr & 0x7;
+        uint32_t        m = d;
+        uint32_t        n = (instr & (0x7 << 3)) >> 3;
+        int             setFlags = !InITBlock(pContext);
+        uint32_t        operand1 = getReg(pContext, n);
+        uint32_t        operand2 = getReg(pContext, m);
+        uint32_t        result = operand1 * operand2;
+        
+        setReg(pContext, d, result);
+        if (setFlags)
+        {
+            pContext->xPSR &= ~APSR_NZ;
+            if (result & (1 << 31))
+                pContext->xPSR |= APSR_N;
+            if (result == 0)
+                pContext->xPSR |= APSR_Z;
         }
     }
 
