@@ -92,6 +92,7 @@ static int cmnRegister(PinkySimContext* pContext, uint16_t instr);
 static int orrRegister(PinkySimContext* pContext, uint16_t instr);
 static int mulRegister(PinkySimContext* pContext, uint16_t instr);
 static int bicRegister(PinkySimContext* pContext, uint16_t instr);
+static int mvnRegister(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -698,6 +699,8 @@ static int dataProcessing(PinkySimContext* pContext, uint16_t instr)
         return mulRegister(pContext, instr);
     case 14:
         return bicRegister(pContext, instr);
+    case 15:
+        return mvnRegister(pContext, instr);
     default:
         return PINKYSIM_STEP_UNDEFINED;
     }
@@ -1127,6 +1130,36 @@ static int bicRegister(PinkySimContext* pContext, uint16_t instr)
         // UNDONE: Only Thumb2 instructions require this shifted value.
         shiftResults = Shift_C(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
         result = getReg(pContext, n) & ~shiftResults.result;
+        setReg(pContext, d, result);
+        if (setFlags)
+        {
+            pContext->xPSR &= ~APSR_NZC;
+            if (result & (1 << 31))
+                pContext->xPSR |= APSR_N;
+            if (result == 0)
+                pContext->xPSR |= APSR_Z;
+            if (shiftResults.carryOut)
+                pContext->xPSR |= APSR_C;
+        }
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int mvnRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = instr & 0x7;
+        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+        int             setFlags = !InITBlock(pContext);
+        DecodedImmShift decodedShift = {SRType_LSL, 0};
+        ShiftResults    shiftResults;
+        uint32_t        result;
+        
+        // UNDONE: Only Thumb2 instructions require this shifted value.
+        shiftResults = Shift_C(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
+        result = ~shiftResults.result;
         setReg(pContext, d, result);
         if (setFlags)
         {
