@@ -85,6 +85,7 @@ static int asrRegister(PinkySimContext* pContext, uint16_t instr);
 static int adcRegister(PinkySimContext* pContext, uint16_t instr);
 static int sbcRegister(PinkySimContext* pContext, uint16_t instr);
 static int rorRegister(PinkySimContext* pContext, uint16_t instr);
+static int tstRegister(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -677,6 +678,8 @@ static int dataProcessing(PinkySimContext* pContext, uint16_t instr)
         return sbcRegister(pContext, instr);
     case 7:
         return rorRegister(pContext, instr);
+    case 8:
+        return tstRegister(pContext, instr);
     default:
         return PINKYSIM_STEP_UNDEFINED;
     }
@@ -921,6 +924,31 @@ static int rorRegister(PinkySimContext* pContext, uint16_t instr)
             if (shiftResults.carryOut)
                 pContext->xPSR |= APSR_C;
         }
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int tstRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        n = instr & 0x7;
+        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+        DecodedImmShift decodedShift = {SRType_LSL, 0};
+        ShiftResults    shiftResults;
+        uint32_t        result;
+        
+        // UNDONE: Only Thumb2 instructions require this shifted value but the carry is used below.
+        shiftResults = Shift_C(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
+        result = getReg(pContext, n) & shiftResults.result;
+        pContext->xPSR &= ~APSR_NZC;
+        if (result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (shiftResults.carryOut)
+            pContext->xPSR |= APSR_C;
     }
 
     return PINKYSIM_STEP_OK;
