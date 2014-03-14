@@ -59,6 +59,9 @@ static ShiftResults Shift_C(uint32_t value, SRType type, uint32_t amount, uint32
 static ShiftResults LSL_C(uint32_t x, uint32_t shift);
 static ShiftResults LSR_C(uint32_t x, uint32_t shift);
 static ShiftResults ASR_C(uint32_t x, uint32_t shift);
+static ShiftResults ROR_C(uint32_t x, uint32_t shift);
+static uint32_t LSR(uint32_t x, uint32_t shift);
+static uint32_t LSL(uint32_t x, uint32_t shift);
 static uint32_t getReg(const PinkySimContext* pContext, uint32_t reg);
 static void setReg(PinkySimContext* pContext, uint32_t reg, uint32_t value);
 static int lsrImmediate(PinkySimContext* pContext, uint16_t instr);
@@ -81,6 +84,7 @@ static int lsrRegister(PinkySimContext* pContext, uint16_t instr);
 static int asrRegister(PinkySimContext* pContext, uint16_t instr);
 static int adcRegister(PinkySimContext* pContext, uint16_t instr);
 static int sbcRegister(PinkySimContext* pContext, uint16_t instr);
+static int rorRegister(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -214,8 +218,10 @@ static ShiftResults Shift_C(uint32_t value, SRType type, uint32_t amount, uint32
         case SRType_ASR:
             results = ASR_C(value, amount);
             break;
-        case SRType_RRX:
         case SRType_ROR:
+            results = ROR_C(value, amount);
+            break;
+        case SRType_RRX:
             // UNDONE: Actually implement these modes as tests progress.
             assert ( FALSE );
         }
@@ -272,6 +278,45 @@ static ShiftResults ASR_C(uint32_t x, uint32_t shift)
         results.result = (uint32_t)((int32_t)x >> shift);
     }
     return results;
+}
+
+static ShiftResults ROR_C(uint32_t x, uint32_t shift)
+{
+    uint32_t     m;
+    ShiftResults results;
+    
+    assert (shift != 0);
+
+    m = shift & 31U;
+    results.result = LSR(x, m) | LSL(x, 32-m);
+    results.carryOut = results.result & (1 << 31);
+    return results;
+}
+
+static uint32_t LSR(uint32_t x, uint32_t shift)
+{
+    ShiftResults results = {0, 0};
+    
+    assert (shift >= 0);
+    
+    if (shift == 0)
+        results.result = x;
+    else
+        results = LSR_C(x, shift);
+    return results.result;
+}
+
+static uint32_t LSL(uint32_t x, uint32_t shift)
+{
+    ShiftResults results = {0, 0};
+    
+    assert (shift >= 0);
+    
+    if (shift == 0)
+        results.result = x;
+    else
+        results = LSL_C(x, shift);
+    return results.result;
 }
 
 static uint32_t getReg(const PinkySimContext* pContext, uint32_t reg)
@@ -630,6 +675,8 @@ static int dataProcessing(PinkySimContext* pContext, uint16_t instr)
         return adcRegister(pContext, instr);
     case 6:
         return sbcRegister(pContext, instr);
+    case 7:
+        return rorRegister(pContext, instr);
     default:
         return PINKYSIM_STEP_UNDEFINED;
     }
@@ -844,6 +891,35 @@ static int sbcRegister(PinkySimContext* pContext, uint16_t instr)
                 pContext->xPSR |= APSR_C;
             if (addResults.overflow)
                 pContext->xPSR |= APSR_V;
+        }
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int rorRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = instr & 0x7;
+        uint32_t        n = d;
+        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+        int             setFlags = !InITBlock(pContext);
+        uint32_t        shiftN;
+        ShiftResults    shiftResults;
+
+        shiftN = getReg(pContext, m) & 0xFF;
+        shiftResults = Shift_C(getReg(pContext, n), SRType_ROR, shiftN, pContext->xPSR & APSR_C);
+        setReg(pContext, d, shiftResults.result);
+        if (setFlags)
+        {
+            pContext->xPSR &= ~APSR_NZC;
+            if (shiftResults.result & (1 << 31))
+                pContext->xPSR |= APSR_N;
+            if (shiftResults.result == 0)
+                pContext->xPSR |= APSR_Z;
+            if (shiftResults.carryOut)
+                pContext->xPSR |= APSR_C;
         }
     }
 
