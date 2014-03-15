@@ -99,6 +99,7 @@ static void ALUWritePC(PinkySimContext* pContext, uint32_t address);
 static void BranchWritePC(PinkySimContext* pContext, uint32_t address);
 static void BranchTo(PinkySimContext* pContext, uint32_t address);
 static int cmpRegisterT2(PinkySimContext* pContext, uint16_t instr);
+static int movRegister(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -1211,6 +1212,8 @@ static int specialDataAndBranchExchange(PinkySimContext* pContext, uint16_t inst
     else if (((instr & 0x03C0) == 0x0140) ||
              ((instr & 0x0380) == 0x0180))
         return cmpRegisterT2(pContext, instr);
+    else if ((instr & 0x0300) == 0x0200)
+        return movRegister(pContext, instr);
     else
         return PINKYSIM_STEP_UNDEFINED;
 }
@@ -1308,6 +1311,45 @@ static int cmpRegisterT2(PinkySimContext* pContext, uint16_t instr)
             pContext->xPSR |= APSR_C;
         if (addResults.overflow)
             pContext->xPSR |= APSR_V;
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int movRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = ((instr & (1 << 7)) >> 4) | (instr & 0x7);
+        uint32_t        m = (instr & (0xF << 3)) >> 3;
+        // UNDONE: Not required for this encoding.
+        //int             setFlags = FALSE;
+        uint32_t        result;
+
+        result = getReg(pContext, m);
+        if (d == 15)
+        {
+            ALUWritePC(pContext, result);
+        }
+        else
+        {
+            setReg(pContext, d, result);
+            // UNDONE: setFlags is forced to FALSE for this encoding.
+#ifdef UNDONE
+            if (setFlags)
+            {
+                pContext->xPSR &= ~APSR_NZCV;
+                if (addResults.result & (1 << 31))
+                    pContext->xPSR |= APSR_N;
+                if (addResults.result == 0)
+                    pContext->xPSR |= APSR_Z;
+                if (addResults.carryOut)
+                    pContext->xPSR |= APSR_C;
+                if (addResults.overflow)
+                    pContext->xPSR |= APSR_V;
+            }
+#endif // UNDONE
+        }
     }
 
     return PINKYSIM_STEP_OK;
