@@ -32,16 +32,18 @@ TEST_GROUP_BASE(bicRegister, pinkySimBase)
 TEST(bicRegister, UseLowestRegisterForBothArgs)
 {
     emitInstruction16("0100001110mmmddd", R0, R0);
-    setExpectedAPSRflags("nZ");
+    setExpectedAPSRflags("nZc");
     setExpectedRegisterValue(R0, 0);
+    clearCarry();
     pinkySimStep(&m_context);
 }
 
 TEST(bicRegister, UseHighestRegisterForBothArgs)
 {
     emitInstruction16("0100001110mmmddd", R7, R7);
-    setExpectedAPSRflags("nZ");
+    setExpectedAPSRflags("nZC");
     setExpectedRegisterValue(R7, 0);
+    setCarry();
     pinkySimStep(&m_context);
 }
 
