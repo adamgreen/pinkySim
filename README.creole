@@ -1,8 +1,9 @@
 ==Work in Progress!
 
+
 ==How to Clone
-This project uses submodules (CppUTest for unit testing).  Cloning
-requires a few more steps to get all of the necessary code.
+This project uses submodules (CppUTest for unit testing).  Cloning requires a few more steps to get all of the necessary
+code.
 
 {{{
 git clone git@github.com:adamgreen/pinkySim.git
@@ -16,3 +17,18 @@ git submodule update
 {{{
 git clone --recursive git@github.com:adamgreen/pinkySim.git
 }}}
+
+
+==Important Notes
+Due to the intended use of this simulator, there are several ARMV6-m architectural features which aren't implemented:
+* **Not cycle accurate:** The simulator just executes instructions as it encounters them in the code stream and has no
+  knowledge of clock cycles.
+* **No memory mapped peripherals:** The simulator just issues read/writes to memory.  It doesn't attempt to map special
+  memory regions to peripheral registers.  This includes the ARMV6-m specified peripherals such as the NVIC.
+* **Doesn't support exception/interrupts:** If the simulator encounters an instruction which would throw an exception,
+  it just returns a non-zero return value from the pinkySimStep() routine.  As the simulator doesn't attempt to provide
+  any implementation of peripherals, it also doesn't implement support for interrupts that might occur from such
+  peripherals.
+* **Only runs in Privileged Thread mode:** The simulator doesn't support the switching of the processor into
+  Unprivileged mode.  Since exceptions aren't supported, the processor can never enter Handler mode either.
+* **Main SP only:** The simulator doesn't support switching to the process stack pointer.
