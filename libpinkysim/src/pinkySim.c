@@ -105,7 +105,6 @@ int pinkySimStep(PinkySimContext* pContext)
     int      result = PINKYSIM_STEP_UNDEFINED;
     uint16_t instr = (uint16_t)pContext->memory;
 
-    pContext->instr1 = instr;
     // UNDONE: This is specific to 16-bit instructions.
     pContext->newPC = pContext->pc + 2;
     if ((instr & 0xC000) == 0x0000)

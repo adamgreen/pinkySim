@@ -56,7 +56,6 @@ typedef struct PinkySimContext
     uint32_t newPC;
     uint32_t xPSR;
     uint32_t memory; /* UNDONE: To be refactored out with additional tests. */
-    uint16_t instr1;
 } PinkySimContext;
 
 
