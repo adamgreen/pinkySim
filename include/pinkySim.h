@@ -29,7 +29,7 @@
 #define APSR_NC     (APSR_N | APSR_C)
 #define APSR_ZC     (APSR_Z | APSR_C)
 
-/* Register indices into PinkySimContext::R array. */
+/* Register names / indices into PinkySimContext::R array for first 13 registers. */
 #define R0  0
 #define R1  1
 #define R2  2
@@ -43,10 +43,17 @@
 #define R10 10
 #define R11 11
 #define R12 12
+#define SP  13
+#define LR  14
+#define PC  15
 
 typedef struct PinkySimContext
 {
     uint32_t R[13];
+    uint32_t lr;
+    uint32_t spMain;
+    uint32_t pc;
+    uint32_t newPC;
     uint32_t xPSR;
     uint32_t memory; /* UNDONE: To be refactored out with additional tests. */
     uint16_t instr1;
@@ -56,6 +63,7 @@ typedef struct PinkySimContext
 /* Values that can be returned from the pinkSimStep() function. */
 #define PINKYSIM_STEP_OK            0   /* Executed instruction successfully. */
 #define PINKYSIM_STEP_UNDEFINED     1   /* Encountered undefined instruction. */
+#define PINKYSIM_STEP_UNPREDICTABLE 2   /* Encountered instruction with unpredictable behaviour. */
 
 
 int pinkySimStep(PinkySimContext* pContext);

@@ -27,9 +27,9 @@ TEST_GROUP_BASE(addRegister, pinkySimBase)
 };
 
 
-/* ADD - Register
+/* ADD - Register - Encoding T1
    Encoding: 000 11 0 0 Rm:3 Rn:3 Rd:3 */
-TEST(addRegister, UseR1ForAllArgsAndCarryOverflowZeroNegativeFlagsShouldBeClear)
+TEST(addRegister, T1UseR1ForAllArgsAndCarryOverflowZeroNegativeFlagsShouldBeClear)
 {
     emitInstruction16("0001100mmmnnnddd", R1, R1, R1);
     setExpectedAPSRflags("nzcv");
@@ -37,7 +37,7 @@ TEST(addRegister, UseR1ForAllArgsAndCarryOverflowZeroNegativeFlagsShouldBeClear)
     pinkySimStep(&m_context);
 }
 
-TEST(addRegister, UseLowestRegisterForAllArgsAndOnlyZeroFlagShouldBeSet)
+TEST(addRegister, T1UseLowestRegisterForAllArgsAndOnlyZeroFlagShouldBeSet)
 {
     emitInstruction16("0001100mmmnnnddd", R0, R0, R0);
     setExpectedAPSRflags("nZcv");
@@ -45,7 +45,7 @@ TEST(addRegister, UseLowestRegisterForAllArgsAndOnlyZeroFlagShouldBeSet)
     pinkySimStep(&m_context);
 }
 
-TEST(addRegister, UseHigestRegisterForAllArgsAndWillBeNegativeBecauseOfOverflow)
+TEST(addRegister, T1UseHigestRegisterForAllArgsAndWillBeNegativeBecauseOfOverflow)
 {
     emitInstruction16("0001100mmmnnnddd", R7, R7, R7);
     setExpectedAPSRflags("NzcV");
@@ -53,7 +53,7 @@ TEST(addRegister, UseHigestRegisterForAllArgsAndWillBeNegativeBecauseOfOverflow)
     pinkySimStep(&m_context);
 }
 
-TEST(addRegister, UseDifferentRegistersForEachArg)
+TEST(addRegister, T1UseDifferentRegistersForEachArg)
 {
     emitInstruction16("0001100mmmnnnddd", R1, R2, R0);
     setExpectedAPSRflags("nzcv");
@@ -61,7 +61,7 @@ TEST(addRegister, UseDifferentRegistersForEachArg)
     pinkySimStep(&m_context);
 }
 
-TEST(addRegister, ForceCarryWithNoOverflow)
+TEST(addRegister, T1ForceCarryWithNoOverflow)
 {
     emitInstruction16("0001100mmmnnnddd", R1, R2, R0);
     setExpectedAPSRflags("nZCv");
@@ -71,12 +71,115 @@ TEST(addRegister, ForceCarryWithNoOverflow)
     pinkySimStep(&m_context);
 }
 
-TEST(addRegister, ForceCarryAndOverflow)
+TEST(addRegister, T1ForceCarryAndOverflow)
 {
     emitInstruction16("0001100mmmnnnddd", R1, R2, R0);
     setExpectedAPSRflags("nzCV");
     setRegisterValue(R1, -1);
     setRegisterValue(R2, 0x80000000U);
     setExpectedRegisterValue(R0, -1 + (int32_t)0x80000000U);
+    pinkySimStep(&m_context);
+}
+
+
+
+/* ADD - Register - Encoding T2
+   Encoding: 010001 00 DN:1 Rm:4 Rdn:3 
+   NOTE: Shouldn't modify any of the APSR flags.*/
+TEST(addRegister, T2UseR1ForAllArgs)
+{
+    emitInstruction16("01000100dmmmmddd", R1, R1);
+    setExpectedRegisterValue(R1, 0x11111111U + 0x11111111U);
+    pinkySimStep(&m_context);
+}
+
+TEST(addRegister, T2UseLowestRegisterForAllArgs)
+{
+    emitInstruction16("01000100dmmmmddd", R0, R0);
+    setExpectedRegisterValue(R0, 0U);
+    pinkySimStep(&m_context);
+}
+
+TEST(addRegister, T2UseR12ForAllArgs)
+{
+    emitInstruction16("01000100dmmmmddd", R12, R12);
+    setExpectedRegisterValue(R12, 0xCCCCCCCCU + 0xCCCCCCCCU);
+    pinkySimStep(&m_context);
+}
+
+TEST(addRegister, T2UseDifferentRegistersForEachArg)
+{
+    emitInstruction16("01000100dmmmmddd", R2, R1);
+    setExpectedRegisterValue(R2, 0x11111111U + 0x22222222U);
+    pinkySimStep(&m_context);
+}
+
+TEST(addRegister, T2ForceCarryWithNoOverflow)
+{
+    emitInstruction16("01000100dmmmmddd", R2, R1);
+    setRegisterValue(R1, -1);
+    setRegisterValue(R2, 1);
+    setExpectedRegisterValue(R2, -1 + 1);
+    pinkySimStep(&m_context);
+}
+
+TEST(addRegister, T2ForceCarryAndOverflow)
+{
+    emitInstruction16("01000100dmmmmddd", R2, R1);
+    setRegisterValue(R1, -1);
+    setRegisterValue(R2, 0x80000000U);
+    setExpectedRegisterValue(R2, -1 + (int32_t)0x80000000U);
+    pinkySimStep(&m_context);
+}
+
+TEST(addRegister, T2Add1ToSP)
+{
+    emitInstruction16("01000100dmmmmddd", SP, R1);
+    setRegisterValue(SP, 0x10008000);
+    setRegisterValue(R1, 1);
+    setExpectedRegisterValue(SP, 0x10008000 + 1);
+    pinkySimStep(&m_context);
+}
+
+TEST(addRegister, T2Subtract1FromSP)
+{
+    emitInstruction16("01000100dmmmmddd", SP, R1);
+    setRegisterValue(SP, 0x10008000);
+    setRegisterValue(R1, -1);
+    setExpectedRegisterValue(SP, 0x10008000 - 1);
+    pinkySimStep(&m_context);
+}
+
+TEST(addRegister, T2Add1ToLR)
+{
+    emitInstruction16("01000100dmmmmddd", LR, R1);
+    setRegisterValue(LR, 2);
+    setRegisterValue(R1, 1);
+    setExpectedRegisterValue(LR, 2 + 1);
+    pinkySimStep(&m_context);
+}
+
+TEST(addRegister, T2Add1ToPCWhichWillBeOddAndRoundedDown)
+{
+    emitInstruction16("01000100dmmmmddd", PC, R1);
+    setRegisterValue(PC, 0x10000000);
+    setRegisterValue(R1, 1);
+    setExpectedRegisterValue(PC, (0x10000000 + 4 + 1) & 0xFFFFFFFE);
+    pinkySimStep(&m_context);
+}
+
+TEST(addRegister, T2Add2ToPC)
+{
+    emitInstruction16("01000100dmmmmddd", PC, R1);
+    setRegisterValue(PC, 0x10000000);
+    setRegisterValue(R1, 2);
+    setExpectedRegisterValue(PC, (0x10000000 + 4 + 2) & 0xFFFFFFFE);
+    pinkySimStep(&m_context);
+}
+
+TEST(addRegister, T2ItIsUnpredictableToHaveBothArgsBePC)
+{
+    emitInstruction16("01000100dmmmmddd", PC, PC);
+    setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
     pinkySimStep(&m_context);
 }

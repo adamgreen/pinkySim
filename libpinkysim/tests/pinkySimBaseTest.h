@@ -30,6 +30,9 @@ protected:
     int             m_expectedStepReturn;
     int             m_expectedAPSRflags;
     uint32_t        m_expectedRegisterValues[13];
+    uint32_t        m_expectedSPmain;
+    uint32_t        m_expectedLR;
+    uint32_t        m_expectedPC;
     PinkySimContext m_context;
     
     void setup()
@@ -95,15 +98,40 @@ protected:
     
     void setExpectedRegisterValue(int index, uint32_t expectedValue)
     {
-        assert (index >= 0 && index < sizeof(m_context.R)/sizeof(m_context.R[0]));
-        m_expectedRegisterValues[index] = expectedValue;
+        assert (index >= 0 && index <= PC);
+
+        if (index == PC)
+            m_expectedPC = expectedValue;
+        else if (index == LR)
+            m_expectedLR = expectedValue;
+        else if (index == SP)
+            m_expectedSPmain = expectedValue;
+        else
+            m_expectedRegisterValues[index] = expectedValue;
     }
     
     void setRegisterValue(int index, uint32_t value)
     {
-        assert (index >= 0 && index < sizeof(m_context.R)/sizeof(m_context.R[0]));
+        assert (index >= 0 && index <= PC);
+
         setExpectedRegisterValue(index, value);
-        m_context.R[index] = value;
+        if (index == PC)
+        {
+            setExpectedRegisterValue(index, value + 2);
+            m_context.pc = value;
+        }
+        else if (index == LR)
+        {
+            m_context.lr = value;
+        }
+        else if (index == SP)
+        {
+            m_context.spMain = value;
+        }
+        else
+        {
+            m_context.R[index] = value;
+        }
     }
     
     void initContext()
@@ -139,6 +167,11 @@ protected:
             m_expectedRegisterValues[i] = value;
             value += 0x11111111;
         }
+
+        /* These defaults are values that would work on the LPC1768. */
+        setRegisterValue(SP, 0x10008000);
+        setRegisterValue(LR, 0xFFFFFFFF);
+        setRegisterValue(PC, 0x10000000);
     }
     
     void emitInstruction16(const char* pEncoding, ...)
@@ -240,6 +273,9 @@ protected:
     {
         for (int i = 0 ; i < 13 ; i++)
             CHECK_EQUAL(m_expectedRegisterValues[i], m_context.R[i]);
+        CHECK_EQUAL(m_expectedSPmain, m_context.spMain);
+        CHECK_EQUAL(m_expectedLR, m_context.lr);
+        CHECK_EQUAL(m_expectedPC, m_context.pc);
     }
     
     void setCarry()

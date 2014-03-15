@@ -93,18 +93,30 @@ static int orrRegister(PinkySimContext* pContext, uint16_t instr);
 static int mulRegister(PinkySimContext* pContext, uint16_t instr);
 static int bicRegister(PinkySimContext* pContext, uint16_t instr);
 static int mvnRegister(PinkySimContext* pContext, uint16_t instr);
+static int specialDataAndBranchExchange(PinkySimContext* pContext, uint16_t instr);
+static int addRegisterT2(PinkySimContext* pContext, uint16_t instr);
+static void ALUWritePC(PinkySimContext* pContext, uint32_t address);
+static void BranchWritePC(PinkySimContext* pContext, uint32_t address);
+static void BranchTo(PinkySimContext* pContext, uint32_t address);
 
 
 int pinkySimStep(PinkySimContext* pContext)
 {
+    int      result = PINKYSIM_STEP_UNDEFINED;
     uint16_t instr = (uint16_t)pContext->memory;
+
     pContext->instr1 = instr;
+    // UNDONE: This is specific to 16-bit instructions.
+    pContext->newPC = pContext->pc + 2;
     if ((instr & 0xC000) == 0x0000)
-        return shiftAddSubtractMoveCompare(pContext, instr);
+        result = shiftAddSubtractMoveCompare(pContext, instr);
     else if ((instr & 0xFC00) == 0x4000)
-        return dataProcessing(pContext, instr);
-    else
-        return PINKYSIM_STEP_UNDEFINED;
+        result = dataProcessing(pContext, instr);
+    else if ((instr & 0xFC00) == 0x4400)
+        result = specialDataAndBranchExchange(pContext, instr);
+    
+    pContext->pc = pContext->newPC;
+    return result;
 }
 
 static int shiftAddSubtractMoveCompare(PinkySimContext* pContext, uint16_t instr)
@@ -329,16 +341,30 @@ static uint32_t LSL(uint32_t x, uint32_t shift)
 
 static uint32_t getReg(const PinkySimContext* pContext, uint32_t reg)
 {
-    assert (reg < sizeof(pContext->R)/sizeof(pContext->R[0]));
+    assert (reg <= PC);
     
-    return pContext->R[reg];
+    if (reg == PC)
+        return pContext->pc + 4;
+    else if (reg == LR)
+        return pContext->lr;
+    else if (reg == SP)
+        // NOTE: Simulator only supports main handler mode.
+        return pContext->spMain;
+    else
+        return pContext->R[reg];
 }
 
 static void setReg(PinkySimContext* pContext, uint32_t reg, uint32_t value)
 {
-    assert (reg < sizeof(pContext->R)/sizeof(pContext->R[0]));
+    assert (reg < PC);
 
-    pContext->R[reg] = value;
+    if (reg == LR)
+        pContext->lr = value;
+    else if (reg == SP)
+        // NOTE: Simulator only supports main handler mode.
+        pContext->spMain = value;
+    else
+        pContext->R[reg] = value;
 }
 
 static int lsrImmediate(PinkySimContext* pContext, uint16_t instr)
@@ -1174,4 +1200,77 @@ static int mvnRegister(PinkySimContext* pContext, uint16_t instr)
     }
 
     return PINKYSIM_STEP_OK;
+}
+
+static int specialDataAndBranchExchange(PinkySimContext* pContext, uint16_t instr)
+{
+    if ((instr & 0x3000) == 0x0000)
+        return addRegisterT2(pContext, instr);
+    else
+        return PINKYSIM_STEP_UNDEFINED;
+}
+
+static int addRegisterT2(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = ((instr & (1 << 7)) >> 4) | (instr & 0x7);
+        uint32_t        n = d;
+        uint32_t        m = (instr & (0xF << 3)) >> 3;
+        // UNDONE: Not required for this encoding.
+        //int             setFlags = FALSE;
+        DecodedImmShift decodedShift = {SRType_LSL, 0};
+        uint32_t        shifted;
+        AddResults      addResults;
+
+        if (d == 15 && m == 15)
+            return PINKYSIM_STEP_UNPREDICTABLE;
+        // UNDONE: InITBlock() always returns FALSE for ARMv6-m so this assert will never fire.
+        //if (d == 15 && InITBlock(pContext) && !LastInITBlock(pContext))
+        //    return PINKYSIM_STEP_UNPREDICTABLE;
+        
+        // UNDONE: Only Thumb2 instructions require this shifted value.
+        shifted = Shift(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
+        addResults = AddWithCarry(getReg(pContext, n), shifted, 0);
+        if (d == 15)
+        {
+            ALUWritePC(pContext, addResults.result);
+        }
+        else
+        {
+            setReg(pContext, d, addResults.result);
+            // UNDONE: setFlags is forced to FALSE for this encoding.
+#ifdef UNDONE
+            if (setFlags)
+            {
+                pContext->xPSR &= ~APSR_NZCV;
+                if (addResults.result & (1 << 31))
+                    pContext->xPSR |= APSR_N;
+                if (addResults.result == 0)
+                    pContext->xPSR |= APSR_Z;
+                if (addResults.carryOut)
+                    pContext->xPSR |= APSR_C;
+                if (addResults.overflow)
+                    pContext->xPSR |= APSR_V;
+            }
+#endif // UNDONE
+        }
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static void ALUWritePC(PinkySimContext* pContext, uint32_t address)
+{
+    BranchWritePC(pContext, address);
+}
+
+static void BranchWritePC(PinkySimContext* pContext, uint32_t address)
+{
+    BranchTo(pContext, address & 0xFFFFFFFE);
+}
+
+static void BranchTo(PinkySimContext* pContext, uint32_t address)
+{
+    pContext->newPC = address;
 }
