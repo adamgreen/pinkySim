@@ -32,3 +32,17 @@ TEST(pinkySim, InvalidOpcodeShouldProduceUndefinedError)
     setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
     pinkySimStep(&m_context);
 }
+
+TEST(pinkySim, Encoding1ThatShouldProduceUnpredictableError)
+{
+    emitInstruction16("0100010100000000");
+    setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    pinkySimStep(&m_context);
+}
+
+TEST(pinkySim, Encoding2ThatShouldProduceUnpredictableError)
+{
+    emitInstruction16("0100010100111111");
+    setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    pinkySimStep(&m_context);
+}

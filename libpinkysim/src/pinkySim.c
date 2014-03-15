@@ -1203,8 +1203,10 @@ static int mvnRegister(PinkySimContext* pContext, uint16_t instr)
 
 static int specialDataAndBranchExchange(PinkySimContext* pContext, uint16_t instr)
 {
-    if ((instr & 0x3000) == 0x0000)
+    if ((instr & 0x0300) == 0x0000)
         return addRegisterT2(pContext, instr);
+    else if ((instr & 0x03C0) == 0x0100)
+        return PINKYSIM_STEP_UNPREDICTABLE;
     else
         return PINKYSIM_STEP_UNDEFINED;
 }
