@@ -257,7 +257,8 @@ protected:
     
     void pinkySimStep(PinkySimContext* pContext)
     {
-        CHECK_EQUAL(m_expectedStepReturn, ::pinkySimStep(pContext));
+        int result = ::pinkySimStep(pContext);
+        CHECK_EQUAL(m_expectedStepReturn, result);
         validateXPSR();
         validateRegisters();
     }
