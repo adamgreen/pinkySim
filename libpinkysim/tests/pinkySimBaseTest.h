@@ -23,12 +23,17 @@ extern "C"
 // Include C++ headers for test harness.
 #include "CppUTest/TestHarness.h"
 
+// Initial values for special registers.
+#define INITIAL_SP 0x10008000
+#define INITIAL_LR 0xFFFFFFFF
+#define INITIAL_PC 0x10000000
+
 
 class pinkySimBase : public Utest
 {
 protected:
     int             m_expectedStepReturn;
-    int             m_expectedAPSRflags;
+    int             m_expectedXPSRflags;
     uint32_t        m_expectedRegisterValues[13];
     uint32_t        m_expectedSPmain;
     uint32_t        m_expectedLR;
@@ -59,36 +64,42 @@ protected:
             switch (*pExpectedFlags)
             {
             case 'n':
-                m_expectedAPSRflags &= ~APSR_N;
+                m_expectedXPSRflags &= ~APSR_N;
                 m_context.xPSR |= APSR_N;
                 break;
             case 'N':
-                m_expectedAPSRflags |= APSR_N;
+                m_expectedXPSRflags |= APSR_N;
                 m_context.xPSR &= ~APSR_N;
                 break;
             case 'z':
-                m_expectedAPSRflags &= ~APSR_Z;
+                m_expectedXPSRflags &= ~APSR_Z;
                 m_context.xPSR |= APSR_Z;
                 break;
             case 'Z':
-                m_expectedAPSRflags |= APSR_Z;
+                m_expectedXPSRflags |= APSR_Z;
                 m_context.xPSR &= ~APSR_Z;
                 break;
             case 'c':
-                m_expectedAPSRflags &= ~APSR_C;
+                m_expectedXPSRflags &= ~APSR_C;
                 m_context.xPSR |= APSR_C;
                 break;
             case 'C':
-                m_expectedAPSRflags |= APSR_C;
+                m_expectedXPSRflags |= APSR_C;
                 m_context.xPSR &= ~APSR_C;
                 break;
             case 'v':
-                m_expectedAPSRflags &= ~APSR_V;
+                m_expectedXPSRflags &= ~APSR_V;
                 m_context.xPSR |= APSR_V;
                 break;
             case 'V':
-                m_expectedAPSRflags |= APSR_V;
+                m_expectedXPSRflags |= APSR_V;
                 m_context.xPSR &= ~APSR_V;
+                break;
+            case 't':
+                m_expectedXPSRflags &= ~EPSR_T;
+                break;
+            case 'T':
+                m_expectedXPSRflags |= EPSR_T;
                 break;
             }
             
@@ -140,6 +151,7 @@ protected:
         
         /* By default we will place the processor in Thumb mode. */
         m_context.xPSR = EPSR_T;
+        m_expectedXPSRflags |= EPSR_T;
         
         /* Randomly initialize each APSR flag to help verify that the simulator doesn't clear/set a bit that the 
            specification indicates shouldn't be modified by an instruction. */
@@ -149,12 +161,12 @@ protected:
             if (setOrClear)
             {
                 m_context.xPSR |= bit;
-                m_expectedAPSRflags |= bit;
+                m_expectedXPSRflags |= bit;
             }
             else
             {
                 m_context.xPSR &= ~bit;
-                m_expectedAPSRflags &= ~bit;
+                m_expectedXPSRflags &= ~bit;
             }
         }
  
@@ -169,9 +181,9 @@ protected:
         }
 
         /* These defaults are values that would work on the LPC1768. */
-        setRegisterValue(SP, 0x10008000);
-        setRegisterValue(LR, 0xFFFFFFFF);
-        setRegisterValue(PC, 0x10000000);
+        setRegisterValue(SP, INITIAL_SP);
+        setRegisterValue(LR, INITIAL_LR);
+        setRegisterValue(PC, INITIAL_PC);
     }
     
     void emitInstruction16(const char* pEncoding, ...)
@@ -265,8 +277,7 @@ protected:
     
     void validateXPSR()
     {
-        CHECK_EQUAL(m_expectedAPSRflags, m_context.xPSR & APSR_NZCV);
-        CHECK_TRUE(m_context.xPSR & EPSR_T);
+        CHECK_EQUAL(m_expectedXPSRflags, m_context.xPSR & (APSR_NZCV | EPSR_T));
         CHECK_EQUAL(0, m_context.xPSR & IPSR_MASK);
     }
     
