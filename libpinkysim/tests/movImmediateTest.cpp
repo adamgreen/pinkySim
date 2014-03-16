@@ -33,7 +33,7 @@ TEST_GROUP_BASE(movImmediate, pinkySimBase)
 TEST(movImmediate, MovToR0)
 {
     emitInstruction16("00100dddiiiiiiii", R0, 127);
-    setExpectedAPSRflags("nzc");
+    setExpectedXPSRflags("nzc");
     setExpectedRegisterValue(R0, 127);
     clearCarry();
     pinkySimStep(&m_context);
@@ -42,7 +42,7 @@ TEST(movImmediate, MovToR0)
 TEST(movImmediate, MovToR7)
 {
     emitInstruction16("00100dddiiiiiiii", R7, 127);
-    setExpectedAPSRflags("nzc");
+    setExpectedXPSRflags("nzc");
     setExpectedRegisterValue(R7, 127);
     clearCarry();
     pinkySimStep(&m_context);
@@ -51,7 +51,7 @@ TEST(movImmediate, MovToR7)
 TEST(movImmediate, MovSmallestImmediateValueToR3)
 {
     emitInstruction16("00100dddiiiiiiii", R3, 0);
-    setExpectedAPSRflags("nZc");
+    setExpectedXPSRflags("nZc");
     setExpectedRegisterValue(R3, 0);
     clearCarry();
     pinkySimStep(&m_context);
@@ -60,7 +60,7 @@ TEST(movImmediate, MovSmallestImmediateValueToR3)
 TEST(movImmediate, MovLargestImmediateValueToR3)
 {
     emitInstruction16("00100dddiiiiiiii", R3, 255);
-    setExpectedAPSRflags("nzc");
+    setExpectedXPSRflags("nzc");
     setExpectedRegisterValue(R3, 255);
     clearCarry();
     pinkySimStep(&m_context);
@@ -69,7 +69,7 @@ TEST(movImmediate, MovLargestImmediateValueToR3)
 TEST(movImmediate, MakeSureThatCarryNotCleared)
 {
     emitInstruction16("00100dddiiiiiiii", R3, 255);
-    setExpectedAPSRflags("nzC");
+    setExpectedXPSRflags("nzC");
     setExpectedRegisterValue(R3, 255);
     setCarry();
     pinkySimStep(&m_context);

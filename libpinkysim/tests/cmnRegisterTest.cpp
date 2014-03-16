@@ -32,35 +32,35 @@ TEST_GROUP_BASE(cmnRegister, pinkySimBase)
 TEST(cmnRegister, UseR1ForAllArgsResultsInAllFlagsCleared)
 {
     emitInstruction16("0100001011mmmnnn", R1, R1);
-    setExpectedAPSRflags("nzcv");
+    setExpectedXPSRflags("nzcv");
     pinkySimStep(&m_context);
 }
 
 TEST(cmnRegister, UseLowestRegisterForAllArgs)
 {
     emitInstruction16("0100001011mmmnnn", R0, R0);
-    setExpectedAPSRflags("nZcv");
+    setExpectedXPSRflags("nZcv");
     pinkySimStep(&m_context);
 }
 
 TEST(cmnRegister, UseHigestRegister)
 {
     emitInstruction16("0100001011mmmnnn", R7, R7);
-    setExpectedAPSRflags("NzcV");
+    setExpectedXPSRflags("NzcV");
     pinkySimStep(&m_context);
 }
 
 TEST(cmnRegister, UseDifferentRegistersForEachArg)
 {
     emitInstruction16("0100001011mmmnnn", R1, R2);
-    setExpectedAPSRflags("nzcv");
+    setExpectedXPSRflags("nzcv");
     pinkySimStep(&m_context);
 }
 
 TEST(cmnRegister, ForceCarryWithNoOverflow)
 {
     emitInstruction16("0100001011mmmnnn", R1, R2);
-    setExpectedAPSRflags("nZCv");
+    setExpectedXPSRflags("nZCv");
     setRegisterValue(R1, -1);
     setRegisterValue(R2, 1);
     pinkySimStep(&m_context);
@@ -69,7 +69,7 @@ TEST(cmnRegister, ForceCarryWithNoOverflow)
 TEST(cmnRegister, ForceCarryAndOverflow)
 {
     emitInstruction16("0100001011mmmnnn", R1, R2);
-    setExpectedAPSRflags("nzCV");
+    setExpectedXPSRflags("nzCV");
     setRegisterValue(R1, -1);
     setRegisterValue(R2, 0x80000000U);
     pinkySimStep(&m_context);

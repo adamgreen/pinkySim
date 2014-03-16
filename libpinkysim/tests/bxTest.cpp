@@ -32,7 +32,7 @@ TEST_GROUP_BASE(bx, pinkySimBase)
 TEST(bx, UseLowestRegisterToBranchToEvenAddressWhichClearsThumbMode)
 {
     emitInstruction16("010001110mmmm000", R0);
-    setExpectedAPSRflags("t");
+    setExpectedXPSRflags("t");
     setExpectedRegisterValue(PC, 0x0);
     pinkySimStep(&m_context);
     

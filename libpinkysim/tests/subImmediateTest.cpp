@@ -32,7 +32,7 @@ TEST_GROUP_BASE(subImmediate, pinkySimBase)
 TEST(subImmediate, T1UseLowestRegisterOnlySubtractSmallestImmediateCausesZeroResultAndCarryToIndicateNoBorrow)
 {
     emitInstruction16("0001111iiinnnddd", 0, R0, R0);
-    setExpectedAPSRflags("nZCv");
+    setExpectedXPSRflags("nZCv");
     setExpectedRegisterValue(R0, 0U);
     pinkySimStep(&m_context);
 }
@@ -40,7 +40,7 @@ TEST(subImmediate, T1UseLowestRegisterOnlySubtractSmallestImmediateCausesZeroRes
 TEST(subImmediate, T1UseHigestRegisterOnlySubtractLargestImmediateCausesCarryToIndicateNoBorrow)
 {
     emitInstruction16("0001111iiinnnddd", 7, R7, R7);
-    setExpectedAPSRflags("nzCv");
+    setExpectedXPSRflags("nzCv");
     setExpectedRegisterValue(R7, 0x77777777U - 7U);
     pinkySimStep(&m_context);
 }
@@ -48,7 +48,7 @@ TEST(subImmediate, T1UseHigestRegisterOnlySubtractLargestImmediateCausesCarryToI
 TEST(subImmediate, T1UseDifferentRegistersForEachArgSubtract3From0CausesNoCarryToIndicateBorrowAndNegativeResult)
 {
     emitInstruction16("0001111iiinnnddd", 3, R0, R2);
-    setExpectedAPSRflags("Nzcv");
+    setExpectedXPSRflags("Nzcv");
     setExpectedRegisterValue(R2, 0U - 3U);
     pinkySimStep(&m_context);
 }
@@ -56,7 +56,7 @@ TEST(subImmediate, T1UseDifferentRegistersForEachArgSubtract3From0CausesNoCarryT
 TEST(subImmediate, T1ForceOverflowPastLargestNegativeInteger)
 {
     emitInstruction16("0001111iiinnnddd", 1, R0, R7);
-    setExpectedAPSRflags("nzCV");
+    setExpectedXPSRflags("nzCV");
     setRegisterValue(R0, 0x80000000);
     setExpectedRegisterValue(R7, 0x80000000U - 1U);
     pinkySimStep(&m_context);
@@ -69,7 +69,7 @@ TEST(subImmediate, T1ForceOverflowPastLargestNegativeInteger)
 TEST(subImmediate, T2UseLowestRegisterToSubtractSmallestImmediateCausesZeroResultAndCarryToIndicateNoBorrow)
 {
     emitInstruction16("00111dddiiiiiiii", R0, 0);
-    setExpectedAPSRflags("nZCv");
+    setExpectedXPSRflags("nZCv");
     setExpectedRegisterValue(R0, 0U);
     pinkySimStep(&m_context);
 }
@@ -77,7 +77,7 @@ TEST(subImmediate, T2UseLowestRegisterToSubtractSmallestImmediateCausesZeroResul
 TEST(subImmediate, T2UseHigestRegisterToSubtractLargestImmediateCausesCarryToIndicateNoBorrow)
 {
     emitInstruction16("00111dddiiiiiiii", R7, 255);
-    setExpectedAPSRflags("nzCv");
+    setExpectedXPSRflags("nzCv");
     setExpectedRegisterValue(R7, 0x77777777U - 255U);
     pinkySimStep(&m_context);
 }
@@ -85,7 +85,7 @@ TEST(subImmediate, T2UseHigestRegisterToSubtractLargestImmediateCausesCarryToInd
 TEST(subImmediate, T2Subtract127FromR0CausesNoCarryToIndicateBorrowAndNegativeResult)
 {
     emitInstruction16("00111dddiiiiiiii", R0, 127);
-    setExpectedAPSRflags("Nzcv");
+    setExpectedXPSRflags("Nzcv");
     setExpectedRegisterValue(R0, 0U - 127U);
     pinkySimStep(&m_context);
 }
@@ -93,7 +93,7 @@ TEST(subImmediate, T2Subtract127FromR0CausesNoCarryToIndicateBorrowAndNegativeRe
 TEST(subImmediate, T2ForceOverflowPastLargestNegativeInteger)
 {
     emitInstruction16("00111dddiiiiiiii", R0, 1);
-    setExpectedAPSRflags("nzCV");
+    setExpectedXPSRflags("nzCV");
     setRegisterValue(R0, 0x80000000);
     setExpectedRegisterValue(R0, 0x80000000U - 1U);
     pinkySimStep(&m_context);

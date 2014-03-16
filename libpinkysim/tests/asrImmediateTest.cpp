@@ -38,7 +38,7 @@ TEST(asrImmediate, R0by1OfNegativeNumber)
 {
     emitInstruction16("00010iiiiimmmddd", IMM_1, R0, R0);
     m_context.R[0] = 0x80000000U;
-    setExpectedAPSRflags("Nzc");
+    setExpectedXPSRflags("Nzc");
     setExpectedRegisterValue(R0, (int32_t)0x80000000U >> 1);
     pinkySimStep(&m_context);
 }
@@ -47,7 +47,7 @@ TEST(asrImmediate, R0by1OfPositiveNumber)
 {
     emitInstruction16("00010iiiiimmmddd", IMM_1, R0, R0);
     m_context.R[0] = 0x7FFFFFFFU;
-    setExpectedAPSRflags("nzC");
+    setExpectedXPSRflags("nzC");
     setExpectedRegisterValue(R0, (int32_t)0x7FFFFFFFU >> 1);
     pinkySimStep(&m_context);
 }
@@ -56,7 +56,7 @@ TEST(asrImmediate, R0by32OfNegativeNumber)
 {
     emitInstruction16("00010iiiiimmmddd", IMM_32, R0, R0);
     m_context.R[0] = 0x80000000U;
-    setExpectedAPSRflags("NzC");
+    setExpectedXPSRflags("NzC");
     setExpectedRegisterValue(R0, 0xFFFFFFFFU);
     pinkySimStep(&m_context);
 }
@@ -65,7 +65,7 @@ TEST(asrImmediate, R0by32OfPositiveNumber)
 {
     emitInstruction16("00010iiiiimmmddd", IMM_32, R0, R0);
     m_context.R[0] = 0x7FFFFFFFU;
-    setExpectedAPSRflags("nZc");
+    setExpectedXPSRflags("nZc");
     setExpectedRegisterValue(R0, 0x0U);
     pinkySimStep(&m_context);
 }
@@ -73,7 +73,7 @@ TEST(asrImmediate, R0by32OfPositiveNumber)
 TEST(asrImmediate, R1by1ToR7)
 {
     emitInstruction16("00010iiiiimmmddd", IMM_1, R1, R7);
-    setExpectedAPSRflags("nzC");
+    setExpectedXPSRflags("nzC");
     setExpectedRegisterValue(R7, (int32_t)0x11111111U >> 1);
     pinkySimStep(&m_context);
 }
@@ -81,7 +81,7 @@ TEST(asrImmediate, R1by1ToR7)
 TEST(asrImmediate, R7by1ToR0)
 {
     emitInstruction16("00010iiiiimmmddd", IMM_1, R7, R0);
-    setExpectedAPSRflags("nzC");
+    setExpectedXPSRflags("nzC");
     setExpectedRegisterValue(R0, (int32_t)0x77777777U >> 1);
     pinkySimStep(&m_context);
 }
@@ -89,7 +89,7 @@ TEST(asrImmediate, R7by1ToR0)
 TEST(asrImmediate, R0by1)
 {
     emitInstruction16("00010iiiiimmmddd", IMM_1, R7, R0);
-    setExpectedAPSRflags("nzC");
+    setExpectedXPSRflags("nzC");
     setExpectedRegisterValue(R0, (int32_t)0x77777777U >> 1);
     pinkySimStep(&m_context);
 }

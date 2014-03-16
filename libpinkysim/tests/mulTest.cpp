@@ -32,7 +32,7 @@ TEST_GROUP_BASE(mul, pinkySimBase)
 TEST(mul, UseLowestRegisterForAllArgs)
 {
     emitInstruction16("0100001101nnnddd", R0, R0);
-    setExpectedAPSRflags("nZ");
+    setExpectedXPSRflags("nZ");
     setExpectedRegisterValue(R0, 0U);
     pinkySimStep(&m_context);
 }
@@ -40,7 +40,7 @@ TEST(mul, UseLowestRegisterForAllArgs)
 TEST(mul, UseHigestRegisterForAllArgs)
 {
     emitInstruction16("0100001101nnnddd", R7, R7);
-    setExpectedAPSRflags("Nz");
+    setExpectedXPSRflags("Nz");
     setExpectedRegisterValue(R7, 0x77777777U * 0x77777777U);
     pinkySimStep(&m_context);
 }
@@ -50,7 +50,7 @@ TEST(mul, UseDifferentRegistersForEachArg)
     emitInstruction16("0100001101nnnddd", R1, R2);
     setRegisterValue(R1, 0xA5A5);
     setRegisterValue(R2, 2);
-    setExpectedAPSRflags("nz");
+    setExpectedXPSRflags("nz");
     setExpectedRegisterValue(R2, 0xA5A5U << 1U);
     pinkySimStep(&m_context);
 }
@@ -60,7 +60,7 @@ TEST(mul, MultiplyBy16BitMaximumValues)
     emitInstruction16("0100001101nnnddd", R1, R2);
     setRegisterValue(R1, 0xFFFF);
     setRegisterValue(R2, 0xFFFF);
-    setExpectedAPSRflags("Nz");
+    setExpectedXPSRflags("Nz");
     setExpectedRegisterValue(R2, 0xFFFF * 0xFFFF);
     pinkySimStep(&m_context);
 }

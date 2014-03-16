@@ -32,7 +32,7 @@ TEST_GROUP_BASE(andRegister, pinkySimBase)
 TEST(andRegister, UseLowestRegisterForBothArgsAndResultShouldBeZero)
 {
     emitInstruction16("0100000000mmmddd", R0, R0);
-    setExpectedAPSRflags("nZ");
+    setExpectedXPSRflags("nZ");
     setExpectedRegisterValue(R0, 0);
     pinkySimStep(&m_context);
 }
@@ -40,14 +40,14 @@ TEST(andRegister, UseLowestRegisterForBothArgsAndResultShouldBeZero)
 TEST(andRegister, UseHighestRegisterForBothArgsAndRegisterWillBeUnchanged)
 {
     emitInstruction16("0100000000mmmddd", R7, R7);
-    setExpectedAPSRflags("nz");
+    setExpectedXPSRflags("nz");
     pinkySimStep(&m_context);
 }
 
 TEST(andRegister, AndR3andR7)
 {
     emitInstruction16("0100000000mmmddd", R3, R7);
-    setExpectedAPSRflags("nz");
+    setExpectedXPSRflags("nz");
     setExpectedRegisterValue(R7, 0x33333333);
     pinkySimStep(&m_context);
 }
@@ -57,7 +57,7 @@ TEST(andRegister, UseAndToJustKeepNegativeSignBit)
     emitInstruction16("0100000000mmmddd", R7, R0);
     setRegisterValue(R0, -1);
     setRegisterValue(R7, 0x80000000);
-    setExpectedAPSRflags("Nz");
+    setExpectedXPSRflags("Nz");
     setExpectedRegisterValue(R0, 0x80000000);
     pinkySimStep(&m_context);
 }
@@ -67,7 +67,7 @@ TEST(andRegister, HaveAndResultNotBeSameAsEitherSource)
     emitInstruction16("0100000000mmmddd", R7, R0);
     setRegisterValue(R0, 0x12345678);
     setRegisterValue(R7, 0xF0F0F0F0);
-    setExpectedAPSRflags("nz");
+    setExpectedXPSRflags("nz");
     setExpectedRegisterValue(R0, 0x10305070);
     pinkySimStep(&m_context);
 }

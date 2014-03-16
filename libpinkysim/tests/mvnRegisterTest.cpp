@@ -32,7 +32,7 @@ TEST_GROUP_BASE(mvnRegister, pinkySimBase)
 TEST(mvnRegister, UseR1ForAllArgs)
 {
     emitInstruction16("0100001111mmmddd", R1, R1);
-    setExpectedAPSRflags("Nz");
+    setExpectedXPSRflags("Nz");
     setExpectedRegisterValue(R1, ~0x11111111U);
     pinkySimStep(&m_context);
 }
@@ -40,7 +40,7 @@ TEST(mvnRegister, UseR1ForAllArgs)
 TEST(mvnRegister, UseLowestRegisterForAllArgs)
 {
     emitInstruction16("0100001111mmmddd", R0, R0);
-    setExpectedAPSRflags("Nz");
+    setExpectedXPSRflags("Nz");
     setExpectedRegisterValue(R0, ~0U);
     pinkySimStep(&m_context);
 }
@@ -48,7 +48,7 @@ TEST(mvnRegister, UseLowestRegisterForAllArgs)
 TEST(mvnRegister, UseHigestRegisterForAllArgs)
 {
     emitInstruction16("0100001111mmmddd", R7, R7);
-    setExpectedAPSRflags("Nz");
+    setExpectedXPSRflags("Nz");
     setExpectedRegisterValue(R7, ~0x77777777U);
     pinkySimStep(&m_context);
 }
@@ -56,7 +56,7 @@ TEST(mvnRegister, UseHigestRegisterForAllArgs)
 TEST(mvnRegister, UseDifferentRegistersForEachArg)
 {
     emitInstruction16("0100001111mmmddd", R2, R1);
-    setExpectedAPSRflags("Nz");
+    setExpectedXPSRflags("Nz");
     setExpectedRegisterValue(R1, ~0x22222222U);
     pinkySimStep(&m_context);
 }
@@ -65,7 +65,7 @@ TEST(mvnRegister, MoveANegationOfNegativeOneWhichClearsNegativeFlagAndSetsZeroFl
 {
     emitInstruction16("0100001111mmmddd", R2, R1);
     setRegisterValue(R2, -1);
-    setExpectedAPSRflags("nZ");
+    setExpectedXPSRflags("nZ");
     setExpectedRegisterValue(R1, 0U);
     pinkySimStep(&m_context);
 }

@@ -32,7 +32,7 @@ TEST_GROUP_BASE(sbcRegister, pinkySimBase)
 TEST(sbcRegister, UseLowestRegisterForAllArgsAndShouldBeZeroWithCarrySetForNoBorrow)
 {
     emitInstruction16("0100000110mmmddd", R0, R0);
-    setExpectedAPSRflags("nZCv");
+    setExpectedXPSRflags("nZCv");
     setExpectedRegisterValue(R0, 0);
     setCarry();
     pinkySimStep(&m_context);
@@ -41,7 +41,7 @@ TEST(sbcRegister, UseLowestRegisterForAllArgsAndShouldBeZeroWithCarrySetForNoBor
 TEST(sbcRegister, UseHigestRegisterForAllArgsAndShouldBeZeroWithCarrySetForNoBorrow)
 {
     emitInstruction16("0100000110mmmddd", R7, R7);
-    setExpectedAPSRflags("nZCv");
+    setExpectedXPSRflags("nZCv");
     setExpectedRegisterValue(R7, 0);
     setCarry();
     pinkySimStep(&m_context);
@@ -50,7 +50,7 @@ TEST(sbcRegister, UseHigestRegisterForAllArgsAndShouldBeZeroWithCarrySetForNoBor
 TEST(sbcRegister, UseDifferentRegistersForEachArgAndOnlyCarryShouldBeSetToIndicateNoBorrow)
 {
     emitInstruction16("0100000110mmmddd", R1, R2);
-    setExpectedAPSRflags("nzCv");
+    setExpectedXPSRflags("nzCv");
     setExpectedRegisterValue(R2, 0x22222222U - 0x11111111U);
     setCarry();
     pinkySimStep(&m_context);
@@ -59,7 +59,7 @@ TEST(sbcRegister, UseDifferentRegistersForEachArgAndOnlyCarryShouldBeSetToIndica
 TEST(sbcRegister, ForceCarryClearToIndicateBorrowAndResultWillBeNegative)
 {
     emitInstruction16("0100000110mmmddd", R1, R0);
-    setExpectedAPSRflags("Nzcv");
+    setExpectedXPSRflags("Nzcv");
     setRegisterValue(R1, 1);
     setExpectedRegisterValue(R0, 0U - 1U);
     setCarry();
@@ -69,7 +69,7 @@ TEST(sbcRegister, ForceCarryClearToIndicateBorrowAndResultWillBeNegative)
 TEST(sbcRegister, ForceNegativeOverflow)
 {
     emitInstruction16("0100000110mmmddd", R1, R2);
-    setExpectedAPSRflags("nzCV");
+    setExpectedXPSRflags("nzCV");
     setRegisterValue(R2, 0x80000000U);
     setRegisterValue(R1, 1U);
     setExpectedRegisterValue(R2, (int32_t)0x80000000U - 1);
@@ -80,7 +80,7 @@ TEST(sbcRegister, ForceNegativeOverflow)
 TEST(sbcRegister, ForcePositiveOverflow)
 {
     emitInstruction16("0100000110mmmddd", R1, R2);
-    setExpectedAPSRflags("NzcV");
+    setExpectedXPSRflags("NzcV");
     setRegisterValue(R2, 0x7FFFFFFFU);
     setRegisterValue(R1, -1U);
     setExpectedRegisterValue(R2, 0x7FFFFFFF + 1);
@@ -91,7 +91,7 @@ TEST(sbcRegister, ForcePositiveOverflow)
 TEST(sbcRegister, ClearCarryToCauseABorrowToOccur)
 {
     emitInstruction16("0100000110mmmddd", R1, R2);
-    setExpectedAPSRflags("nzCv");
+    setExpectedXPSRflags("nzCv");
     setExpectedRegisterValue(R2, 0x22222222U - 1U - 0x11111111U);
     clearCarry(); // Causes borrow.
     pinkySimStep(&m_context);

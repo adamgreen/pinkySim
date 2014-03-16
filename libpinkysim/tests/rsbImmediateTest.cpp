@@ -32,7 +32,7 @@ TEST_GROUP_BASE(rsbImmediate, pinkySimBase)
 TEST(rsbImmediate, UseLowestRegisterOnly)
 {
     emitInstruction16("0100001001nnnddd", R0, R0);
-    setExpectedAPSRflags("nZCv");
+    setExpectedXPSRflags("nZCv");
     setExpectedRegisterValue(R0, 0U);
     pinkySimStep(&m_context);
 }
@@ -40,7 +40,7 @@ TEST(rsbImmediate, UseLowestRegisterOnly)
 TEST(rsbImmediate, UseHigestRegisterOnly)
 {
     emitInstruction16("0100001001nnnddd", R7, R7);
-    setExpectedAPSRflags("Nzcv");
+    setExpectedXPSRflags("Nzcv");
     setExpectedRegisterValue(R7, -0x77777777U);
     pinkySimStep(&m_context);
 }
@@ -48,7 +48,7 @@ TEST(rsbImmediate, UseHigestRegisterOnly)
 TEST(rsbImmediate, UseDifferentRegistersForEachArg)
 {
     emitInstruction16("0100001001nnnddd", R2, R0);
-    setExpectedAPSRflags("Nzcv");
+    setExpectedXPSRflags("Nzcv");
     setExpectedRegisterValue(R0, -0x22222222);
     pinkySimStep(&m_context);
 }
@@ -56,7 +56,7 @@ TEST(rsbImmediate, UseDifferentRegistersForEachArg)
 TEST(rsbImmediate, ForceOverflowByNegatingLargestNegativeValue)
 {
     emitInstruction16("0100001001nnnddd", R0, R7);
-    setExpectedAPSRflags("NzcV");
+    setExpectedXPSRflags("NzcV");
     setRegisterValue(R0, 0x80000000);
     setExpectedRegisterValue(R7, 0x80000000U);
     pinkySimStep(&m_context);

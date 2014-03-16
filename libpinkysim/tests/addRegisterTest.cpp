@@ -32,7 +32,7 @@ TEST_GROUP_BASE(addRegister, pinkySimBase)
 TEST(addRegister, T1UseR1ForAllArgsAndCarryOverflowZeroNegativeFlagsShouldBeClear)
 {
     emitInstruction16("0001100mmmnnnddd", R1, R1, R1);
-    setExpectedAPSRflags("nzcv");
+    setExpectedXPSRflags("nzcv");
     setExpectedRegisterValue(R1, 0x11111111U + 0x11111111U);
     pinkySimStep(&m_context);
 }
@@ -40,7 +40,7 @@ TEST(addRegister, T1UseR1ForAllArgsAndCarryOverflowZeroNegativeFlagsShouldBeClea
 TEST(addRegister, T1UseLowestRegisterForAllArgsAndOnlyZeroFlagShouldBeSet)
 {
     emitInstruction16("0001100mmmnnnddd", R0, R0, R0);
-    setExpectedAPSRflags("nZcv");
+    setExpectedXPSRflags("nZcv");
     setExpectedRegisterValue(R0, 0U);
     pinkySimStep(&m_context);
 }
@@ -48,7 +48,7 @@ TEST(addRegister, T1UseLowestRegisterForAllArgsAndOnlyZeroFlagShouldBeSet)
 TEST(addRegister, T1UseHigestRegisterForAllArgsAndWillBeNegativeBecauseOfOverflow)
 {
     emitInstruction16("0001100mmmnnnddd", R7, R7, R7);
-    setExpectedAPSRflags("NzcV");
+    setExpectedXPSRflags("NzcV");
     setExpectedRegisterValue(R7, 0x77777777U + 0x77777777U);
     pinkySimStep(&m_context);
 }
@@ -56,7 +56,7 @@ TEST(addRegister, T1UseHigestRegisterForAllArgsAndWillBeNegativeBecauseOfOverflo
 TEST(addRegister, T1UseDifferentRegistersForEachArg)
 {
     emitInstruction16("0001100mmmnnnddd", R1, R2, R0);
-    setExpectedAPSRflags("nzcv");
+    setExpectedXPSRflags("nzcv");
     setExpectedRegisterValue(R0, 0x11111111U + 0x22222222U);
     pinkySimStep(&m_context);
 }
@@ -64,7 +64,7 @@ TEST(addRegister, T1UseDifferentRegistersForEachArg)
 TEST(addRegister, T1ForceCarryWithNoOverflow)
 {
     emitInstruction16("0001100mmmnnnddd", R1, R2, R0);
-    setExpectedAPSRflags("nZCv");
+    setExpectedXPSRflags("nZCv");
     setRegisterValue(R1, -1);
     setRegisterValue(R2, 1);
     setExpectedRegisterValue(R0, -1 + 1);
@@ -74,7 +74,7 @@ TEST(addRegister, T1ForceCarryWithNoOverflow)
 TEST(addRegister, T1ForceCarryAndOverflow)
 {
     emitInstruction16("0001100mmmnnnddd", R1, R2, R0);
-    setExpectedAPSRflags("nzCV");
+    setExpectedXPSRflags("nzCV");
     setRegisterValue(R1, -1);
     setRegisterValue(R2, 0x80000000U);
     setExpectedRegisterValue(R0, -1 + (int32_t)0x80000000U);

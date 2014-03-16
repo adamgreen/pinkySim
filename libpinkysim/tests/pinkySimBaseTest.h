@@ -55,7 +55,7 @@ protected:
         m_expectedStepReturn = expectedStepReturn;
     }
     
-    void setExpectedAPSRflags(const char* pExpectedFlags)
+    void setExpectedXPSRflags(const char* pExpectedFlags)
     {
         // Remember what expected APSR flags should be after instruction execution and flip initial flag state to make
         // sure that simular correctly flips the state and doesn't just get lucky to match a pre-existing condition.

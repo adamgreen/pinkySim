@@ -32,7 +32,7 @@ TEST_GROUP_BASE(bicRegister, pinkySimBase)
 TEST(bicRegister, UseLowestRegisterForBothArgs)
 {
     emitInstruction16("0100001110mmmddd", R0, R0);
-    setExpectedAPSRflags("nZc");
+    setExpectedXPSRflags("nZc");
     setExpectedRegisterValue(R0, 0);
     clearCarry();
     pinkySimStep(&m_context);
@@ -41,7 +41,7 @@ TEST(bicRegister, UseLowestRegisterForBothArgs)
 TEST(bicRegister, UseHighestRegisterForBothArgs)
 {
     emitInstruction16("0100001110mmmddd", R7, R7);
-    setExpectedAPSRflags("nZC");
+    setExpectedXPSRflags("nZC");
     setExpectedRegisterValue(R7, 0);
     setCarry();
     pinkySimStep(&m_context);
@@ -50,7 +50,7 @@ TEST(bicRegister, UseHighestRegisterForBothArgs)
 TEST(bicRegister, UseR3andR7)
 {
     emitInstruction16("0100001110mmmddd", R3, R7);
-    setExpectedAPSRflags("nz");
+    setExpectedXPSRflags("nz");
     setExpectedRegisterValue(R7, 0x77777777 & ~0x33333333);
     pinkySimStep(&m_context);
 }
@@ -60,7 +60,7 @@ TEST(bicRegister, UseBicToClearLSbit)
     emitInstruction16("0100001110mmmddd", R7, R0);
     setRegisterValue(R0, -1);
     setRegisterValue(R7, 1);
-    setExpectedAPSRflags("Nz");
+    setExpectedXPSRflags("Nz");
     setExpectedRegisterValue(R0, -1U & ~1);
     pinkySimStep(&m_context);
 }

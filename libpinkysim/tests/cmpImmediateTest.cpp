@@ -32,21 +32,21 @@ TEST_GROUP_BASE(cmpImmediate, pinkySimBase)
 TEST(cmpImmediate, CompareLowestRegisterToEqualValue)
 {
     emitInstruction16("00101nnniiiiiiii", R0, 0);
-    setExpectedAPSRflags("nZCv");
+    setExpectedXPSRflags("nZCv");
     pinkySimStep(&m_context);
 }
 
 TEST(cmpImmediate, CompareHighestRegisterToImmediateWhichIsSmaller)
 {
     emitInstruction16("00101nnniiiiiiii", R7, 127);
-    setExpectedAPSRflags("nzCv");
+    setExpectedXPSRflags("nzCv");
     pinkySimStep(&m_context);
 }
 
 TEST(cmpImmediate, CompareRegisterToLargestImmediateWhichIsLarger)
 {
     emitInstruction16("00101nnniiiiiiii", R0, 255);
-    setExpectedAPSRflags("Nzcv");
+    setExpectedXPSRflags("Nzcv");
     pinkySimStep(&m_context);
 }
 
@@ -54,6 +54,6 @@ TEST(cmpImmediate, CompareRegisterToImmediateWhichWillGenerateNegativeOverflow)
 {
     emitInstruction16("00101nnniiiiiiii", R3, 1);
     setRegisterValue(R3, 0x80000000);
-    setExpectedAPSRflags("nzCV");
+    setExpectedXPSRflags("nzCV");
     pinkySimStep(&m_context);
 }

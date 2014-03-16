@@ -32,7 +32,7 @@ TEST_GROUP_BASE(subRegister, pinkySimBase)
 TEST(subRegister, UseLowestRegisterForAllArgsAndShouldBeZeroWithCarrySetForNoBorrow)
 {
     emitInstruction16("0001101mmmnnnddd", R0, R0, R0);
-    setExpectedAPSRflags("nZCv");
+    setExpectedXPSRflags("nZCv");
     setExpectedRegisterValue(R0, 0);
     pinkySimStep(&m_context);
 }
@@ -40,7 +40,7 @@ TEST(subRegister, UseLowestRegisterForAllArgsAndShouldBeZeroWithCarrySetForNoBor
 TEST(subRegister, UseHigestRegisterForAllArgsAndShouldBeZeroWithCarrySetForNoBorrow)
 {
     emitInstruction16("0001101mmmnnnddd", R7, R7, R7);
-    setExpectedAPSRflags("nZCv");
+    setExpectedXPSRflags("nZCv");
     setExpectedRegisterValue(R7, 0);
     pinkySimStep(&m_context);
 }
@@ -48,7 +48,7 @@ TEST(subRegister, UseHigestRegisterForAllArgsAndShouldBeZeroWithCarrySetForNoBor
 TEST(subRegister, UseDifferentRegistersForEachArgAndOnlyCarryShouldBeSetToIndicateNoBorrow)
 {
     emitInstruction16("0001101mmmnnnddd", R1, R2, R0);
-    setExpectedAPSRflags("nzCv");
+    setExpectedXPSRflags("nzCv");
     setExpectedRegisterValue(R0, 0x22222222U - 0x11111111U);
     pinkySimStep(&m_context);
 }
@@ -56,7 +56,7 @@ TEST(subRegister, UseDifferentRegistersForEachArgAndOnlyCarryShouldBeSetToIndica
 TEST(subRegister, ForceCarryClearToIndicateBorrowAndResultWillBeNegative)
 {
     emitInstruction16("0001101mmmnnnddd", R1, R0, R2);
-    setExpectedAPSRflags("Nzcv");
+    setExpectedXPSRflags("Nzcv");
     setRegisterValue(R1, 1);
     setExpectedRegisterValue(R2, 0U - 1U);
     pinkySimStep(&m_context);
@@ -65,7 +65,7 @@ TEST(subRegister, ForceCarryClearToIndicateBorrowAndResultWillBeNegative)
 TEST(subRegister, ForceNegativeOverflow)
 {
     emitInstruction16("0001101mmmnnnddd", R1, R2, R0);
-    setExpectedAPSRflags("nzCV");
+    setExpectedXPSRflags("nzCV");
     setRegisterValue(R2, 0x80000000U);
     setRegisterValue(R1, 1U);
     setExpectedRegisterValue(R0, (int32_t)0x80000000U - 1);
@@ -75,7 +75,7 @@ TEST(subRegister, ForceNegativeOverflow)
 TEST(subRegister, ForcePositiveOverflow)
 {
     emitInstruction16("0001101mmmnnnddd", R1, R2, R0);
-    setExpectedAPSRflags("NzcV");
+    setExpectedXPSRflags("NzcV");
     setRegisterValue(R2, 0x7FFFFFFFU);
     setRegisterValue(R1, -1U);
     setExpectedRegisterValue(R0, 0x7FFFFFFF + 1);

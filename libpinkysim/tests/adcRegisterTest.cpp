@@ -32,7 +32,7 @@ TEST_GROUP_BASE(adcRegister, pinkySimBase)
 TEST(adcRegister, UseR1ForAllArgsAndCarryOverflowZeroNegativeFlagsShouldBeClear)
 {
     emitInstruction16("0100000101mmmddd", R1, R1);
-    setExpectedAPSRflags("nzcv");
+    setExpectedXPSRflags("nzcv");
     setExpectedRegisterValue(R1, 0x11111111U + 0x11111111U);
     clearCarry();
     pinkySimStep(&m_context);
@@ -41,7 +41,7 @@ TEST(adcRegister, UseR1ForAllArgsAndCarryOverflowZeroNegativeFlagsShouldBeClear)
 TEST(adcRegister, UseLowestRegisterForAllArgsAndOnlyZeroFlagShouldBeSet)
 {
     emitInstruction16("0100000101mmmddd", R0, R0);
-    setExpectedAPSRflags("nZcv");
+    setExpectedXPSRflags("nZcv");
     setExpectedRegisterValue(R0, 0U);
     clearCarry();
     pinkySimStep(&m_context);
@@ -50,7 +50,7 @@ TEST(adcRegister, UseLowestRegisterForAllArgsAndOnlyZeroFlagShouldBeSet)
 TEST(adcRegister, Add0to0WithCarryInSetToGiveAResultOf1)
 {
     emitInstruction16("0100000101mmmddd", R0, R0);
-    setExpectedAPSRflags("nzcv");
+    setExpectedXPSRflags("nzcv");
     setExpectedRegisterValue(R0, 0U + 0U + 1U);
     setCarry();
     pinkySimStep(&m_context);
@@ -59,7 +59,7 @@ TEST(adcRegister, Add0to0WithCarryInSetToGiveAResultOf1)
 TEST(adcRegister, UseHigestRegisterForAllArgsAndWillBeNegativeBecauseOfOverflow)
 {
     emitInstruction16("0100000101mmmddd", R7, R7);
-    setExpectedAPSRflags("NzcV");
+    setExpectedXPSRflags("NzcV");
     setExpectedRegisterValue(R7, 0x77777777U + 0x77777777U);
     clearCarry();
     pinkySimStep(&m_context);
@@ -68,7 +68,7 @@ TEST(adcRegister, UseHigestRegisterForAllArgsAndWillBeNegativeBecauseOfOverflow)
 TEST(adcRegister, UseDifferentRegistersForEachArg)
 {
     emitInstruction16("0100000101mmmddd", R1, R2);
-    setExpectedAPSRflags("nzcv");
+    setExpectedXPSRflags("nzcv");
     setExpectedRegisterValue(R2, 0x11111111U + 0x22222222U);
     clearCarry();
     pinkySimStep(&m_context);
@@ -77,7 +77,7 @@ TEST(adcRegister, UseDifferentRegistersForEachArg)
 TEST(adcRegister, ForceCarryWithNoOverflow)
 {
     emitInstruction16("0100000101mmmddd", R1, R2);
-    setExpectedAPSRflags("nZCv");
+    setExpectedXPSRflags("nZCv");
     setRegisterValue(R1, -1);
     setRegisterValue(R2, 1);
     setExpectedRegisterValue(R2, -1 + 1);
@@ -88,7 +88,7 @@ TEST(adcRegister, ForceCarryWithNoOverflow)
 TEST(adcRegister, ForceCarryAndOverflow)
 {
     emitInstruction16("0100000101mmmddd", R1, R2);
-    setExpectedAPSRflags("nzCV");
+    setExpectedXPSRflags("nzCV");
     setRegisterValue(R1, -1);
     setRegisterValue(R2, 0x80000000U);
     setExpectedRegisterValue(R2, -1 + (int32_t)0x80000000U);
