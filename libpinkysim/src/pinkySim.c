@@ -102,6 +102,8 @@ static int cmpRegisterT2(PinkySimContext* pContext, uint16_t instr);
 static int movRegister(PinkySimContext* pContext, uint16_t instr);
 static int bx(PinkySimContext* pContext, uint16_t instr);
 static void BXWritePC(PinkySimContext* pContext, uint32_t address);
+static int blx(PinkySimContext* pContext, uint16_t instr);
+static void BLXWritePC(PinkySimContext* pContext, uint32_t address);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -1221,6 +1223,8 @@ static int specialDataAndBranchExchange(PinkySimContext* pContext, uint16_t inst
         return movRegister(pContext, instr);
     else if ((instr & 0x0380) == 0x0300)
         return bx(pContext, instr);
+    else if ((instr & 0x0380) == 0x0380)
+        return blx(pContext, instr);
     else
         return PINKYSIM_STEP_UNDEFINED;
 }
@@ -1388,6 +1392,39 @@ static void BXWritePC(PinkySimContext* pContext, uint32_t address)
     //if (pContext->currentMode == modeHandler && (address & 0xF000) == 0xF000)
     //    ExceptionReturn(pContext, address & ((1 << 27) - 1));
     // else
+    pContext->xPSR &= ~EPSR_T;
+    if (address & 1)
+        pContext->xPSR |= EPSR_T;
+    BranchTo(pContext, address & 0xFFFFFFFE);
+}
+
+static int blx(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t m = (instr & (0xF << 3)) >> 3;
+        uint32_t target;
+        uint32_t nextInstrAddr;
+        
+        // UNDONE: InITBlock() always returns FALSE for ARMv6-m so this assert will never fire.
+        //if (InITBlock(pContext) && !LastInITBlock(pContext))
+        //    return PINKYSIM_STEP_UNPREDICTABLE;
+        if ((instr & 0x7) != 0x0)
+            return PINKYSIM_STEP_UNPREDICTABLE;
+        if (m == 15)
+            return PINKYSIM_STEP_UNPREDICTABLE;
+        
+        target = getReg(pContext, m);
+        nextInstrAddr = getReg(pContext, PC) - 2;
+        setReg(pContext, LR, nextInstrAddr | 1);
+        BLXWritePC(pContext, target);
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static void BLXWritePC(PinkySimContext* pContext, uint32_t address)
+{
     pContext->xPSR &= ~EPSR_T;
     if (address & 1)
         pContext->xPSR |= EPSR_T;

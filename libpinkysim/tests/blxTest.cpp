@@ -13,7 +13,7 @@
 
 #include "pinkySimBaseTest.h"
 
-TEST_GROUP_BASE(bx, pinkySimBase)
+TEST_GROUP_BASE(blx, pinkySimBase)
 {
     void setup()
     {
@@ -27,54 +27,56 @@ TEST_GROUP_BASE(bx, pinkySimBase)
 };
 
 
-/* BX (Branch and Exchange)
-   Encoding: 010001 11 0 Rm:4 (0)(0)(0) */
-TEST(bx, UseLowestRegisterToBranchToEvenAddressWhichClearsThumbMode)
+/* BLX (Branch with Link and Exchange)
+   Encoding: 010001 11 1 Rm:4 (0)(0)(0) */
+TEST(blx, UseLowestRegisterToBranchToEvenAddressWhichClearsThumbMode)
 {
-    emitInstruction16("010001110mmmm000", R0);
+    emitInstruction16("010001111mmmm000", R0);
     setExpectedXPSRflags("t");
     setExpectedRegisterValue(PC, 0x0);
+    setExpectedRegisterValue(LR, (INITIAL_PC + 2) | 1);
     pinkySimStep(&m_context);
     
     setExpectedStepReturn(PINKYSIM_STEP_HARDFAULT);
     pinkySimStep(&m_context);
 }
 
-TEST(bx, UseHighestRegisterToBranchToOddAddressWhichIsOk)
+TEST(blx, UseHighestRegisterToBranchToOddAddressWhichIsOk)
 {
-    emitInstruction16("010001110mmmm000", LR);
+    emitInstruction16("010001111mmmm000", LR);
     setRegisterValue(LR, 0x1);
     setExpectedRegisterValue(PC, 0x0);
+    setExpectedRegisterValue(LR, (INITIAL_PC + 2) | 1);
     pinkySimStep(&m_context);
 
     // UNDONE: Could place a BKPT insstruction at branch destination.
     //pinkySimStep(&m_context);
 }
 
-TEST(bx, UnpredictableToUseR15)
+TEST(blx, UnpredictableToUseR15)
 {
-    emitInstruction16("010001110mmmm000", PC);
+    emitInstruction16("010001111mmmm000", PC);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
     pinkySimStep(&m_context);
 }
 
-TEST(bx, UnpredictableForBit0ToBeHigh)
+TEST(blx, UnpredictableForBit0ToBeHigh)
 {
-    emitInstruction16("010001110mmmm001", R0);
+    emitInstruction16("010001111mmmm001", R0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
     pinkySimStep(&m_context);
 }
 
-TEST(bx, UnpredictableForBit1ToBeHigh)
+TEST(blx, UnpredictableForBit1ToBeHigh)
 {
-    emitInstruction16("010001110mmmm010", R0);
+    emitInstruction16("010001111mmmm010", R0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
     pinkySimStep(&m_context);
 }
 
-TEST(bx, UnpredictableForBit2ToBeHigh)
+TEST(blx, UnpredictableForBit2ToBeHigh)
 {
-    emitInstruction16("010001110mmmm100", R0);
+    emitInstruction16("010001111mmmm100", R0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
     pinkySimStep(&m_context);
 }
