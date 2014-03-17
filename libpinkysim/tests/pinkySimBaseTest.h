@@ -14,7 +14,8 @@
 // Include headers from C modules under test.
 extern "C"
 {
-    #include "pinkySim.h"
+    #include <pinkySim.h>
+    #include <SimpleMemory.h>
 }
 
 // Include standard headers.
@@ -38,6 +39,7 @@ protected:
     uint32_t        m_expectedSPmain;
     uint32_t        m_expectedLR;
     uint32_t        m_expectedPC;
+    uint32_t        m_emitAddress;
     PinkySimContext m_context;
     
     void setup()
@@ -149,6 +151,9 @@ protected:
     {
         memset(&m_context, 0, sizeof(m_context));
         
+        m_context.pMemory = SimpleMemory_Init();
+        SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC, 0x0, READ_WRITE);
+
         /* By default we will place the processor in Thumb mode. */
         m_context.xPSR = EPSR_T;
         m_expectedXPSRflags |= EPSR_T;
@@ -184,6 +189,8 @@ protected:
         setRegisterValue(SP, INITIAL_SP);
         setRegisterValue(LR, INITIAL_LR);
         setRegisterValue(PC, INITIAL_PC);
+        
+        m_emitAddress = INITIAL_PC;
     }
     
     void emitInstruction16(const char* pEncoding, ...)
@@ -264,7 +271,8 @@ protected:
             }
         }
         
-        m_context.memory = (uint32_t)instr;
+        IMemory_Write16(m_context.pMemory, m_emitAddress, instr);
+        m_emitAddress += 2;
     }
     
     void pinkySimStep(PinkySimContext* pContext)

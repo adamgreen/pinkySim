@@ -109,11 +109,12 @@ static void BLXWritePC(PinkySimContext* pContext, uint32_t address);
 int pinkySimStep(PinkySimContext* pContext)
 {
     int      result = PINKYSIM_STEP_UNDEFINED;
-    uint16_t instr = (uint16_t)pContext->memory;
+    uint16_t instr;
 
     if (!(pContext->xPSR & EPSR_T))
         return PINKYSIM_STEP_HARDFAULT;
     
+    instr =  IMemory_Read16(pContext->pMemory, pContext->pc);
     // UNDONE: This is specific to 16-bit instructions.
     pContext->newPC = pContext->pc + 2;
     if ((instr & 0xC000) == 0x0000)
