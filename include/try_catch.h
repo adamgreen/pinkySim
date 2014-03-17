@@ -19,6 +19,8 @@
 #define noException                         0
 #define undefinedException                  1
 #define unpredictableException              2
+#define outOfMemoryException                3
+#define busErrorException                   4
 
 
 #ifndef __debugbreak
