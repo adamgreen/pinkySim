@@ -109,30 +109,43 @@ static uint32_t Align(uint32_t value, uint32_t alignment);
 static uint32_t unalignedMemRead(PinkySimContext* pContext, uint32_t address, uint32_t size);
 static uint32_t alignedMemRead(PinkySimContext* pContext, uint32_t address, uint32_t size);
 static int isAligned(uint32_t address, uint32_t size);
+static int loadStoreSingleDataItem(PinkySimContext* pContext, uint16_t instr);
+static int strRegister(PinkySimContext* pContext, uint16_t instr);
+static void unalignedMemWrite(PinkySimContext* pContext, uint32_t address, uint32_t size, uint32_t value);
+static void alignedMemWrite(PinkySimContext* pContext, uint32_t address, uint32_t size, uint32_t value);
 
 
 int pinkySimStep(PinkySimContext* pContext)
 {
     int      result = PINKYSIM_STEP_UNDEFINED;
-    uint16_t instr;
 
     if (!(pContext->xPSR & EPSR_T))
         return PINKYSIM_STEP_HARDFAULT;
-    
-    instr =  IMemory_Read16(pContext->pMemory, pContext->pc);
-    // UNDONE: This is specific to 16-bit instructions.
-    pContext->newPC = pContext->pc + 2;
 
-    if ((instr & 0xC000) == 0x0000)
-        result = shiftAddSubtractMoveCompare(pContext, instr);
-    else if ((instr & 0xFC00) == 0x4000)
-        result = dataProcessing(pContext, instr);
-    else if ((instr & 0xFC00) == 0x4400)
-        result = specialDataAndBranchExchange(pContext, instr);
-    else if ((instr & 0xF800) == 0x4800)
-        result = ldrLiteral(pContext, instr);
+    __try
+    {
+        uint16_t instr =  IMemory_Read16(pContext->pMemory, pContext->pc);
+        // UNDONE: This is specific to 16-bit instructions.
+        pContext->newPC = pContext->pc + 2;
+
+        if ((instr & 0xC000) == 0x0000)
+            result = shiftAddSubtractMoveCompare(pContext, instr);
+        else if ((instr & 0xFC00) == 0x4000)
+            result = dataProcessing(pContext, instr);
+        else if ((instr & 0xFC00) == 0x4400)
+            result = specialDataAndBranchExchange(pContext, instr);
+        else if ((instr & 0xF800) == 0x4800)
+            result = ldrLiteral(pContext, instr);
+        else if (((instr & 0xF000) == 0x5000) || ((instr & 0xE000) == 0x6000) || ((instr & 0xE000) == 0x8000))
+            result = loadStoreSingleDataItem(pContext, instr);
     
-    pContext->pc = pContext->newPC;
+        pContext->pc = pContext->newPC;
+    }
+    __catch
+    {
+        return PINKYSIM_STEP_HARDFAULT;
+    }
+    
     return result;
 }
 
@@ -1495,4 +1508,54 @@ static uint32_t alignedMemRead(PinkySimContext* pContext, uint32_t address, uint
 static int isAligned(uint32_t address, uint32_t size)
 {
     return address == (address & ~(size - 1));
+}
+
+static int loadStoreSingleDataItem(PinkySimContext* pContext, uint16_t instr)
+{
+    if ((instr & 0xFE00) == 0x5000)
+        return strRegister(pContext, instr);
+    else
+        return PINKYSIM_STEP_UNDEFINED;
+}
+
+static int strRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        t = instr & 0x7;
+        uint32_t        n = (instr & (0x7 << 3)) >> 3;
+        uint32_t        m = (instr & (0x7 << 6)) >> 6;
+        DecodedImmShift decodedShift = {SRType_LSL, 0};
+        uint32_t        offset;
+        uint32_t        address;
+        
+        // UNDONE: Only Thumb2 instructions require this shifted value.
+        offset = Shift(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
+        address = getReg(pContext, n) + offset;
+        unalignedMemWrite(pContext, address, 4, getReg(pContext, t));
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static void unalignedMemWrite(PinkySimContext* pContext, uint32_t address, uint32_t size, uint32_t value)
+{
+    // UNDONE: All memory accesses must be aligned on ARMv6-M.
+    alignedMemWrite(pContext, address, size, value);
+}
+
+static void alignedMemWrite(PinkySimContext* pContext, uint32_t address, uint32_t size, uint32_t value)
+{
+    if (!isAligned(address, size))
+        __throw(alignmentException);
+        
+    // UNDONE: So far test cases are only hitting 4 byte reads.
+    //switch (size)
+    //{
+    //case 4:
+        IMemory_Write32(pContext->pMemory, address, value);
+    //    break;
+    //default:
+    //    return 0xFFFFFFFF;
+    //}
 }
