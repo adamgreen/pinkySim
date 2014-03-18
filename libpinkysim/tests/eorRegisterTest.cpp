@@ -33,24 +33,27 @@ TEST_GROUP_BASE(eorRegister, pinkySimBase)
 TEST(eorRegister, UseLowestRegisterForBothArgsAndResultShouldBeZero)
 {
     emitInstruction16("0100000001mmmddd", R0, R0);
-    setExpectedXPSRflags("nZ");
+    setExpectedXPSRflags("nZc");
     setExpectedRegisterValue(R0, 0);
+    clearCarry();
     pinkySimStep(&m_context);
 }
 
 TEST(eorRegister, UseHighestRegisterForBothArgsAndResultShouldBeZero)
 {
     emitInstruction16("0100000001mmmddd", R7, R7);
-    setExpectedXPSRflags("nZ");
+    setExpectedXPSRflags("nZC");
     setExpectedRegisterValue(R7, 0);
+    setCarry();
     pinkySimStep(&m_context);
 }
 
 TEST(eorRegister, XorR3andR7)
 {
     emitInstruction16("0100000001mmmddd", R3, R7);
-    setExpectedXPSRflags("nz");
+    setExpectedXPSRflags("nzc");
     setExpectedRegisterValue(R7, 0x33333333 ^ 0x77777777);
+    clearCarry();
     pinkySimStep(&m_context);
 }
 
@@ -58,7 +61,8 @@ TEST(eorRegister, UseXorToJustFlipNegativeSignBitOn)
 {
     emitInstruction16("0100000001mmmddd", R7, R3);
     setRegisterValue(R7, 0x80000000);
-    setExpectedXPSRflags("Nz");
+    setExpectedXPSRflags("NzC");
     setExpectedRegisterValue(R3, 0x33333333 ^ 0x80000000);
+    setCarry();
     pinkySimStep(&m_context);
 }
