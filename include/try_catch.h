@@ -21,6 +21,7 @@
 #define unpredictableException              2
 #define outOfMemoryException                3
 #define busErrorException                   4
+#define alignmentException                  5
 
 
 #ifndef __debugbreak

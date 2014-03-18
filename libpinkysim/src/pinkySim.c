@@ -104,6 +104,11 @@ static int bx(PinkySimContext* pContext, uint16_t instr);
 static void BXWritePC(PinkySimContext* pContext, uint32_t address);
 static int blx(PinkySimContext* pContext, uint16_t instr);
 static void BLXWritePC(PinkySimContext* pContext, uint32_t address);
+static int ldrLiteral(PinkySimContext* pContext, uint16_t instr);
+static uint32_t Align(uint32_t value, uint32_t alignment);
+static uint32_t unalignedMemRead(PinkySimContext* pContext, uint32_t address, uint32_t size);
+static uint32_t alignedMemRead(PinkySimContext* pContext, uint32_t address, uint32_t size);
+static int isAligned(uint32_t address, uint32_t size);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -117,12 +122,15 @@ int pinkySimStep(PinkySimContext* pContext)
     instr =  IMemory_Read16(pContext->pMemory, pContext->pc);
     // UNDONE: This is specific to 16-bit instructions.
     pContext->newPC = pContext->pc + 2;
+
     if ((instr & 0xC000) == 0x0000)
         result = shiftAddSubtractMoveCompare(pContext, instr);
     else if ((instr & 0xFC00) == 0x4000)
         result = dataProcessing(pContext, instr);
     else if ((instr & 0xFC00) == 0x4400)
         result = specialDataAndBranchExchange(pContext, instr);
+    else if ((instr & 0xF800) == 0x4800)
+        result = ldrLiteral(pContext, instr);
     
     pContext->pc = pContext->newPC;
     return result;
@@ -1430,4 +1438,61 @@ static void BLXWritePC(PinkySimContext* pContext, uint32_t address)
     if (address & 1)
         pContext->xPSR |= EPSR_T;
     BranchTo(pContext, address & 0xFFFFFFFE);
+}
+
+static int ldrLiteral(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t t = (instr & (0x7 << 8)) >> 8;
+        uint32_t imm32 = (instr & 0xFF) << 2;
+        // UNDONE: Add is forced to be TRUE in the ARMv6-m encoding.
+        //int      add = TRUE;
+        uint32_t base;
+        uint32_t address;
+
+        base = Align(getReg(pContext, PC), 4);
+        // UNDONE: Add is forced to be TRUE in the ARMv6-m encoding.
+        //if (add)
+            address = base + imm32;
+        //else
+        //    address = base - imm32;
+        setReg(pContext, t, unalignedMemRead(pContext, address, 4));
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static uint32_t Align(uint32_t value, uint32_t alignment)
+{
+    assert (alignment == 2 || alignment == 4);
+    return value & ~(alignment - 1);
+}
+
+static uint32_t unalignedMemRead(PinkySimContext* pContext, uint32_t address, uint32_t size)
+{
+    // UNDONE: All memory accesses must be aligned on ARMv6-M.
+    return alignedMemRead(pContext, address, size);
+}
+
+static uint32_t alignedMemRead(PinkySimContext* pContext, uint32_t address, uint32_t size)
+{
+    // UNDONE: Do nothing for alignment now but once I can construct tests for it, I must enable it.
+    //if (!isAligned(address, size))
+        //__throw(alignmentException);
+    assert (isAligned(address,size));
+        
+    // UNDONE: So far test cases are only hitting 4 byte reads.
+    //switch (size)
+    //{
+    //case 4:
+        return IMemory_Read32(pContext->pMemory, address);
+    //default:
+    //    return 0xFFFFFFFF;
+    //}
+}
+
+static int isAligned(uint32_t address, uint32_t size)
+{
+    return address == (address & ~(size - 1));
 }
