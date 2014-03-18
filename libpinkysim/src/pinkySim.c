@@ -113,6 +113,7 @@ static int loadStoreSingleDataItem(PinkySimContext* pContext, uint16_t instr);
 static int strRegister(PinkySimContext* pContext, uint16_t instr);
 static void unalignedMemWrite(PinkySimContext* pContext, uint32_t address, uint32_t size, uint32_t value);
 static void alignedMemWrite(PinkySimContext* pContext, uint32_t address, uint32_t size, uint32_t value);
+static int strhRegister(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -1514,6 +1515,8 @@ static int loadStoreSingleDataItem(PinkySimContext* pContext, uint16_t instr)
 {
     if ((instr & 0xFE00) == 0x5000)
         return strRegister(pContext, instr);
+    else if ((instr & 0xFE00) == 0x5200)
+        return strhRegister(pContext, instr);
     else
         return PINKYSIM_STEP_UNDEFINED;
 }
@@ -1549,13 +1552,35 @@ static void alignedMemWrite(PinkySimContext* pContext, uint32_t address, uint32_
     if (!isAligned(address, size))
         __throw(alignmentException);
         
-    // UNDONE: So far test cases are only hitting 4 byte reads.
-    //switch (size)
-    //{
-    //case 4:
+    switch (size)
+    {
+    case 4:
         IMemory_Write32(pContext->pMemory, address, value);
-    //    break;
-    //default:
-    //    return 0xFFFFFFFF;
-    //}
+        break;
+    // UNDONE: Added to improve code coverage.
+    default:
+    case 2:
+        IMemory_Write16(pContext->pMemory, address, value);
+        break;
+    }
+}
+
+static int strhRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        t = instr & 0x7;
+        uint32_t        n = (instr & (0x7 << 3)) >> 3;
+        uint32_t        m = (instr & (0x7 << 6)) >> 6;
+        DecodedImmShift decodedShift = {SRType_LSL, 0};
+        uint32_t        offset;
+        uint32_t        address;
+        
+        // UNDONE: Only Thumb2 instructions require this shifted value.
+        offset = Shift(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
+        address = getReg(pContext, n) + offset;
+        unalignedMemWrite(pContext, address, 2, getReg(pContext, t));
+    }
+
+    return PINKYSIM_STEP_OK;
 }
