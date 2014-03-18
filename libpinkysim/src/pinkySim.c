@@ -153,30 +153,32 @@ int pinkySimStep(PinkySimContext* pContext)
 
 static int shiftAddSubtractMoveCompare(PinkySimContext* pContext, uint16_t instr)
 {
+    int result = PINKYSIM_STEP_UNDEFINED;
+
     if ((instr & 0x3800) == 0x0000)
-        return lslImmediate(pContext, instr);
+        result = lslImmediate(pContext, instr);
     else if ((instr & 0x3800) == 0x0800)
-        return lsrImmediate(pContext, instr);
+        result = lsrImmediate(pContext, instr);
     else if ((instr & 0x3800) == 0x1000)
-        return asrImmediate(pContext, instr);
+        result = asrImmediate(pContext, instr);
     else if ((instr & 0x3E00) == 0x1800)
-        return addRegisterT1(pContext, instr);
+        result = addRegisterT1(pContext, instr);
     else if ((instr & 0x3E00) == 0x1A00)
-        return subRegister(pContext, instr);
+        result = subRegister(pContext, instr);
     else if ((instr & 0x3E00) == 0x1C00)
-        return addImmediateT1(pContext, instr);
+        result = addImmediateT1(pContext, instr);
     else if ((instr & 0x3E00) == 0x1E00)
-        return subImmediateT1(pContext, instr);
+        result = subImmediateT1(pContext, instr);
     else if ((instr & 0x3800) == 0x2000)
-        return movImmediate(pContext, instr);
+        result = movImmediate(pContext, instr);
     else if ((instr & 0x3800) == 0x2800)
-        return cmpImmediate(pContext, instr);
+        result = cmpImmediate(pContext, instr);
     else if ((instr & 0x3800) == 0x3000)
-        return addImmediateT2(pContext, instr);
+        result = addImmediateT2(pContext, instr);
     else if ((instr & 0x3800) == 0x3800)
-        return subImmediateT2(pContext, instr);
-    else
-        return PINKYSIM_STEP_UNDEFINED;
+        result = subImmediateT2(pContext, instr);
+
+    return result;
 }
 
 static int lslImmediate(PinkySimContext* pContext, uint16_t instr)
@@ -725,43 +727,61 @@ static int subImmediateT2(PinkySimContext* pContext, uint16_t instr)
 
 static int dataProcessing(PinkySimContext* pContext, uint16_t instr)
 {
+    int result = PINKYSIM_STEP_UNDEFINED;
+    
     switch ((instr & 0x03C0) >> 6)
     {
     case 0:
-        return andRegister(pContext, instr);
+        result = andRegister(pContext, instr);
+        break;
     case 1:
-        return eorRegister(pContext, instr);
+        result = eorRegister(pContext, instr);
+        break;
     case 2:
-        return lslRegister(pContext, instr);
+        result = lslRegister(pContext, instr);
+        break;
     case 3:
-        return lsrRegister(pContext, instr);
+        result = lsrRegister(pContext, instr);
+        break;
     case 4:
-        return asrRegister(pContext, instr);
+        result = asrRegister(pContext, instr);
+        break;
     case 5:
-        return adcRegister(pContext, instr);
+        result = adcRegister(pContext, instr);
+        break;
     case 6:
-        return sbcRegister(pContext, instr);
+        result = sbcRegister(pContext, instr);
+        break;
     case 7:
-        return rorRegister(pContext, instr);
+        result = rorRegister(pContext, instr);
+        break;
     case 8:
-        return tstRegister(pContext, instr);
+        result = tstRegister(pContext, instr);
+        break;
     case 9:
-        return rsbRegister(pContext, instr);
+        result = rsbRegister(pContext, instr);
+        break;
     case 10:
-        return cmpRegisterT1(pContext, instr);
+        result = cmpRegisterT1(pContext, instr);
+        break;
     case 11:
-        return cmnRegister(pContext, instr);
+        result = cmnRegister(pContext, instr);
+        break;
     case 12:
-        return orrRegister(pContext, instr);
+        result = orrRegister(pContext, instr);
+        break;
     case 13:
-        return mulRegister(pContext, instr);
+        result = mulRegister(pContext, instr);
+        break;
     case 14:
-        return bicRegister(pContext, instr);
+        result = bicRegister(pContext, instr);
+        break;
     case 15:
-        return mvnRegister(pContext, instr);
-    default:
-        return PINKYSIM_STEP_UNDEFINED;
+        result = mvnRegister(pContext, instr);
+        break;
     }
+    
+    return result;
 }
 
 static int andRegister(PinkySimContext* pContext, uint16_t instr)
@@ -1236,21 +1256,22 @@ static int mvnRegister(PinkySimContext* pContext, uint16_t instr)
 
 static int specialDataAndBranchExchange(PinkySimContext* pContext, uint16_t instr)
 {
+    int result = PINKYSIM_STEP_UNDEFINED;
+    
     if ((instr & 0x0300) == 0x0000)
-        return addRegisterT2(pContext, instr);
+        result = addRegisterT2(pContext, instr);
     else if ((instr & 0x03C0) == 0x0100)
-        return PINKYSIM_STEP_UNPREDICTABLE;
-    else if (((instr & 0x03C0) == 0x0140) ||
-             ((instr & 0x0380) == 0x0180))
-        return cmpRegisterT2(pContext, instr);
+        result = PINKYSIM_STEP_UNPREDICTABLE;
+    else if (((instr & 0x03C0) == 0x0140) || ((instr & 0x0380) == 0x0180))
+        result = cmpRegisterT2(pContext, instr);
     else if ((instr & 0x0300) == 0x0200)
-        return movRegister(pContext, instr);
+        result = movRegister(pContext, instr);
     else if ((instr & 0x0380) == 0x0300)
-        return bx(pContext, instr);
+        result = bx(pContext, instr);
     else if ((instr & 0x0380) == 0x0380)
-        return blx(pContext, instr);
-    else
-        return PINKYSIM_STEP_UNDEFINED;
+        result = blx(pContext, instr);
+        
+    return result;
 }
 
 static int addRegisterT2(PinkySimContext* pContext, uint16_t instr)
@@ -1518,14 +1539,16 @@ static int isAligned(uint32_t address, uint32_t size)
 
 static int loadStoreSingleDataItem(PinkySimContext* pContext, uint16_t instr)
 {
+    int result = PINKYSIM_STEP_UNDEFINED;
+    
     if ((instr & 0xFE00) == 0x5000)
-        return strRegister(pContext, instr);
+        result = strRegister(pContext, instr);
     else if ((instr & 0xFE00) == 0x5200)
-        return strhRegister(pContext, instr);
+        result = strhRegister(pContext, instr);
     else if ((instr & 0xFE00) == 0x5400)
-        return strbRegister(pContext, instr);
-    else
-        return PINKYSIM_STEP_UNDEFINED;
+        result = strbRegister(pContext, instr);
+        
+    return result;
 }
 
 static int strRegister(PinkySimContext* pContext, uint16_t instr)
