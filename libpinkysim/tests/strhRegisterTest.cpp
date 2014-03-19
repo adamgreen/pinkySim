@@ -27,7 +27,7 @@ TEST_GROUP_BASE(strhRegister, pinkySimBase)
 };
 
 
-/* STR - Register
+/* STRH - Register
    Encoding: 0101 001 Rm:3 Rn:3 Rt:3 */
 TEST(strhRegister, UseAMixOfRegistersWordAligned)
 {
