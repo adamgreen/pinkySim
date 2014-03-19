@@ -117,6 +117,7 @@ static int strhRegister(PinkySimContext* pContext, uint16_t instr);
 static int strbRegister(PinkySimContext* pContext, uint16_t instr);
 static int ldrsbRegister(PinkySimContext* pContext, uint16_t instr);
 static uint32_t signExtend8(uint32_t valueToExtend);
+static int ldrRegister(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -1515,21 +1516,26 @@ static uint32_t unalignedMemRead(PinkySimContext* pContext, uint32_t address, ui
 
 static uint32_t alignedMemRead(PinkySimContext* pContext, uint32_t address, uint32_t size)
 {
+    uint32_t result = 0xFFFFFFFF;
+    
     assert (size == 4 || size == 2 || size == 1);
 
-    // UNDONE: Do nothing for alignment now but once I can construct tests for it, I must enable it.
-    //if (!isAligned(address, size))
-        //__throw(alignmentException);
-    assert (isAligned(address,size));
+    if (!isAligned(address, size))
+        __throw(alignmentException);
         
-    // UNDONE: So far test cases are only hitting 4 byte reads.
-    //switch (size)
-    //{
-    //case 4:
-        return IMemory_Read32(pContext->pMemory, address);
-    //default:
-    //    return 0xFFFFFFFF;
-    //}
+    switch (size)
+    {
+    case 1:
+        result = IMemory_Read8(pContext->pMemory, address);
+        break;
+    case 2:
+        result = IMemory_Read16(pContext->pMemory, address);
+        break;
+    case 4:
+        result = IMemory_Read32(pContext->pMemory, address);
+        break;
+    }
+    return result;
 }
 
 static int isAligned(uint32_t address, uint32_t size)
@@ -1551,6 +1557,8 @@ static int loadStoreSingleDataItem(PinkySimContext* pContext, uint16_t instr)
         result = strbRegister(pContext, instr);
     else if ((instr & 0xFE00) == 0x5600)
         result = ldrsbRegister(pContext, instr);
+    else if ((instr & 0xFE00) == 0x5800)
+        result = ldrRegister(pContext, instr);
         
     return result;
 }
@@ -1677,4 +1685,39 @@ static int ldrsbRegister(PinkySimContext* pContext, uint16_t instr)
 static uint32_t signExtend8(uint32_t valueToExtend)
 {
     return (uint32_t)(((int32_t)valueToExtend << 24) >> 24);
+}
+
+static int ldrRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        t = instr & 0x7;
+        uint32_t        n = (instr & (0x7 << 3)) >> 3;
+        uint32_t        m = (instr & (0x7 << 6)) >> 6;
+        // UNDONE: Not required for ARMv6-M encodings.
+        //int             index = TRUE;
+        //int             add = TRUE;
+        //int             wback = FALSE;
+        DecodedImmShift decodedShift = {SRType_LSL, 0};
+        uint32_t        offset;
+        uint32_t        offsetAddress;
+        uint32_t        address;
+        
+        // UNDONE: Only Thumb2 instructions require this shifted value.
+        offset = Shift(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
+        // UNDONE: Not required for ARMv6-m encodings.
+        //if (add)
+            offsetAddress = getReg(pContext, n) + offset;
+        //else
+        //    offsetAddress = getReg(pContext, n) - offset;
+        //if (index)
+            address = offsetAddress;
+        //else
+        //    address = getReg(pContext, n);
+        setReg(pContext, t, unalignedMemRead(pContext, address, 4));
+        //if (wback)
+        //    setReg(pContext, n, offsetAddress);
+    }
+
+    return PINKYSIM_STEP_OK;
 }
