@@ -122,6 +122,8 @@ static int ldrhRegister(PinkySimContext* pContext, uint16_t instr);
 static uint32_t zeroExtend16(uint32_t value);
 static int ldrbRegister(PinkySimContext* pContext, uint16_t instr);
 static uint32_t zeroExtend8(uint32_t value);
+static int ldrshRegister(PinkySimContext* pContext, uint16_t instr);
+static uint32_t signExtend16(uint32_t valueToExtend);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -1567,6 +1569,8 @@ static int loadStoreSingleDataItem(PinkySimContext* pContext, uint16_t instr)
         result = ldrhRegister(pContext, instr);
     else if ((instr & 0xFE00) == 0x5C00)
         result = ldrbRegister(pContext, instr);
+    else if ((instr & 0xFE00) == 0x5E00)
+        result = ldrshRegister(pContext, instr);
         
     return result;
 }
@@ -1810,4 +1814,46 @@ static uint32_t zeroExtend8(uint32_t value)
 {
     // UNDONE: IMemory_Read8() returns zero extended values already.
     return value;
+}
+
+static int ldrshRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        t = instr & 0x7;
+        uint32_t        n = (instr & (0x7 << 3)) >> 3;
+        uint32_t        m = (instr & (0x7 << 6)) >> 6;
+        // UNDONE: Not required for ARMv6-M encodings.
+        //int             index = TRUE;
+        //int             add = TRUE;
+        //int             wback = FALSE;
+        DecodedImmShift decodedShift = {SRType_LSL, 0};
+        uint32_t        offset;
+        uint32_t        offsetAddress;
+        uint32_t        address;
+        uint32_t        data;
+        
+        // UNDONE: Only Thumb2 instructions require this shifted value.
+        offset = Shift(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
+        // UNDONE: Not required for ARMv6-m encodings.
+        //if (add)
+            offsetAddress = getReg(pContext, n) + offset;
+        //else
+        //    offsetAddress = getReg(pContext, n) - offset;
+        //if (index)
+            address = offsetAddress;
+        //else
+        //    address = getReg(pContext, n);
+        data = unalignedMemRead(pContext, address, 2);
+        //if (wback)
+        //    setReg(pContext, n, offsetAddress);
+        setReg(pContext, t, signExtend16(data));
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static uint32_t signExtend16(uint32_t valueToExtend)
+{
+    return (uint32_t)(((int32_t)valueToExtend << 16) >> 16);
 }
