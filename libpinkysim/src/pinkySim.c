@@ -124,6 +124,7 @@ static int ldrbRegister(PinkySimContext* pContext, uint16_t instr);
 static uint32_t zeroExtend8(uint32_t value);
 static int ldrshRegister(PinkySimContext* pContext, uint16_t instr);
 static uint32_t signExtend16(uint32_t valueToExtend);
+static int strImmediateT1(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -1571,6 +1572,8 @@ static int loadStoreSingleDataItem(PinkySimContext* pContext, uint16_t instr)
         result = ldrbRegister(pContext, instr);
     else if ((instr & 0xFE00) == 0x5E00)
         result = ldrshRegister(pContext, instr);
+    else if ((instr & 0xF800) == 0x6000)
+        result = strImmediateT1(pContext, instr);
         
     return result;
 }
@@ -1856,4 +1859,35 @@ static int ldrshRegister(PinkySimContext* pContext, uint16_t instr)
 static uint32_t signExtend16(uint32_t valueToExtend)
 {
     return (uint32_t)(((int32_t)valueToExtend << 16) >> 16);
+}
+
+static int strImmediateT1(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        t = instr & 0x7;
+        uint32_t        n = (instr & (0x7 << 3)) >> 3;
+        uint32_t        imm32 = (instr & (0x1F << 6)) >> 4;
+        // UNDONE: Not required for ARMv6-M encodings.
+        //int             index = TRUE;
+        //int             add = TRUE;
+        //int             wback = FALSE;        
+        uint32_t        offsetAddress;
+        uint32_t        address;
+
+        // UNDONE: Not required for ARMv6-m encodings.
+        //if (add)
+            offsetAddress = getReg(pContext, n) + imm32;
+        //else
+        //    offsetAddress = getReg(pContext, n) - imm32;
+        //if (index)
+            address = offsetAddress;
+        //else
+        //    address = getReg(pContext, n);
+        unalignedMemWrite(pContext, address, 4, getReg(pContext, t));
+        //if (wback)
+        //    setReg(pContext, n, offsetAddress);
+    }
+
+    return PINKYSIM_STEP_OK;
 }
