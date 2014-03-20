@@ -47,6 +47,14 @@ TEST(strhImmediate, AnotherMixOfRegistersNotWordAligned)
     CHECK_EQUAL(0x7777FEED, IMemory_Read32(m_context.pMemory, INITIAL_PC + 4));
 }
 
+TEST(strhImmediate, LargestOffset)
+{
+    emitInstruction16("10000iiiiinnnttt", 31, R0, R7);
+    setRegisterValue(R0, INITIAL_PC);
+    SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 60, 0xBAADFEED, READ_WRITE);
+    pinkySimStep(&m_context);
+    CHECK_EQUAL(0x7777FEED, IMemory_Read32(m_context.pMemory, INITIAL_PC + 60));
+}
 TEST(strhImmediate, AttemptStoreToInvalidAddress)
 {
     emitInstruction16("10000iiiiinnnttt", 0, R3, R1);
