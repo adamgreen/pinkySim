@@ -65,10 +65,19 @@ TEST(strbImmediate, YetAnotherMixOfRegistersFourthByteInWord)
     CHECK_EQUAL(0x55ADFEED, IMemory_Read32(m_context.pMemory, INITIAL_PC + 4));
 }
 
-TEST(strbImmediate, AttemptStoreToInvalidAddressWithLargestOffset)
+TEST(strbImmediate, LargestOffset)
 {
-    emitInstruction16("01110iiiiinnnttt", 31, R3, R0);
-    setRegisterValue(R3, 0xFFFFFFFC - 31);
+    emitInstruction16("01110iiiiinnnttt", 31, R2, R4);
+    setRegisterValue(R2, INITIAL_PC);
+    SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 28, 0xBAADFEED, READ_WRITE);
+    pinkySimStep(&m_context);
+    CHECK_EQUAL(0x44ADFEED, IMemory_Read32(m_context.pMemory, INITIAL_PC + 28));
+}
+
+TEST(strbImmediate, AttemptStoreToInvalidAddress)
+{
+    emitInstruction16("01110iiiiinnnttt", 0, R3, R0);
+    setRegisterValue(R3, 0xFFFFFFFC);
     setExpectedStepReturn(PINKYSIM_STEP_HARDFAULT);
     setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
