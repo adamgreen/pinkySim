@@ -29,7 +29,7 @@ TEST_GROUP_BASE(strImmediate, pinkySimBase)
 
 /* STR - Immediate Encoding T1
    Encoding: 011 0 0 Imm:5 Rn:3 Rt:3 */
-TEST(strImmediate, UseAMixOfRegistersWithSmallestImmediateOffset)
+TEST(strImmediate, T1UseAMixOfRegistersWithSmallestImmediateOffset)
 {
     emitInstruction16("01100iiiiinnnttt", 0, R7, R0);
     setRegisterValue(R7, INITIAL_PC + 4);
@@ -38,7 +38,7 @@ TEST(strImmediate, UseAMixOfRegistersWithSmallestImmediateOffset)
     CHECK_EQUAL(0x00000000, IMemory_Read32(m_context.pMemory, INITIAL_PC + 4));
 }
 
-TEST(strImmediate, UseAnotherMixOfRegistersWithLargestImmediateOffset)
+TEST(strImmediate, T1UseAnotherMixOfRegistersWithLargestImmediateOffset)
 {
     emitInstruction16("01100iiiiinnnttt", 31, R0, R7);
     setRegisterValue(R0, INITIAL_PC);
@@ -47,7 +47,7 @@ TEST(strImmediate, UseAnotherMixOfRegistersWithLargestImmediateOffset)
     CHECK_EQUAL(0x77777777, IMemory_Read32(m_context.pMemory, INITIAL_PC + 31 * 4));
 }
 
-TEST(strImmediate, AttemptUnalignedStore)
+TEST(strImmediate, T1AttemptUnalignedStore)
 {
     emitInstruction16("01100iiiiinnnttt", 0, R3, R2);
     setRegisterValue(R3, INITIAL_PC + 2);
@@ -56,10 +56,50 @@ TEST(strImmediate, AttemptUnalignedStore)
     pinkySimStep(&m_context);
 }
 
-TEST(strImmediate, AttemptStoreToInvalidAddress)
+TEST(strImmediate, T1AttemptStoreToInvalidAddress)
 {
     emitInstruction16("01100iiiiinnnttt", 16, R3, R2);
     setRegisterValue(R3, 0xFFFFFFFC - 16 * 4);
+    setExpectedStepReturn(PINKYSIM_STEP_HARDFAULT);
+    setExpectedRegisterValue(PC, INITIAL_PC);
+    pinkySimStep(&m_context);
+}
+
+
+
+/* STR - Immediate Encoding T2
+   Encoding: 1001 0 Rt:3 Imm:8 */
+TEST(strImmediate, T2StoreFromR0WithSmallestImmediateOffset)
+{
+    emitInstruction16("10010tttiiiiiiii", R0, 0);
+    setRegisterValue(SP, INITIAL_PC + 4);
+    SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 4, 0xBAADFEED, READ_WRITE);
+    pinkySimStep(&m_context);
+    CHECK_EQUAL(0x00000000, IMemory_Read32(m_context.pMemory, INITIAL_PC + 4));
+}
+
+TEST(strImmediate, T2StoreFromR7WithLargestImmediateOffset)
+{
+    emitInstruction16("10010tttiiiiiiii", R7, 255);
+    setRegisterValue(SP, INITIAL_PC);
+    SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 255 * 4, 0xBAADFEED, READ_WRITE);
+    pinkySimStep(&m_context);
+    CHECK_EQUAL(0x77777777, IMemory_Read32(m_context.pMemory, INITIAL_PC + 255 * 4));
+}
+
+TEST(strImmediate, T2AttemptUnalignedStore)
+{
+    emitInstruction16("10010tttiiiiiiii", R2, 0);
+    setRegisterValue(SP, INITIAL_PC + 2);
+    setExpectedStepReturn(PINKYSIM_STEP_HARDFAULT);
+    setExpectedRegisterValue(PC, INITIAL_PC);
+    pinkySimStep(&m_context);
+}
+
+TEST(strImmediate, T2AttemptStoreToInvalidAddress)
+{
+    emitInstruction16("10010tttiiiiiiii", R2, 0);
+    setRegisterValue(SP, 0xFFFFFFFC);
     setExpectedStepReturn(PINKYSIM_STEP_HARDFAULT);
     setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
