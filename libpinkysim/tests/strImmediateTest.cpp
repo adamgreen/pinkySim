@@ -69,22 +69,22 @@ TEST(strImmediate, T1AttemptStoreToInvalidAddress)
 
 /* STR - Immediate Encoding T2
    Encoding: 1001 0 Rt:3 Imm:8 */
-TEST(strImmediate, T2StoreFromR0WithSmallestImmediateOffset)
+TEST(strImmediate, T2HighestRegisterWithSmallestImmediateOffset)
 {
-    emitInstruction16("10010tttiiiiiiii", R0, 0);
+    emitInstruction16("10010tttiiiiiiii", R7, 0);
     setRegisterValue(SP, INITIAL_PC + 4);
     SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 4, 0xBAADFEED, READ_WRITE);
     pinkySimStep(&m_context);
-    CHECK_EQUAL(0x00000000, IMemory_Read32(m_context.pMemory, INITIAL_PC + 4));
+    CHECK_EQUAL(0x77777777, IMemory_Read32(m_context.pMemory, INITIAL_PC + 4));
 }
 
-TEST(strImmediate, T2StoreFromR7WithLargestImmediateOffset)
+TEST(strImmediate, T2LowestRegisterWithLargestImmediateOffset)
 {
-    emitInstruction16("10010tttiiiiiiii", R7, 255);
+    emitInstruction16("10010tttiiiiiiii", R0, 255);
     setRegisterValue(SP, INITIAL_PC);
     SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 255 * 4, 0xBAADFEED, READ_WRITE);
     pinkySimStep(&m_context);
-    CHECK_EQUAL(0x77777777, IMemory_Read32(m_context.pMemory, INITIAL_PC + 255 * 4));
+    CHECK_EQUAL(0x00000000, IMemory_Read32(m_context.pMemory, INITIAL_PC + 255 * 4));
 }
 
 TEST(strImmediate, T2AttemptUnalignedStore)
