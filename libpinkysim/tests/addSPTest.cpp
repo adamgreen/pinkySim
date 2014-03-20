@@ -49,3 +49,28 @@ TEST(addSP, T1UseIntermediateValues)
     setExpectedRegisterValue(R3, INITIAL_SP + 128 * 4);
     pinkySimStep(&m_context);
 }
+
+
+
+/* ADD SP Plus Immediate - Encoding T2
+   Encoding: 1011 0000 0 Imm:7 */
+TEST(addSP, T2SmallestImmediate)
+{
+    emitInstruction16("101100000iiiiiii", 0);
+    setExpectedRegisterValue(SP, INITIAL_SP + 0);
+    pinkySimStep(&m_context);
+}
+
+TEST(addSP, T2LargestImmediate)
+{
+    emitInstruction16("101100000iiiiiii", 127);
+    setExpectedRegisterValue(SP, INITIAL_SP + 127 * 4);
+    pinkySimStep(&m_context);
+}
+
+TEST(addSP, T2IntermediateValues)
+{
+    emitInstruction16("101100000iiiiiii", 64);
+    setExpectedRegisterValue(SP, INITIAL_SP + 64 * 4);
+    pinkySimStep(&m_context);
+}

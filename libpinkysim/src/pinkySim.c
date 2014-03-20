@@ -134,6 +134,8 @@ static int strImmediateT2(PinkySimContext* pContext, uint16_t instr);
 static int ldrImmediateT2(PinkySimContext* pContext, uint16_t instr);
 static int adr(PinkySimContext* pContext, uint16_t instr);
 static int addSPT1(PinkySimContext* pContext, uint16_t instr);
+static int misc16BitInstructions(PinkySimContext* pContext, uint16_t instr);
+static int addSPT2(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -163,6 +165,8 @@ int pinkySimStep(PinkySimContext* pContext)
             result = adr(pContext, instr);
         else if ((instr & 0xF800) == 0xA800)
             result = addSPT1(pContext, instr);
+        else if ((instr & 0xF000) == 0xB000)
+            result = misc16BitInstructions(pContext, instr);
     
         pContext->pc = pContext->newPC;
     }
@@ -2163,6 +2167,34 @@ static int addSPT1(PinkySimContext* pContext, uint16_t instr)
     {
         uint32_t        d = (instr & (0x7 << 8)) >> 8;
         uint32_t        imm32 = (instr & 0xFF) << 2;
+        // UNDONE: Not used in ARMv6-m encodings.
+        //int             setFlags = FALSE;
+        AddResults      addResults;
+        
+        addResults = AddWithCarry(getReg(pContext, SP), imm32, 0);
+        setReg(pContext, d, addResults.result);
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+
+static int misc16BitInstructions(PinkySimContext* pContext, uint16_t instr)
+{
+    int result = PINKYSIM_STEP_UNDEFINED;
+    
+    if ((instr & 0x0F80) == 0x0000)
+        result = addSPT2(pContext, instr);
+        
+    return result;
+}
+
+static int addSPT2(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = 13;
+        uint32_t        imm32 = (instr & 0x7F) << 2;
         // UNDONE: Not used in ARMv6-m encodings.
         //int             setFlags = FALSE;
         AddResults      addResults;
