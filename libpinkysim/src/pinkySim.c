@@ -129,6 +129,7 @@ static int ldrImmediateT1(PinkySimContext* pContext, uint16_t instr);
 static int strbImmediate(PinkySimContext* pContext, uint16_t instr);
 static int ldrbImmediate(PinkySimContext* pContext, uint16_t instr);
 static int strhImmediate(PinkySimContext* pContext, uint16_t instr);
+static int ldrhImmediate(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -1586,6 +1587,8 @@ static int loadStoreSingleDataItem(PinkySimContext* pContext, uint16_t instr)
         result = ldrbImmediate(pContext, instr);
     else if ((instr & 0xF800) == 0x8000)
         result = strhImmediate(pContext, instr);
+    else if ((instr & 0xF800) == 0x8800)
+        result = ldrhImmediate(pContext, instr);
         
     return result;
 }
@@ -2023,6 +2026,37 @@ static int strhImmediate(PinkySimContext* pContext, uint16_t instr)
         unalignedMemWrite(pContext, address, 2, getReg(pContext, t));
         //if (wback)
         //    setReg(pContext, n, offsetAddress);
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int ldrhImmediate(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        t = instr & 0x7;
+        uint32_t        n = (instr & (0x7 << 3)) >> 3;
+        uint32_t        imm32 = (instr & (0x1F << 6)) >> 5;
+        // UNDONE: Not required for ARMv6-M encodings.
+        //int             index = TRUE;
+        //int             add = TRUE;
+        //int             wback = FALSE;        
+        uint32_t        offsetAddress;
+        uint32_t        address;
+
+        // UNDONE: Not required for ARMv6-m encodings.
+        //if (add)
+            offsetAddress = getReg(pContext, n) + imm32;
+        //else
+        //    offsetAddress = getReg(pContext, n) - imm32;
+        //if (index)
+            address = offsetAddress;
+        //else
+        //    address = getReg(pContext, n);
+        //if (wback)
+        //    setReg(pContext, n, offsetAddress);
+        setReg(pContext, t, unalignedMemRead(pContext, address, 2));
     }
 
     return PINKYSIM_STEP_OK;
