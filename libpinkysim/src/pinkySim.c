@@ -132,6 +132,7 @@ static int strhImmediate(PinkySimContext* pContext, uint16_t instr);
 static int ldrhImmediate(PinkySimContext* pContext, uint16_t instr);
 static int strImmediateT2(PinkySimContext* pContext, uint16_t instr);
 static int ldrImmediateT2(PinkySimContext* pContext, uint16_t instr);
+static int adr(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -157,6 +158,8 @@ int pinkySimStep(PinkySimContext* pContext)
             result = ldrLiteral(pContext, instr);
         else if (((instr & 0xF000) == 0x5000) || ((instr & 0xE000) == 0x6000) || ((instr & 0xE000) == 0x8000))
             result = loadStoreSingleDataItem(pContext, instr);
+        else if ((instr & 0xF800) == 0xA000)
+            result = adr(pContext, instr);
     
         pContext->pc = pContext->newPC;
     }
@@ -2125,6 +2128,27 @@ static int ldrImmediateT2(PinkySimContext* pContext, uint16_t instr)
         setReg(pContext, t, unalignedMemRead(pContext, address, 4));
         //if (wback)
         //    setReg(pContext, n, offsetAddress);
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int adr(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t d = (instr & (0x7 << 8)) >> 8;
+        uint32_t imm32 = (instr & 0xFF) << 2;
+        // UNDONE: Add is forced to be TRUE in the ARMv6-m encoding.
+        //int      add = TRUE;
+        uint32_t result;
+
+        // UNDONE: Add is forced to be TRUE in the ARMv6-m encoding.
+        //if (add)
+            result = Align(getReg(pContext, PC), 4) + imm32;
+        //else
+        //    result = Align(getReg(pContext, PC), 4) - imm32;
+        setReg(pContext, d, result);
     }
 
     return PINKYSIM_STEP_OK;
