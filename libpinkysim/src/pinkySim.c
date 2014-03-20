@@ -133,6 +133,7 @@ static int ldrhImmediate(PinkySimContext* pContext, uint16_t instr);
 static int strImmediateT2(PinkySimContext* pContext, uint16_t instr);
 static int ldrImmediateT2(PinkySimContext* pContext, uint16_t instr);
 static int adr(PinkySimContext* pContext, uint16_t instr);
+static int addSPT1(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -160,6 +161,8 @@ int pinkySimStep(PinkySimContext* pContext)
             result = loadStoreSingleDataItem(pContext, instr);
         else if ((instr & 0xF800) == 0xA000)
             result = adr(pContext, instr);
+        else if ((instr & 0xF800) == 0xA800)
+            result = addSPT1(pContext, instr);
     
         pContext->pc = pContext->newPC;
     }
@@ -2149,6 +2152,23 @@ static int adr(PinkySimContext* pContext, uint16_t instr)
         //else
         //    result = Align(getReg(pContext, PC), 4) - imm32;
         setReg(pContext, d, result);
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int addSPT1(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = (instr & (0x7 << 8)) >> 8;
+        uint32_t        imm32 = (instr & 0xFF) << 2;
+        // UNDONE: Not used in ARMv6-m encodings.
+        //int             setFlags = FALSE;
+        AddResults      addResults;
+        
+        addResults = AddWithCarry(getReg(pContext, SP), imm32, 0);
+        setReg(pContext, d, addResults.result);
     }
 
     return PINKYSIM_STEP_OK;
