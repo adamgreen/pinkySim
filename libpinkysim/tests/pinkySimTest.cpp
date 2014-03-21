@@ -46,3 +46,18 @@ TEST(pinkySim, Encoding2ThatShouldProduceUnpredictableError)
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
     pinkySimStep(&m_context);
 }
+
+TEST(pinkySim, HintEncodingsThatShouldProduceUndefinedError)
+{
+    // opA = XXXX opB != 0
+    for (uint32_t opA = 0 ; opA < 16 ; opA++)
+    {
+        for (uint32_t opB = 1 ; opB < 16 ; opB++)
+        {
+            emitInstruction16("10111111aaaabbbb", opA, opB);
+            setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
+            pinkySimStep(&m_context);
+            initContext();
+        }
+    }
+}
