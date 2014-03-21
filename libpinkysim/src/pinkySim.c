@@ -149,6 +149,8 @@ static int currentModeIsPrivileged(PinkySimContext* pContext);
 static int rev(PinkySimContext* pContext, uint16_t instr);
 static int rev16(PinkySimContext* pContext, uint16_t instr);
 static int revsh(PinkySimContext* pContext, uint16_t instr);
+static int pop(PinkySimContext* pContext, uint16_t instr);
+static void LoadWritePC(PinkySimContext* pContext, uint32_t address);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -2216,6 +2218,8 @@ static int misc16BitInstructions(PinkySimContext* pContext, uint16_t instr)
         result = rev16(pContext, instr);
     else if ((instr & 0x0FC0) == 0x0AC0)
         result = revsh(pContext, instr);
+    else if ((instr & 0x0E00) == 0x0C00)
+        result = pop(pContext, instr);
         
     return result;
 }
@@ -2450,4 +2454,40 @@ static int revsh(PinkySimContext* pContext, uint16_t instr)
     }
 
     return PINKYSIM_STEP_OK;
+}
+
+static int pop(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t    registers = ((instr & (1 << 8)) << 7) | (instr & 0xFF);
+        uint32_t    address;
+        int         i;
+        
+        if (bitCount(registers) < 1)
+            return PINKYSIM_STEP_UNPREDICTABLE;
+        // UNDONE: Never in IT blocks in ARMv6-M.
+        //if ((registers & (1 << 15)) && InITBlock(pContext) && !LastInITBlock(pContext))
+        //    return PINKYSIM_STEP_UNPREDICTABLE;
+        
+        address = getReg(pContext, SP);
+        for (i = 0 ; i <= 7 ; i++)
+        {
+            if (registers & (1 << i))
+            {
+                setReg(pContext, i, alignedMemRead(pContext, address, 4));
+                address += 4;
+            }
+        }
+        if (registers & (1 << 15))
+            LoadWritePC(pContext, alignedMemRead(pContext, address, 4));
+        setReg(pContext, SP, getReg(pContext, SP) + 4 * bitCount(registers));
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static void LoadWritePC(PinkySimContext* pContext, uint32_t address)
+{
+    BXWritePC(pContext, address);
 }
