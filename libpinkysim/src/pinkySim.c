@@ -153,6 +153,7 @@ static int pop(PinkySimContext* pContext, uint16_t instr);
 static void LoadWritePC(PinkySimContext* pContext, uint32_t address);
 static int hints(PinkySimContext* pContext, uint16_t instr);
 static int nop(PinkySimContext* pContext, uint16_t instr);
+static int yield(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -2516,6 +2517,9 @@ static int hints(PinkySimContext* pContext, uint16_t instr)
     case 0:
         result = nop(pContext, instr);
         break;
+    case 1:
+        result = yield(pContext, instr);
+        break;
     }
         
     return result;
@@ -2524,4 +2528,9 @@ static int hints(PinkySimContext* pContext, uint16_t instr)
 static int nop(PinkySimContext* pContext, uint16_t instr)
 {
     return PINKYSIM_STEP_OK;
+}
+
+static int yield(PinkySimContext* pContext, uint16_t instr)
+{
+    return PINKYSIM_STEP_UNSUPPORTED;
 }
