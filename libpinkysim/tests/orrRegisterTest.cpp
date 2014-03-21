@@ -32,15 +32,17 @@ TEST_GROUP_BASE(orrRegister, pinkySimBase)
 TEST(orrRegister, UseLowestRegisterForBothArgs)
 {
     emitInstruction16("0100001100mmmddd", R0, R0);
-    setExpectedXPSRflags("nZ");
+    setExpectedXPSRflags("nZc");
     setExpectedRegisterValue(R0, 0);
+    clearCarry();
     pinkySimStep(&m_context);
 }
 
 TEST(orrRegister, UseHighestRegisterForBothArgs)
 {
     emitInstruction16("0100001100mmmddd", R7, R7);
-    setExpectedXPSRflags("nz");
+    setExpectedXPSRflags("nzC");
+    setCarry();
     pinkySimStep(&m_context);
 }
 
