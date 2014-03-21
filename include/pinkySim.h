@@ -69,6 +69,7 @@ typedef struct PinkySimContext
 #define PINKYSIM_STEP_UNDEFINED     1   /* Encountered undefined instruction. */
 #define PINKYSIM_STEP_UNPREDICTABLE 2   /* Encountered instruction with unpredictable behaviour. */
 #define PINKYSIM_STEP_HARDFAULT     3   /* Encountered instruction which generates hard fault. */
+#define PINKYSIM_STEP_BKPT          4   /* Encountered BKPT instruction or other debug event. */
 
 
 int pinkySimStep(PinkySimContext* pContext);

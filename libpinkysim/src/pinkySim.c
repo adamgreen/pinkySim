@@ -187,7 +187,13 @@ int pinkySimStep(PinkySimContext* pContext)
     }
     __catch
     {
-        return PINKYSIM_STEP_HARDFAULT;
+        switch (getExceptionCode())
+        {
+        case bkptException:
+            return PINKYSIM_STEP_BKPT;
+        default:
+            return PINKYSIM_STEP_HARDFAULT;
+        }
     }
     
     return result;
@@ -2220,6 +2226,8 @@ static int misc16BitInstructions(PinkySimContext* pContext, uint16_t instr)
         result = revsh(pContext, instr);
     else if ((instr & 0x0E00) == 0x0C00)
         result = pop(pContext, instr);
+    else if ((instr & 0x0F00) == 0x0E00)
+        __throw(bkptException);
         
     return result;
 }

@@ -22,6 +22,7 @@
 #define outOfMemoryException                3
 #define busErrorException                   4
 #define alignmentException                  5
+#define bkptException                       6
 
 
 #ifndef __debugbreak
