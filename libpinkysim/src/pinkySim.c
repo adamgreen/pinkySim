@@ -142,6 +142,8 @@ static uint32_t ROR(uint32_t x, uint32_t shift);
 static int sxtb(PinkySimContext* pContext, uint16_t instr);
 static int uxth(PinkySimContext* pContext, uint16_t instr);
 static int uxtb(PinkySimContext* pContext, uint16_t instr);
+static int push(PinkySimContext* pContext, uint16_t instr);
+static uint32_t bitCount(uint32_t value);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -2199,6 +2201,8 @@ static int misc16BitInstructions(PinkySimContext* pContext, uint16_t instr)
         result = uxth(pContext, instr);
     if ((instr & 0x0FC0) == 0x02C0)
         result = uxtb(pContext, instr);
+    if ((instr & 0x0E00) == 0x0400)
+        result = push(pContext, instr);
         
     return result;
 }
@@ -2316,4 +2320,42 @@ static int uxtb(PinkySimContext* pContext, uint16_t instr)
     }
 
     return PINKYSIM_STEP_OK;
+}
+
+static int push(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t    registers = ((instr & (1 << 8)) << 6) | (instr & 0xFF);
+        uint32_t    address;
+        int         i;
+        
+        if (bitCount(registers) < 1)
+            return PINKYSIM_STEP_UNPREDICTABLE;
+        
+        address = getReg(pContext, SP) - 4 * bitCount(registers);
+        for (i = 0 ; i <= 14 ; i++)
+        {
+            if (registers & (1 << i))
+            {
+                alignedMemWrite(pContext, address, 4, getReg(pContext, i));
+                address += 4;
+            }
+        }
+        setReg(pContext, SP, getReg(pContext, SP) - 4 * bitCount(registers));
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static uint32_t bitCount(uint32_t value)
+{
+    uint32_t count = 0;
+    
+    while (value)
+    {
+        value = value & (value - 1);
+        count++;
+    }
+    return count;
 }
