@@ -31,7 +31,7 @@ TEST_GROUP_BASE(wfe, pinkySimBase)
    Encoding: 1011 1111 0010 0000 */
 TEST(wfe, BasicTest)
 {
-    emitInstruction16("1011111100100000", 0);
+    emitInstruction16("1011111100100000");
     setExpectedStepReturn(PINKYSIM_STEP_UNSUPPORTED);
     pinkySimStep(&m_context);
 }
