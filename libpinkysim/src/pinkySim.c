@@ -137,6 +137,8 @@ static int addSPT1(PinkySimContext* pContext, uint16_t instr);
 static int misc16BitInstructions(PinkySimContext* pContext, uint16_t instr);
 static int addSPT2(PinkySimContext* pContext, uint16_t instr);
 static int subSP(PinkySimContext* pContext, uint16_t instr);
+static int sxth(PinkySimContext* pContext, uint16_t instr);
+static uint32_t ROR(uint32_t x, uint32_t shift);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -2188,6 +2190,8 @@ static int misc16BitInstructions(PinkySimContext* pContext, uint16_t instr)
         result = addSPT2(pContext, instr);
     if ((instr & 0x0F80) == 0x0080)
         result = subSP(pContext, instr);
+    if ((instr & 0x0FC0) == 0x0200)
+        result = sxth(pContext, instr);
         
     return result;
 }
@@ -2224,4 +2228,34 @@ static int subSP(PinkySimContext* pContext, uint16_t instr)
     }
 
     return PINKYSIM_STEP_OK;
+}
+
+static int sxth(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = instr & 0x7;
+        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+        uint32_t        rotation = 0;
+        uint32_t        rotated;
+
+        // UNDONE: This rotation is hardcoded as 0 for ARMv6-m.
+        rotated = ROR(getReg(pContext, m), rotation);
+        setReg(pContext, d, signExtend16(rotated));
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static uint32_t ROR(uint32_t x, uint32_t shift)
+{
+    ShiftResults results = {0, 0};
+    
+    assert (shift >= 0);
+    
+    if (shift == 0)
+        results.result = x;
+    else
+        results = ROR_C(x, shift);
+    return results.result;
 }
