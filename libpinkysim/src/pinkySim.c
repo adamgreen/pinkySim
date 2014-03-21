@@ -140,6 +140,7 @@ static int subSP(PinkySimContext* pContext, uint16_t instr);
 static int sxth(PinkySimContext* pContext, uint16_t instr);
 static uint32_t ROR(uint32_t x, uint32_t shift);
 static int sxtb(PinkySimContext* pContext, uint16_t instr);
+static int uxth(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -1811,8 +1812,7 @@ static int ldrhRegister(PinkySimContext* pContext, uint16_t instr)
 
 static uint32_t zeroExtend16(uint32_t value)
 {
-    // UNDONE: IMemory_Read16() returns zero extended values already.
-    return value;
+    return value & 0xFFFF;
 }
 
 static int ldrbRegister(PinkySimContext* pContext, uint16_t instr)
@@ -1850,8 +1850,7 @@ static int ldrbRegister(PinkySimContext* pContext, uint16_t instr)
 
 static uint32_t zeroExtend8(uint32_t value)
 {
-    // UNDONE: IMemory_Read8() returns zero extended values already.
-    return value;
+    return value & 0xFF;
 }
 
 static int ldrshRegister(PinkySimContext* pContext, uint16_t instr)
@@ -2195,6 +2194,8 @@ static int misc16BitInstructions(PinkySimContext* pContext, uint16_t instr)
         result = sxth(pContext, instr);
     if ((instr & 0x0FC0) == 0x0240)
         result = sxtb(pContext, instr);
+    if ((instr & 0x0FC0) == 0x0280)
+        result = uxth(pContext, instr);
         
     return result;
 }
@@ -2275,6 +2276,23 @@ static int sxtb(PinkySimContext* pContext, uint16_t instr)
         // UNDONE: This rotation is hardcoded as 0 for ARMv6-m.
         rotated = ROR(getReg(pContext, m), rotation);
         setReg(pContext, d, signExtend8(rotated));
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int uxth(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = instr & 0x7;
+        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+        uint32_t        rotation = 0;
+        uint32_t        rotated;
+
+        // UNDONE: This rotation is hardcoded as 0 for ARMv6-m.
+        rotated = ROR(getReg(pContext, m), rotation);
+        setReg(pContext, d, zeroExtend16(rotated));
     }
 
     return PINKYSIM_STEP_OK;
