@@ -43,7 +43,7 @@ TEST(SimpleMemory, BasicInit)
 
 TEST(SimpleMemory, TooManySetMemoryCalls)
 {
-    for (int i = 0 ; i < 5 ; i++)
+    for (int i = 0 ; i < SIMPLE_MEMORY_REGION_COUNT ; i++)
         SimpleMemory_SetMemory(m_pMemory, i*4, i, READ_WRITE);
     CHECK_EQUAL(noException, getExceptionCode());
 

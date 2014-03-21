@@ -16,6 +16,9 @@
 #include <IMemory.h>
 
 
+/* Number of separate 32-bit words which can be set. */
+#define SIMPLE_MEMORY_REGION_COUNT 10
+
 /* Read/Write flags passed into SimpleMemory_SetMemory() method. */
 #define READ_WRITE 0
 #define READ_ONLY  1

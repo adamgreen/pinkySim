@@ -38,7 +38,7 @@ struct SimpleMemory
 {
     IMemoryVTable* pVTable;
     size_t         entryCount;
-    MemoryEntry    entries[5];
+    MemoryEntry    entries[SIMPLE_MEMORY_REGION_COUNT];
 };
 
 static SimpleMemory g_object;
