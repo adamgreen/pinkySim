@@ -30,6 +30,9 @@
 #define APSR_NC     (APSR_N | APSR_C)
 #define APSR_ZC     (APSR_Z | APSR_C)
 
+/* Bits in PinkySimContext::PRIMASK */
+#define PRIMASK_PM (1 << 0)
+
 /* Register names / indices into PinkySimContext::R array for first 13 registers. */
 #define R0  0
 #define R1  1
@@ -57,6 +60,7 @@ typedef struct PinkySimContext
     uint32_t pc;
     uint32_t newPC;
     uint32_t xPSR;
+    uint32_t PRIMASK;
 } PinkySimContext;
 
 

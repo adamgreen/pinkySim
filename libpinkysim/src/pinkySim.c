@@ -144,6 +144,8 @@ static int uxth(PinkySimContext* pContext, uint16_t instr);
 static int uxtb(PinkySimContext* pContext, uint16_t instr);
 static int push(PinkySimContext* pContext, uint16_t instr);
 static uint32_t bitCount(uint32_t value);
+static int cps(PinkySimContext* pContext, uint16_t instr);
+static int currentModeIsPrivileged(PinkySimContext* pContext);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -2191,18 +2193,20 @@ static int misc16BitInstructions(PinkySimContext* pContext, uint16_t instr)
     
     if ((instr & 0x0F80) == 0x0000)
         result = addSPT2(pContext, instr);
-    if ((instr & 0x0F80) == 0x0080)
+    else if ((instr & 0x0F80) == 0x0080)
         result = subSP(pContext, instr);
-    if ((instr & 0x0FC0) == 0x0200)
+    else if ((instr & 0x0FC0) == 0x0200)
         result = sxth(pContext, instr);
-    if ((instr & 0x0FC0) == 0x0240)
+    else if ((instr & 0x0FC0) == 0x0240)
         result = sxtb(pContext, instr);
-    if ((instr & 0x0FC0) == 0x0280)
+    else if ((instr & 0x0FC0) == 0x0280)
         result = uxth(pContext, instr);
-    if ((instr & 0x0FC0) == 0x02C0)
+    else if ((instr & 0x0FC0) == 0x02C0)
         result = uxtb(pContext, instr);
-    if ((instr & 0x0E00) == 0x0400)
+    else if ((instr & 0x0E00) == 0x0400)
         result = push(pContext, instr);
+    else if ((instr & 0x0FE0) == 0x0660)
+        result = cps(pContext, instr);
         
     return result;
 }
@@ -2358,4 +2362,32 @@ static uint32_t bitCount(uint32_t value)
         count++;
     }
     return count;
+}
+
+static int cps(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t im = instr & (1 << 4);
+        
+        if ((instr & 0xF) != 0x2)
+            return PINKYSIM_STEP_UNPREDICTABLE;
+        
+        if (currentModeIsPrivileged(pContext))
+        {
+            if (im)
+                pContext->PRIMASK |= PRIMASK_PM;
+            else
+                pContext->PRIMASK &= ~PRIMASK_PM;
+        }
+
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int currentModeIsPrivileged(PinkySimContext* pContext)
+{
+    // This simulator only supports privileged mode.
+    return TRUE;
 }
