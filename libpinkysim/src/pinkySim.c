@@ -151,6 +151,8 @@ static int rev16(PinkySimContext* pContext, uint16_t instr);
 static int revsh(PinkySimContext* pContext, uint16_t instr);
 static int pop(PinkySimContext* pContext, uint16_t instr);
 static void LoadWritePC(PinkySimContext* pContext, uint32_t address);
+static int hints(PinkySimContext* pContext, uint16_t instr);
+static int nop(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -2197,7 +2199,6 @@ static int addSPT1(PinkySimContext* pContext, uint16_t instr)
     return PINKYSIM_STEP_OK;
 }
 
-
 static int misc16BitInstructions(PinkySimContext* pContext, uint16_t instr)
 {
     int result = PINKYSIM_STEP_UNDEFINED;
@@ -2227,7 +2228,9 @@ static int misc16BitInstructions(PinkySimContext* pContext, uint16_t instr)
     else if ((instr & 0x0E00) == 0x0C00)
         result = pop(pContext, instr);
     else if ((instr & 0x0F00) == 0x0E00)
-        __throw(bkptException);
+        __throw(bkptException)
+    else if ((instr & 0x0F00) == 0x0F00)
+        result = hints(pContext, instr);
         
     return result;
 }
@@ -2498,4 +2501,27 @@ static int pop(PinkySimContext* pContext, uint16_t instr)
 static void LoadWritePC(PinkySimContext* pContext, uint32_t address)
 {
     BXWritePC(pContext, address);
+}
+
+static int hints(PinkySimContext* pContext, uint16_t instr)
+{
+    uint32_t opA = (instr & (0x00F0)) >> 4;
+    uint32_t opB = instr & 0x000F;
+    int      result = PINKYSIM_STEP_UNDEFINED;
+    
+    if (opB != 0x0000)
+        return PINKYSIM_STEP_UNDEFINED;
+    switch (opA)
+    {
+    case 0:
+        result = nop(pContext, instr);
+        break;
+    }
+        
+    return result;
+}
+
+static int nop(PinkySimContext* pContext, uint16_t instr)
+{
+    return PINKYSIM_STEP_OK;
 }
