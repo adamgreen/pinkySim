@@ -148,6 +148,7 @@ static int cps(PinkySimContext* pContext, uint16_t instr);
 static int currentModeIsPrivileged(PinkySimContext* pContext);
 static int rev(PinkySimContext* pContext, uint16_t instr);
 static int rev16(PinkySimContext* pContext, uint16_t instr);
+static int revsh(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -2213,6 +2214,8 @@ static int misc16BitInstructions(PinkySimContext* pContext, uint16_t instr)
         result = rev(pContext, instr);
     else if ((instr & 0x0FC0) == 0x0A40)
         result = rev16(pContext, instr);
+    else if ((instr & 0x0FC0) == 0x0AC0)
+        result = revsh(pContext, instr);
         
     return result;
 }
@@ -2427,6 +2430,23 @@ static int rev16(PinkySimContext* pContext, uint16_t instr)
         value = getReg(pContext, m);
         result = ((value & 0xFF00FF00) >> 8) | ((value & 0x00FF00FF) << 8);
         setReg(pContext, d, result);
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int revsh(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t        d = instr & 0x7;
+        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+        uint32_t        value;
+        uint32_t        result;
+        
+        value = getReg(pContext, m);
+        result = ((value & 0xFF00FF00) >> 8) | ((value & 0x00FF00FF) << 8);
+        setReg(pContext, d, signExtend16(result));
     }
 
     return PINKYSIM_STEP_OK;
