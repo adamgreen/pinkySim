@@ -31,6 +31,19 @@ TEST_GROUP_BASE(nop, pinkySimBase)
    Encoding: 1011 1111 0000 0000 */
 TEST(nop, BasicTest)
 {
-    emitInstruction16("1011111100000000", 0);
+    emitInstruction16("1011111100000000");
     pinkySimStep(&m_context);
+}
+
+
+
+/* Unallocated hint encodings with OpB == 0 are treated as NOP as well. */
+TEST(nop, UnallocatedHints)
+{
+    for (uint32_t opA = 5 ; opA < 16 ; opA++)
+    {
+        emitInstruction16("10111111aaaa0000", opA);
+        pinkySimStep(&m_context);
+        initContext();
+    }
 }

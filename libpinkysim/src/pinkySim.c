@@ -157,6 +157,7 @@ static int yield(PinkySimContext* pContext, uint16_t instr);
 static int wfe(PinkySimContext* pContext, uint16_t instr);
 static int wfi(PinkySimContext* pContext, uint16_t instr);
 static int sev(PinkySimContext* pContext, uint16_t instr);
+static int treatAsNop(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -2532,6 +2533,9 @@ static int hints(PinkySimContext* pContext, uint16_t instr)
     case 4:
         result = sev(pContext, instr);
         break;
+    default:
+        result = treatAsNop(pContext, instr);
+        break;
     }
         
     return result;
@@ -2560,4 +2564,9 @@ static int wfi(PinkySimContext* pContext, uint16_t instr)
 static int sev(PinkySimContext* pContext, uint16_t instr)
 {
     return PINKYSIM_STEP_UNSUPPORTED;
+}
+
+static int treatAsNop(PinkySimContext* pContext, uint16_t instr)
+{
+    return PINKYSIM_STEP_OK;
 }
