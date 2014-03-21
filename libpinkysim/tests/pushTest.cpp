@@ -68,6 +68,15 @@ TEST(push, PushAll)
     CHECK_EQUAL(INITIAL_LR, IMemory_Read32(m_context.pMemory, INITIAL_SP - 4));
 }
 
+TEST(push, HardFaultFromInvalidMemoryWrite)
+{
+    emitInstruction16("1011010Mrrrrrrrr", 0, 1);
+    setRegisterValue(SP, 0xFFFFFFFC);
+    setExpectedStepReturn(PINKYSIM_STEP_HARDFAULT);
+    setExpectedRegisterValue(PC, INITIAL_PC);
+    pinkySimStep(&m_context);
+}
+
 TEST(push, UnpredictableToPushNoRegisters)
 {
     emitInstruction16("1011010Mrrrrrrrr", 0, 0);
