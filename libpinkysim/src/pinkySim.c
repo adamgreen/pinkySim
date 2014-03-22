@@ -162,6 +162,7 @@ static int stm(PinkySimContext* pContext, uint16_t instr);
 static int isNotLowestBitSet(uint32_t bits, uint32_t i);
 static int ldm(PinkySimContext* pContext, uint16_t instr);
 static int conditionalBranchAndSupervisor(PinkySimContext* pContext, uint16_t instr);
+static int svc(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -2653,6 +2654,16 @@ static int conditionalBranchAndSupervisor(PinkySimContext* pContext, uint16_t in
 
     if ((instr & 0x0F00) == 0x0E00)
         result = PINKYSIM_STEP_UNDEFINED;
+    else if ((instr & 0x0F00) == 0x0F00)
+        result = svc(pContext, instr);
 
     return result;
+}
+
+static int svc(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+        return PINKYSIM_STEP_SVC;
+
+    return PINKYSIM_STEP_OK;
 }

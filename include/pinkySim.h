@@ -71,6 +71,7 @@ typedef struct PinkySimContext
 #define PINKYSIM_STEP_HARDFAULT     3   /* Encountered instruction which generates hard fault. */
 #define PINKYSIM_STEP_BKPT          4   /* Encountered BKPT instruction or other debug event. */
 #define PINKYSIM_STEP_UNSUPPORTED   5   /* Encountered instruction not supported by simulator. */
+#define PINKYSIM_STEP_SVC           6   /* Encountered SVC instruction. */
 
 
 int pinkySimStep(PinkySimContext* pContext);
