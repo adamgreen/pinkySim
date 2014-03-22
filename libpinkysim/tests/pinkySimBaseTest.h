@@ -195,11 +195,31 @@ protected:
     
     void emitInstruction16(const char* pEncoding, ...)
     {
+        va_list     valist;
+
+        va_start(valist, pEncoding);
+        emitInstruction16Varg(pEncoding, valist);
+        va_end(valist);
+    }
+    
+    void emitInstruction32(const char* pEncoding1, const char* pEncoding2, ...)
+    {
+        va_list     valist;
+
+        va_start(valist, pEncoding2);
+        emitInstruction16Varg(pEncoding1, valist);
+        emitInstruction16Varg(pEncoding2, valist);
+        va_end(valist);
+        
+        setExpectedRegisterValue(PC, INITIAL_PC + 4);
+    }
+    
+    void emitInstruction16Varg(const char* pEncoding, va_list valist)
+    {
         uint16_t    instr = 0;
         size_t      i = 0;
         char        last = '\0';
         const char* p;
-        va_list     valist;
         struct Field
         {
             uint32_t value;
@@ -208,7 +228,6 @@ protected:
         
         assert (16 == strlen(pEncoding));
         memset(fields, 0, sizeof(fields));
-        va_start(valist, pEncoding);
 
         // Go through pEncoding from left to right and find all fields to be inserted.
         p = pEncoding;
@@ -238,7 +257,6 @@ protected:
                 }
             }
         }
-        va_end(valist);
         
         // Go through pEncoding again from right to left and insert field bits.
         p = pEncoding + 15;

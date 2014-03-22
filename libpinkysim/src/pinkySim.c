@@ -50,6 +50,7 @@ typedef struct AddResults
 } AddResults;
 
 /* Function Prototypes */
+static int executeInstruction16(PinkySimContext* pContext, uint16_t instr);
 static int shiftAddSubtractMoveCompare(PinkySimContext* pContext, uint16_t instr);
 static int lslImmediate(PinkySimContext* pContext, uint16_t instr);
 static int ConditionPassedForNonBranchInstr(const PinkySimContext* pContext);
@@ -166,6 +167,9 @@ static int svc(PinkySimContext* pContext, uint16_t instr);
 static int conditionalBranch(PinkySimContext* pContext, uint16_t instr);
 static int conditionPassedForBranchInstr(PinkySimContext* pContext, uint16_t instr);
 static int unconditionalBranch(PinkySimContext* pContext, uint16_t instr);
+static int executeInstruction32(PinkySimContext* pContext, uint16_t instr1);
+static int branchAndMiscellaneousControl(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
+static int msr(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -178,34 +182,14 @@ int pinkySimStep(PinkySimContext* pContext)
     __try
     {
         uint16_t instr =  IMemory_Read16(pContext->pMemory, pContext->pc);
-        // UNDONE: This is specific to 16-bit instructions.
-        pContext->newPC = pContext->pc + 2;
+        
+        if ((instr & 0xF800) == 0xE800 ||
+            (instr & 0xF800) == 0xF000 ||
+            (instr & 0xF800) == 0xF800)
+            result = executeInstruction32(pContext, instr);
+        else
+            result = executeInstruction16(pContext, instr);
 
-        if ((instr & 0xC000) == 0x0000)
-            result = shiftAddSubtractMoveCompare(pContext, instr);
-        else if ((instr & 0xFC00) == 0x4000)
-            result = dataProcessing(pContext, instr);
-        else if ((instr & 0xFC00) == 0x4400)
-            result = specialDataAndBranchExchange(pContext, instr);
-        else if ((instr & 0xF800) == 0x4800)
-            result = ldrLiteral(pContext, instr);
-        else if (((instr & 0xF000) == 0x5000) || ((instr & 0xE000) == 0x6000) || ((instr & 0xE000) == 0x8000))
-            result = loadStoreSingleDataItem(pContext, instr);
-        else if ((instr & 0xF800) == 0xA000)
-            result = adr(pContext, instr);
-        else if ((instr & 0xF800) == 0xA800)
-            result = addSPT1(pContext, instr);
-        else if ((instr & 0xF000) == 0xB000)
-            result = misc16BitInstructions(pContext, instr);
-        else if ((instr & 0xF800) == 0xC000)
-            result = stm(pContext, instr);
-        else if ((instr & 0xF800) == 0xC800)
-            result = ldm(pContext, instr);
-        else if ((instr & 0xF000) == 0xD000)
-            result = conditionalBranchAndSupervisor(pContext, instr);
-        else if ((instr & 0xF800) == 0xE000)
-            result = unconditionalBranch(pContext, instr);
-    
         pContext->pc = pContext->newPC;
     }
     __catch
@@ -218,6 +202,39 @@ int pinkySimStep(PinkySimContext* pContext)
             return PINKYSIM_STEP_HARDFAULT;
         }
     }
+    
+    return result;
+}
+
+static int executeInstruction16(PinkySimContext* pContext, uint16_t instr)
+{
+    int result = PINKYSIM_STEP_UNDEFINED;
+
+    pContext->newPC = pContext->pc + 2;
+    if ((instr & 0xC000) == 0x0000)
+        result = shiftAddSubtractMoveCompare(pContext, instr);
+    else if ((instr & 0xFC00) == 0x4000)
+        result = dataProcessing(pContext, instr);
+    else if ((instr & 0xFC00) == 0x4400)
+        result = specialDataAndBranchExchange(pContext, instr);
+    else if ((instr & 0xF800) == 0x4800)
+        result = ldrLiteral(pContext, instr);
+    else if (((instr & 0xF000) == 0x5000) || ((instr & 0xE000) == 0x6000) || ((instr & 0xE000) == 0x8000))
+        result = loadStoreSingleDataItem(pContext, instr);
+    else if ((instr & 0xF800) == 0xA000)
+        result = adr(pContext, instr);
+    else if ((instr & 0xF800) == 0xA800)
+        result = addSPT1(pContext, instr);
+    else if ((instr & 0xF000) == 0xB000)
+        result = misc16BitInstructions(pContext, instr);
+    else if ((instr & 0xF800) == 0xC000)
+        result = stm(pContext, instr);
+    else if ((instr & 0xF800) == 0xC800)
+        result = ldm(pContext, instr);
+    else if ((instr & 0xF000) == 0xD000)
+        result = conditionalBranchAndSupervisor(pContext, instr);
+    else if ((instr & 0xF800) == 0xE000)
+        result = unconditionalBranch(pContext, instr);
     
     return result;
 }
@@ -2741,6 +2758,86 @@ static int unconditionalBranch(PinkySimContext* pContext, uint16_t instr)
         //if (InITBlock(pContext) && !LastInITBlock())
         //    return PINKSIM_STEP_UNPREDICTABLE;
         BranchWritePC(pContext, getReg(pContext, PC) + imm32);
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int executeInstruction32(PinkySimContext* pContext, uint16_t instr1)
+{
+    int      result = PINKYSIM_STEP_UNDEFINED;
+    uint16_t instr2;
+
+    pContext->newPC = pContext->pc + 4;
+    instr2 =  IMemory_Read16(pContext->pMemory, pContext->pc + 2);
+
+    if ((instr1 & 0x1800) == 0x1000 && (instr2 & 0x8000) == 0x8000)
+        result = branchAndMiscellaneousControl(pContext, instr1, instr2);
+
+    return result;
+}
+
+static int branchAndMiscellaneousControl(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
+{
+    int      result = PINKYSIM_STEP_UNDEFINED;
+
+    if ((instr2 & 0x5000) == 0x0000 && (instr1 & 0x07E0) == 0x0380)
+        result = msr(pContext, instr1, instr2);
+
+    return result;
+}
+
+static int msr(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t n = instr1 & 0xF;
+        uint32_t SYSm = instr2 & 0xFF;
+        uint32_t value;
+        
+        if (n == 13 || n == 15)
+            return PINKYSIM_STEP_UNPREDICTABLE;
+        if (SYSm == 4 || (SYSm > 9 && SYSm < 16) || (SYSm > 16 && SYSm < 20) || (SYSm > 20))
+            return PINKYSIM_STEP_UNPREDICTABLE;
+        if ((instr1 & 0x0010) != 0x0000 || (instr2 & 0x3F00) != 0x0800)
+            return PINKYSIM_STEP_UNPREDICTABLE;
+            
+        value = getReg(pContext, n);
+        switch (SYSm >> 3)
+        {
+        case 0:
+            if ((SYSm & (1 << 2)) == 0)
+                pContext->xPSR = (pContext->xPSR & ~APSR_NZCV) | (value & APSR_NZCV);
+            break;
+        case 1:
+            if (currentModeIsPrivileged(pContext))
+            {
+                switch (SYSm & 0x7)
+                {
+                case 0:
+                    pContext->spMain = value & 0xFFFFFFFC;
+                    break;
+                case 1:
+                    // UNDONE: This simulator doesn't support process stack usage.
+                    break;
+                }
+            }
+            break;
+        case 2:
+            if (currentModeIsPrivileged(pContext))
+            {
+                switch (SYSm & 0x7)
+                {
+                case 0:
+                    pContext->PRIMASK = (pContext->PRIMASK & ~PRIMASK_PM) | (value & PRIMASK_PM);
+                    break;
+                case 4:
+                    // UNDONE: This simulator doesn't support thread mode.
+                    break;
+                }
+            }
+            break;
+        }
     }
 
     return PINKYSIM_STEP_OK;

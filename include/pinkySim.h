@@ -50,6 +50,19 @@
 #define COND_LE (COND_GT | 1)
 #define COND_AL 0xE
 
+/* SYSm field values for MSR and MRS instructions. */
+#define SYS_APSR    0
+#define SYS_IAPSR   1
+#define SYS_EAPSR   2
+#define SYS_XPSR    3
+#define SYS_IPSR    5
+#define SYS_EPSR    6
+#define SYS_IEPSR   7
+#define SYS_MSP     8
+#define SYS_PSP     9
+#define SYS_PRIMASK 16
+#define SYS_CONTROL 20
+
 /* Register names / indices into PinkySimContext::R array for first 13 registers. */
 #define R0  0
 #define R1  1
@@ -78,6 +91,7 @@ typedef struct PinkySimContext
     uint32_t newPC;
     uint32_t xPSR;
     uint32_t PRIMASK;
+    uint32_t CONTROL;
 } PinkySimContext;
 
 
