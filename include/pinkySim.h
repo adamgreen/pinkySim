@@ -16,7 +16,7 @@
 #include <IMemory.h>
 
 /* Bits in PinkySimContext::xPSR */
-#define APSR_N      (1 << 31)   /* Negative flag */
+#define APSR_N      (1U << 31U) /* Negative flag */
 #define APSR_Z      (1 << 30)   /* Zero flag */
 #define APSR_C      (1 << 29)   /* Carry flag */
 #define APSR_V      (1 << 28)   /* Overflow flag */
@@ -32,6 +32,23 @@
 
 /* Bits in PinkySimContext::PRIMASK */
 #define PRIMASK_PM (1 << 0)
+
+/* Condition codes */
+#define COND_EQ 0x0
+#define COND_NE (COND_EQ | 1)
+#define COND_CS 0x2
+#define COND_CC (COND_CS | 1)
+#define COND_MI 0x4
+#define COND_PL (COND_MI | 1)
+#define COND_VS 0x6
+#define COND_VC (COND_VS | 1)
+#define COND_HI 0x8
+#define COND_LS (COND_HI | 1)
+#define COND_GE 0xA
+#define COND_LT (COND_GE | 1)
+#define COND_GT 0xC
+#define COND_LE (COND_GT | 1)
+#define COND_AL 0xE
 
 /* Register names / indices into PinkySimContext::R array for first 13 registers. */
 #define R0  0

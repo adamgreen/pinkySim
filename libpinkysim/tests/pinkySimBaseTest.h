@@ -307,4 +307,34 @@ protected:
     {
         m_context.xPSR &= ~APSR_C;
     }
+    
+    void setZero()
+    {
+        m_context.xPSR |= APSR_Z;
+    }
+    
+    void clearZero()
+    {
+        m_context.xPSR &= ~APSR_Z;
+    }
+    
+    void setNegative()
+    {
+        m_context.xPSR |= APSR_N;
+    }
+    
+    void clearNegative()
+    {
+        m_context.xPSR &= ~APSR_N;
+    }
+    
+    void setOverflow()
+    {
+        m_context.xPSR |= APSR_V;
+    }
+    
+    void clearOverflow()
+    {
+        m_context.xPSR &= ~APSR_V;
+    }
 };

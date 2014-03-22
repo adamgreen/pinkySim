@@ -163,6 +163,8 @@ static int isNotLowestBitSet(uint32_t bits, uint32_t i);
 static int ldm(PinkySimContext* pContext, uint16_t instr);
 static int conditionalBranchAndSupervisor(PinkySimContext* pContext, uint16_t instr);
 static int svc(PinkySimContext* pContext, uint16_t instr);
+static int conditionalBranch(PinkySimContext* pContext, uint16_t instr);
+static int conditionPassedForBranchInstr(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -2656,6 +2658,8 @@ static int conditionalBranchAndSupervisor(PinkySimContext* pContext, uint16_t in
         result = PINKYSIM_STEP_UNDEFINED;
     else if ((instr & 0x0F00) == 0x0F00)
         result = svc(pContext, instr);
+    else
+        result = conditionalBranch(pContext, instr);
 
     return result;
 }
@@ -2667,5 +2671,59 @@ static int svc(PinkySimContext* pContext, uint16_t instr)
     if (ConditionPassedForNonBranchInstr(pContext))
         result = PINKYSIM_STEP_SVC;
 
+    return result;
+}
+
+static int conditionalBranch(PinkySimContext* pContext, uint16_t instr)
+{
+    if (conditionPassedForBranchInstr(pContext, instr))
+    {
+        int32_t imm32 = (((int32_t)(instr & 0xFF)) << 24) >> 23;
+        
+        // UNDONE: On ARMV6-M, InITBlock() will always be FALSE.
+        //if (InITBlock(pContext))
+        //    return PINKSIM_STEP_UNPREDICTABLE;
+        BranchWritePC(pContext, getReg(pContext, PC) + imm32);
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int conditionPassedForBranchInstr(PinkySimContext* pContext, uint16_t instr)
+{
+    uint32_t cond = (instr & 0x0F00) >> 8;
+    uint32_t apsr = pContext->xPSR;
+    int      result = FALSE;
+    
+    switch (cond >> 1)
+    {
+    case 0:
+        result = ((apsr & APSR_Z) == APSR_Z);
+        break;
+    case 1:
+        result = ((apsr & APSR_C) == APSR_C);
+        break;
+    case 2:
+        result = ((apsr & APSR_N) == APSR_N);
+        break;
+    case 3:
+        result = ((apsr & APSR_V) == APSR_V);
+        break;
+    case 4:
+        result = ((apsr & APSR_C) == APSR_C) && ((apsr & APSR_Z) == 0);
+        break;
+    case 5:
+        result = (!!(apsr & APSR_N) == !!(apsr & APSR_V));
+        break;
+    case 6:
+        result = ((!!(apsr & APSR_N) == !!(apsr & APSR_V)) && ((apsr & APSR_Z) == 0));
+        break;
+    // UNDONE: Can't be used as a condition code in ARMv6-M
+    //case 7:
+    //    result = TRUE;
+    }
+    if ((cond & 1) && (cond != 0xF))
+        result = !result;
+        
     return result;
 }
