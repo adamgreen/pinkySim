@@ -303,7 +303,7 @@ TEST(b, BLE_Taken2)
     pinkySimStep(&m_context);
 }
 
-TEST(b, BEQ_TakenWithLargestOffset)
+TEST(b, BEQ_TakenWithLargestPositiveOffset)
 {
     emitInstruction16("1101cccciiiiiiii", COND_EQ, 127);
     setExpectedXPSRflags("Z");
@@ -312,11 +312,36 @@ TEST(b, BEQ_TakenWithLargestOffset)
     pinkySimStep(&m_context);
 }
 
-TEST(b, BEQ_TakenWithLargesNegativetOffset)
+TEST(b, BEQ_TakenWithLargesNegativeOffset)
 {
     emitInstruction16("1101cccciiiiiiii", COND_EQ, -128);
     setExpectedXPSRflags("Z");
     setZero();
     setExpectedRegisterValue(PC, INITIAL_PC + 4 - 128 * 2);
+    pinkySimStep(&m_context);
+}
+
+
+
+/* B - Encoding T2 (Unconditional)
+   Encoding: 11100 Imm:11 */
+TEST(b, BAL_0Offset)
+{
+    emitInstruction16("11100iiiiiiiiiii", 0);
+    setExpectedRegisterValue(PC, INITIAL_PC + 4);
+    pinkySimStep(&m_context);
+}
+
+TEST(b, BAL_LargestPositiveOffset)
+{
+    emitInstruction16("11100iiiiiiiiiii", 1023);
+    setExpectedRegisterValue(PC, INITIAL_PC + 4 + 1023 * 2);
+    pinkySimStep(&m_context);
+}
+
+TEST(b, BAL_LargestNegativeOffset)
+{
+    emitInstruction16("11100iiiiiiiiiii", -1024);
+    setExpectedRegisterValue(PC, INITIAL_PC + 4 - 1024 * 2);
     pinkySimStep(&m_context);
 }

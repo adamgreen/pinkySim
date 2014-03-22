@@ -165,6 +165,7 @@ static int conditionalBranchAndSupervisor(PinkySimContext* pContext, uint16_t in
 static int svc(PinkySimContext* pContext, uint16_t instr);
 static int conditionalBranch(PinkySimContext* pContext, uint16_t instr);
 static int conditionPassedForBranchInstr(PinkySimContext* pContext, uint16_t instr);
+static int unconditionalBranch(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -202,6 +203,8 @@ int pinkySimStep(PinkySimContext* pContext)
             result = ldm(pContext, instr);
         else if ((instr & 0xF000) == 0xD000)
             result = conditionalBranchAndSupervisor(pContext, instr);
+        else if ((instr & 0xF800) == 0xE000)
+            result = unconditionalBranch(pContext, instr);
     
         pContext->pc = pContext->newPC;
     }
@@ -2726,4 +2729,19 @@ static int conditionPassedForBranchInstr(PinkySimContext* pContext, uint16_t ins
         result = !result;
         
     return result;
+}
+
+static int unconditionalBranch(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        int32_t imm32 = (((int32_t)(instr & 0x7FF)) << 21) >> 20;
+        
+        // UNDONE: On ARMV6-M, InITBlock() will always be FALSE.
+        //if (InITBlock(pContext) && !LastInITBlock())
+        //    return PINKSIM_STEP_UNPREDICTABLE;
+        BranchWritePC(pContext, getReg(pContext, PC) + imm32);
+    }
+
+    return PINKYSIM_STEP_OK;
 }
