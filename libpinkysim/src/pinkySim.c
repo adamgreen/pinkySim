@@ -172,6 +172,7 @@ static int branchAndMiscellaneousControl(PinkySimContext* pContext, uint16_t ins
 static int msr(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
 static int miscellaneousControl(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
 static int dsb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
+static int dmb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -2853,11 +2854,25 @@ static int miscellaneousControl(PinkySimContext* pContext, uint16_t instr1, uint
 
     if ((instr2 & 0x00F0) == 0x0040)
         result = dsb(pContext, instr1, instr2);
+    else if ((instr2 & 0x00F0) == 0x0050)
+        result = dmb(pContext, instr1, instr2);
 
     return result;
 }
 
 static int dsb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        if ((instr1 & 0x000F) != 0x000F || (instr2 & 0x2F00) != 0x0F00)
+            return PINKYSIM_STEP_UNPREDICTABLE;
+            
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int dmb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
 {
     if (ConditionPassedForNonBranchInstr(pContext))
     {
