@@ -2662,8 +2662,10 @@ static int conditionalBranchAndSupervisor(PinkySimContext* pContext, uint16_t in
 
 static int svc(PinkySimContext* pContext, uint16_t instr)
 {
+    uint32_t result = PINKYSIM_STEP_OK;
+    
     if (ConditionPassedForNonBranchInstr(pContext))
-        return PINKYSIM_STEP_SVC;
+        result = PINKYSIM_STEP_SVC;
 
-    return PINKYSIM_STEP_OK;
+    return result;
 }
