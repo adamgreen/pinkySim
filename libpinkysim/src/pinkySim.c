@@ -160,6 +160,7 @@ static int sev(PinkySimContext* pContext, uint16_t instr);
 static int treatAsNop(PinkySimContext* pContext, uint16_t instr);
 static int stm(PinkySimContext* pContext, uint16_t instr);
 static int isNotLowestBitSet(uint32_t bits, uint32_t i);
+static int ldm(PinkySimContext* pContext, uint16_t instr);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -193,6 +194,8 @@ int pinkySimStep(PinkySimContext* pContext)
             result = misc16BitInstructions(pContext, instr);
         else if ((instr & 0xF800) == 0xC000)
             result = stm(pContext, instr);
+        else if ((instr & 0xF800) == 0xC800)
+            result = ldm(pContext, instr);
     
         pContext->pc = pContext->newPC;
     }
@@ -2610,4 +2613,33 @@ static int stm(PinkySimContext* pContext, uint16_t instr)
 static int isNotLowestBitSet(uint32_t bits, uint32_t i)
 {
     return (int)(((1 << i) - 1) & bits);
+}
+
+static int ldm(PinkySimContext* pContext, uint16_t instr)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t    n = (instr & (7 << 8)) >> 8;
+        uint32_t    registers = instr & 0xFF;
+        int         wback = (0 == (registers & (1 << n)));
+        uint32_t    address;
+        int         i;
+        
+        if (bitCount(registers) < 1)
+            return PINKYSIM_STEP_UNPREDICTABLE;
+        
+        address = getReg(pContext, n);
+        for (i = 0 ; i <= 7 ; i++)
+        {
+            if (registers & (1 << i))
+            {
+                setReg(pContext, i, alignedMemRead(pContext, address, 4));
+                address += 4;
+            }
+        }
+        if (wback)
+            setReg(pContext, n, getReg(pContext, n) + 4 * bitCount(registers));
+    }
+
+    return PINKYSIM_STEP_OK;
 }
