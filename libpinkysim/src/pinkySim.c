@@ -175,6 +175,7 @@ static int dsb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
 static int dmb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
 static int isb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
 static int mrs(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
+static int bl(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -2792,6 +2793,8 @@ static int branchAndMiscellaneousControl(PinkySimContext* pContext, uint16_t ins
         result = miscellaneousControl(pContext, instr1, instr2);
     else if ((instr2 & 0x5000) == 0x0000 && (instr1 & 0x07E0) == 0x03E0)
         result = mrs(pContext, instr1, instr2);
+    else if ((instr2 & 0x5000) == 0x5000)
+        result = bl(pContext, instr1, instr2);
 
     return result;
 }
@@ -2954,6 +2957,32 @@ static int mrs(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
             break;
         }
         setReg(pContext, d, value);
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int bl(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t s = (instr1 & (1 << 10)) >> 10;
+        uint32_t immHi = instr1 & 0x3FF;
+        uint32_t j1 = (instr2 & (1 << 13)) >> 13;
+        uint32_t j2 = (instr2 & (1 << 11)) >> 11;
+        uint32_t immLo = (instr2 & 0x7FF);
+        uint32_t i1 = (s ^ j1) ^ 1;
+        uint32_t i2 = (s ^ j2) ^ 1;
+        uint32_t imm32 = ((int32_t)((s << 24) | (i1 << 23) | (i2 << 22) | (immHi << 12) | (immLo << 1)) << 7) >> 7;
+        uint32_t nextInstrAddr;
+        
+        // UNDONE: InITBlock() always returns FALSE for ARMv6-m so this assert will never fire.
+        //if (InITBlock(pContext) && !LastInITBlock(pContext))
+        //    return PINKYSIM_STEP_UNPREDICTABLE;
+
+        nextInstrAddr = getReg(pContext, PC) - 2;
+        setReg(pContext, LR, nextInstrAddr | 1);
+        BranchWritePC(pContext, getReg(pContext, PC) + imm32);
     }
 
     return PINKYSIM_STEP_OK;
