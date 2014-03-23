@@ -26,9 +26,30 @@ TEST_GROUP_BASE(pinkySim, pinkySimBase)
 };
 
 
-TEST(pinkySim, InvalidOpcodeShouldProduceUndefinedError)
+TEST(pinkySim, Undedfined16BitWithAllZeroesForImmedaite)
 {
-    emitInstruction16("1101111000000000");
+    emitInstruction16("11011110iiiiiiii", 0);
+    setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
+    pinkySimStep(&m_context);
+}
+
+TEST(pinkySim, Undedfined16BitWithAllOnesForImmedaite)
+{
+    emitInstruction16("11011110iiiiiiii", -1);
+    setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
+    pinkySimStep(&m_context);
+}
+
+TEST(pinkySim, Undefined32BitWithAllZeroesForImmediate)
+{
+    emitInstruction32("111101111111iiii", "1010iiiiiiiiiiii", 0, 0);
+    setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
+    pinkySimStep(&m_context);
+}
+
+TEST(pinkySim, Undefined32BitWithAllOnesForImmediate)
+{
+    emitInstruction32("111101111111iiii", "1010iiiiiiiiiiii", -1, -1);
     setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
     pinkySimStep(&m_context);
 }
