@@ -174,6 +174,7 @@ static int miscellaneousControl(PinkySimContext* pContext, uint16_t instr1, uint
 static int dsb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
 static int dmb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
 static int isb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
+static int mrs(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
 
 
 int pinkySimStep(PinkySimContext* pContext)
@@ -2787,8 +2788,10 @@ static int branchAndMiscellaneousControl(PinkySimContext* pContext, uint16_t ins
 
     if ((instr2 & 0x5000) == 0x0000 && (instr1 & 0x07E0) == 0x0380)
         result = msr(pContext, instr1, instr2);
-    if ((instr2 & 0x5000) == 0x0000 && (instr1 & 0x07F0) == 0x03B0)
+    else if ((instr2 & 0x5000) == 0x0000 && (instr1 & 0x07F0) == 0x03B0)
         result = miscellaneousControl(pContext, instr1, instr2);
+    else if ((instr2 & 0x5000) == 0x0000 && (instr1 & 0x07E0) == 0x03E0)
+        result = mrs(pContext, instr1, instr2);
 
     return result;
 }
@@ -2894,6 +2897,63 @@ static int isb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
         if ((instr1 & 0x000F) != 0x000F || (instr2 & 0x2F00) != 0x0F00)
             return PINKYSIM_STEP_UNPREDICTABLE;
             
+    }
+
+    return PINKYSIM_STEP_OK;
+}
+
+static int mrs(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
+{
+    if (ConditionPassedForNonBranchInstr(pContext))
+    {
+        uint32_t d = (instr2 & (0xF << 8)) >> 8;
+        uint32_t SYSm = instr2 & 0xFF;
+        uint32_t value = 0;
+        
+        if (d == 13 || d == 15)
+            return PINKYSIM_STEP_UNPREDICTABLE;
+        if (SYSm == 4 || (SYSm > 9 && SYSm < 16) || (SYSm > 16 && SYSm < 20) || (SYSm > 20))
+            return PINKYSIM_STEP_UNPREDICTABLE;
+        if ((instr1 & 0x001F) != 0x000F || (instr2 & 0x2000) != 0x0000)
+            return PINKYSIM_STEP_UNPREDICTABLE;
+            
+        switch (SYSm >> 3)
+        {
+        case 0:
+            if ((SYSm & (1 << 0)) && currentModeIsPrivileged(pContext))
+                value |= pContext->xPSR & IPSR_MASK;
+            if ((SYSm & (1 << 1)))
+                value |= 0; /* T-bit reads as zero on ARMv-6m */
+            if ((SYSm & (1 << 2)) == 0)
+                value |= pContext->xPSR & APSR_NZCV;
+            break;
+        case 1:
+            if (currentModeIsPrivileged(pContext))
+            {
+                switch (SYSm & 0x7)
+                {
+                case 0:
+                    value = pContext->spMain;
+                    break;
+                case 1:
+                    // UNDONE: This simulator doesn't support process stack usage.
+                    break;
+                }
+            }
+            break;
+        case 2:
+            switch (SYSm & 0x7)
+            {
+            case 0:
+                value = pContext->PRIMASK & PRIMASK_PM;
+                break;
+            case 4:
+                value = pContext->CONTROL;
+                break;
+            }
+            break;
+        }
+        setReg(pContext, d, value);
     }
 
     return PINKYSIM_STEP_OK;

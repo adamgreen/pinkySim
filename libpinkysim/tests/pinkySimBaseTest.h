@@ -39,6 +39,7 @@ protected:
     uint32_t        m_expectedSPmain;
     uint32_t        m_expectedLR;
     uint32_t        m_expectedPC;
+    uint32_t        m_expectedIPSR;
     uint32_t        m_emitAddress;
     PinkySimContext m_context;
     
@@ -109,6 +110,11 @@ protected:
         }
     }
     
+    void setExpectedIPSR(uint32_t expectedValue)
+    {
+        m_expectedIPSR = expectedValue;
+    }
+    
     void setExpectedRegisterValue(int index, uint32_t expectedValue)
     {
         assert (index >= 0 && index <= PC);
@@ -157,6 +163,9 @@ protected:
         /* By default we will place the processor in Thumb mode. */
         m_context.xPSR = EPSR_T;
         m_expectedXPSRflags |= EPSR_T;
+        
+        /* Expect the interrupt number to be 0 by default. */
+        setExpectedIPSR(0);
         
         /* Randomly initialize each APSR flag to help verify that the simulator doesn't clear/set a bit that the 
            specification indicates shouldn't be modified by an instruction. */
@@ -304,7 +313,7 @@ protected:
     void validateXPSR()
     {
         CHECK_EQUAL(m_expectedXPSRflags, m_context.xPSR & (APSR_NZCV | EPSR_T));
-        CHECK_EQUAL(0, m_context.xPSR & IPSR_MASK);
+        CHECK_EQUAL(m_expectedIPSR, m_context.xPSR & IPSR_MASK);
     }
     
     void validateRegisters()
@@ -354,5 +363,10 @@ protected:
     void clearOverflow()
     {
         m_context.xPSR &= ~APSR_V;
+    }
+    
+    void setIPSR(uint32_t ipsr)
+    {
+        m_context.xPSR = (m_context.xPSR & ~IPSR_MASK) | (ipsr & IPSR_MASK);
     }
 };
