@@ -23,7 +23,8 @@ typedef enum SRType
     SRType_LSL,
     SRType_LSR,
     SRType_ASR,
-    SRType_RRX,
+    // UNDONE: ARMv6-M doesn't use the RRX type.
+    //SRType_RRX,
     SRType_ROR
 } SRType;
 
@@ -317,7 +318,6 @@ static int InITBlock(const PinkySimContext* pContext)
 
 static DecodedImmShift DecodeImmShift(uint32_t typeBits, uint32_t imm5)
 {
-    /* UNDONE: Needs to do much more as tests progress. */
     DecodedImmShift results;
 
     assert ((typeBits & 0x3) == typeBits);
@@ -331,12 +331,12 @@ static DecodedImmShift DecodeImmShift(uint32_t typeBits, uint32_t imm5)
         results.type = SRType_LSR;
         results.n = (imm5 == 0) ? 32 : imm5;
         break;
-    case 0x2:
+    // UNDONE: ARMv6-M only uses the first 3 decodings.
+    //case 0x2:
+    default:
         results.type = SRType_ASR;
         results.n = (imm5 == 0) ? 32 : imm5;
         break;
-    default:
-        assert (FALSE);
     }
     
     return results;
@@ -344,16 +344,12 @@ static DecodedImmShift DecodeImmShift(uint32_t typeBits, uint32_t imm5)
 
 static ShiftResults Shift_C(uint32_t value, SRType type, uint32_t amount, uint32_t carryIn)
 {
-    ShiftResults results;
+    ShiftResults results = {value, carryIn};
 
-    assert (type != SRType_RRX || amount == 1);
+    // UNDONE: ARMv6-M doesn't use the RRX type.
+    //assert (type != SRType_RRX || amount == 1);
     
-    if (amount == 0)
-    {
-        results.result = value;
-        results.carryOut = carryIn;
-    }
-    else
+    if (amount != 0)
     {
         switch (type)
         {
@@ -369,9 +365,8 @@ static ShiftResults Shift_C(uint32_t value, SRType type, uint32_t amount, uint32
         case SRType_ROR:
             results = ROR_C(value, amount);
             break;
-        case SRType_RRX:
-            // UNDONE: Actually implement these modes as tests progress.
-            assert ( FALSE );
+        // UNDONE: ARMv6-M doesn't use the RRX type.
+        //case SRType_RRX:
         }
     }
     return results;
@@ -456,13 +451,11 @@ static uint32_t LSR(uint32_t x, uint32_t shift)
 
 static uint32_t LSL(uint32_t x, uint32_t shift)
 {
-    ShiftResults results = {0, 0};
+    ShiftResults results = {x, 0};
     
     assert (shift >= 0);
     
-    if (shift == 0)
-        results.result = x;
-    else
+    if (shift != 0)
         results = LSL_C(x, shift);
     return results.result;
 }
@@ -2338,8 +2331,9 @@ static uint32_t ROR(uint32_t x, uint32_t shift)
     
     if (shift == 0)
         results.result = x;
-    else
-        results = ROR_C(x, shift);
+    // UNDONE: ARMv6-M only calls this function with a shift of 0.
+    //else
+    //    results = ROR_C(x, shift);
     return results.result;
 }
 
