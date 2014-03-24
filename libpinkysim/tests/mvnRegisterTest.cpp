@@ -29,18 +29,13 @@ TEST_GROUP_BASE(mvnRegister, pinkySimBase)
 
 /* MVN - Register (MOve Negative)
    Encoding: 010000 1111 Rm:3 Rd:3 */
-TEST(mvnRegister, UseR1ForAllArgs)
-{
-    emitInstruction16("0100001111mmmddd", R1, R1);
-    setExpectedXPSRflags("Nz");
-    setExpectedRegisterValue(R1, ~0x11111111U);
-    pinkySimStep(&m_context);
-}
-
+/* NOTE: APSR_C state is maintained by this instruction. */
 TEST(mvnRegister, UseLowestRegisterForAllArgs)
 {
+    // Use a couple of tests to explicitly set/clear carry to verify both states are maintained.
     emitInstruction16("0100001111mmmddd", R0, R0);
-    setExpectedXPSRflags("Nz");
+    setExpectedXPSRflags("NzC");
+    setCarry();
     setExpectedRegisterValue(R0, ~0U);
     pinkySimStep(&m_context);
 }
@@ -48,7 +43,8 @@ TEST(mvnRegister, UseLowestRegisterForAllArgs)
 TEST(mvnRegister, UseHigestRegisterForAllArgs)
 {
     emitInstruction16("0100001111mmmddd", R7, R7);
-    setExpectedXPSRflags("Nz");
+    setExpectedXPSRflags("Nzc");
+    clearCarry();
     setExpectedRegisterValue(R7, ~0x77777777U);
     pinkySimStep(&m_context);
 }
@@ -61,7 +57,7 @@ TEST(mvnRegister, UseDifferentRegistersForEachArg)
     pinkySimStep(&m_context);
 }
 
-TEST(mvnRegister, MoveANegationOfNegativeOneWhichClearsNegativeFlagAndSetsZeroFlag)
+TEST(mvnRegister, MoveANegationOfNegativeOne_ClearsNegativeFlagAndSetsZeroFlag)
 {
     emitInstruction16("0100001111mmmddd", R2, R1);
     setRegisterValue(R2, -1);

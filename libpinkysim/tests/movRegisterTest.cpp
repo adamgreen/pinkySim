@@ -69,3 +69,10 @@ TEST(movRegister, MoveEvenAddressIntoPC)
     setExpectedRegisterValue(PC, 0x22222222);
     pinkySimStep(&m_context);
 }
+
+TEST(movRegister, MovePCintoOtherRegister)
+{
+    emitInstruction16("01000110dmmmmddd", R3, PC);
+    setExpectedRegisterValue(R3, INITIAL_PC + 4);
+    pinkySimStep(&m_context);
+}

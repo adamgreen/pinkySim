@@ -30,47 +30,38 @@ TEST_GROUP_BASE(movImmediate, pinkySimBase)
 
 /* MOV - Immediate
    Encoding: 001 00 Rd:3 Imm:8 */
+/* NOTE: APSR_C state is maintained by this instruction. */
 TEST(movImmediate, MovToR0)
 {
     emitInstruction16("00100dddiiiiiiii", R0, 127);
+    // Use a couple of tests to explicitly set/clear carry to verify both states are maintained.
     setExpectedXPSRflags("nzc");
-    setExpectedRegisterValue(R0, 127);
     clearCarry();
+    setExpectedRegisterValue(R0, 127);
     pinkySimStep(&m_context);
 }
 
 TEST(movImmediate, MovToR7)
 {
     emitInstruction16("00100dddiiiiiiii", R7, 127);
-    setExpectedXPSRflags("nzc");
+    setExpectedXPSRflags("nzC");
+    setCarry();
     setExpectedRegisterValue(R7, 127);
-    clearCarry();
     pinkySimStep(&m_context);
 }
 
 TEST(movImmediate, MovSmallestImmediateValueToR3)
 {
     emitInstruction16("00100dddiiiiiiii", R3, 0);
-    setExpectedXPSRflags("nZc");
+    setExpectedXPSRflags("nZ");
     setExpectedRegisterValue(R3, 0);
-    clearCarry();
     pinkySimStep(&m_context);
 }
 
 TEST(movImmediate, MovLargestImmediateValueToR3)
 {
     emitInstruction16("00100dddiiiiiiii", R3, 255);
-    setExpectedXPSRflags("nzc");
+    setExpectedXPSRflags("nz");
     setExpectedRegisterValue(R3, 255);
-    clearCarry();
-    pinkySimStep(&m_context);
-}
-
-TEST(movImmediate, MakeSureThatCarryNotCleared)
-{
-    emitInstruction16("00100dddiiiiiiii", R3, 255);
-    setExpectedXPSRflags("nzC");
-    setExpectedRegisterValue(R3, 255);
-    setCarry();
     pinkySimStep(&m_context);
 }

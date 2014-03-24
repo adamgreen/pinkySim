@@ -29,7 +29,7 @@ TEST_GROUP_BASE(ldrsbRegister, pinkySimBase)
 
 /* LDRSB - Register
    Encoding: 0101 011 Rm:3 Rn:3 Rt:3 */
-TEST(ldrsbRegister, UseAMixOfRegistersWordAligned)
+TEST(ldrsbRegister, UseAMixOfRegistersWordAligned_NegativeValue)
 {
     emitInstruction16("0101011mmmnnnttt", R7, R3, R0);
     setRegisterValue(R3, INITIAL_PC);
@@ -39,7 +39,7 @@ TEST(ldrsbRegister, UseAMixOfRegistersWordAligned)
     pinkySimStep(&m_context);
 }
 
-TEST(ldrsbRegister, UseAnotherMixOfRegistersSecondByteInWord)
+TEST(ldrsbRegister, UseAnotherMixOfRegistersSecondByteInWord_NegativeValue)
 {
     emitInstruction16("0101011mmmnnnttt", R1, R0, R7);
     setRegisterValue(R0, INITIAL_PC);
@@ -49,7 +49,7 @@ TEST(ldrsbRegister, UseAnotherMixOfRegistersSecondByteInWord)
     pinkySimStep(&m_context);
 }
 
-TEST(ldrsbRegister, YetAnotherMixOfRegistersThirdByteInWord)
+TEST(ldrsbRegister, YetAnotherMixOfRegistersThirdByteInWord_NegativeValue)
 {
     emitInstruction16("0101011mmmnnnttt", R0, R7, R4);
     setRegisterValue(R7, INITIAL_PC);
@@ -59,7 +59,7 @@ TEST(ldrsbRegister, YetAnotherMixOfRegistersThirdByteInWord)
     pinkySimStep(&m_context);
 }
 
-TEST(ldrsbRegister, YetAnotherMixOfRegistersFourthByteInWord)
+TEST(ldrsbRegister, YetAnotherMixOfRegistersFourthByteInWord_NegativeValue)
 {
     emitInstruction16("0101011mmmnnnttt", R0, R7, R5);
     setRegisterValue(R7, INITIAL_PC);

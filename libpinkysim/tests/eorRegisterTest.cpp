@@ -30,21 +30,22 @@ TEST_GROUP_BASE(eorRegister, pinkySimBase)
 /* EOR - Register
    Encoding: 010000 0001 Rm:3 Rdn:3 */
 /* NOTE: APSR_C state is maintained by this instruction. */
-TEST(eorRegister, UseLowestRegisterForBothArgsAndResultShouldBeZero)
+TEST(eorRegister, UseLowestRegisterForBothArgs)
 {
     emitInstruction16("0100000001mmmddd", R0, R0);
+    // Use a couple of tests to explicitly set/clear carry to verify both states are maintained.
     setExpectedXPSRflags("nZc");
-    setExpectedRegisterValue(R0, 0);
     clearCarry();
+    setExpectedRegisterValue(R0, 0);
     pinkySimStep(&m_context);
 }
 
-TEST(eorRegister, UseHighestRegisterForBothArgsAndResultShouldBeZero)
+TEST(eorRegister, UseHighestRegisterForBothArgs)
 {
     emitInstruction16("0100000001mmmddd", R7, R7);
     setExpectedXPSRflags("nZC");
-    setExpectedRegisterValue(R7, 0);
     setCarry();
+    setExpectedRegisterValue(R7, 0);
     pinkySimStep(&m_context);
 }
 
@@ -59,8 +60,8 @@ TEST(eorRegister, XorR3andR7)
 
 TEST(eorRegister, UseXorToJustFlipNegativeSignBitOn)
 {
-    emitInstruction16("0100000001mmmddd", R7, R3);
-    setRegisterValue(R7, 0x80000000);
+    emitInstruction16("0100000001mmmddd", R6, R3);
+    setRegisterValue(R6, 0x80000000);
     setExpectedXPSRflags("NzC");
     setExpectedRegisterValue(R3, 0x33333333 ^ 0x80000000);
     setCarry();

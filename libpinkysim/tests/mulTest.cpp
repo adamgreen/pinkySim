@@ -37,7 +37,7 @@ TEST(mul, UseLowestRegisterForAllArgs)
     pinkySimStep(&m_context);
 }
 
-TEST(mul, UseHigestRegisterForAllArgs)
+TEST(mul, UseHigestRegisterForAllArgs_OnlyGetLower32bitsOfResult)
 {
     emitInstruction16("0100001101nnnddd", R7, R7);
     setExpectedXPSRflags("Nz");

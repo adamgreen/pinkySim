@@ -67,7 +67,7 @@ TEST(ldrImmediate, T1AttemptLoadFromInvalidAddress)
 
 
 
-/* LDR - Immediate Encoding T2
+/* LDR - Immediate Encoding T2 (SP is base register)
    Encoding: 1001 1 Rt:3 Imm:8 */
 TEST(ldrImmediate, T2UseHighestRegisterWithSmallestOffset)
 {

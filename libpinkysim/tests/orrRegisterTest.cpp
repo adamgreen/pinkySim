@@ -29,12 +29,14 @@ TEST_GROUP_BASE(orrRegister, pinkySimBase)
 
 /* ORR - Register
    Encoding: 010000 1100 Rm:3 Rdn:3 */
+/* NOTE: APSR_C state is maintained by this instruction. */
 TEST(orrRegister, UseLowestRegisterForBothArgs)
 {
     emitInstruction16("0100001100mmmddd", R0, R0);
+    // Use a couple of tests to explicitly set/clear carry to verify both states are maintained.
     setExpectedXPSRflags("nZc");
-    setExpectedRegisterValue(R0, 0);
     clearCarry();
+    setExpectedRegisterValue(R0, 0);
     pinkySimStep(&m_context);
 }
 

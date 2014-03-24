@@ -34,7 +34,7 @@ TEST_GROUP_BASE(lsrImmediate, pinkySimBase)
 
 /* LSR - Immediate (Logical Shift Right)
    Encoding: 000 01 imm:5 Rm:3 Rd:3 */
-TEST(lsrImmediate, R2by1toR0NoCarryNotZeroNotNegative)
+TEST(lsrImmediate, R2by1toR0)
 {
     emitInstruction16("00001iiiiimmmddd", IMM_1, R2, R0);
     setExpectedXPSRflags("nzc");
@@ -42,7 +42,7 @@ TEST(lsrImmediate, R2by1toR0NoCarryNotZeroNotNegative)
     pinkySimStep(&m_context);
 }
 
-TEST(lsrImmediate, R7by32toR0IsZero)
+TEST(lsrImmediate, R7by32toR0_ZeroResult)
 {
     emitInstruction16("00001iiiiimmmddd", IMM_32, R7, R0);
     setExpectedXPSRflags("nZc");
@@ -50,7 +50,7 @@ TEST(lsrImmediate, R7by32toR0IsZero)
     pinkySimStep(&m_context);
 }
 
-TEST(lsrImmediate, R1by1toR7HasCarryOut)
+TEST(lsrImmediate, R1by1toR7_CarryOut)
 {
     emitInstruction16("00001iiiiimmmddd", IMM_1, R1, R7);
     setExpectedXPSRflags("nzC");
@@ -58,11 +58,13 @@ TEST(lsrImmediate, R1by1toR7HasCarryOut)
     pinkySimStep(&m_context);
 }
 
-TEST(lsrImmediate, R0by32HasCarryOutAndIsZero)
+TEST(lsrImmediate, R0by32_CarryOutAndIsZero)
 {
     emitInstruction16("00001iiiiimmmddd", IMM_32, R0, R0);
-    m_context.R[R0] = 0x80000000U;
     setExpectedXPSRflags("nZC");
+    setRegisterValue(R0, 0x80000000U);
     setExpectedRegisterValue(R0, 0U);
     pinkySimStep(&m_context);
 }
+
+// Can't generate a negative result as smallest shift is 1, meaning at least one 0 is shifted in from left.

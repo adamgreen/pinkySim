@@ -29,18 +29,22 @@ TEST_GROUP_BASE(andRegister, pinkySimBase)
 
 /* AND - Register
    Encoding: 010000 0000 Rm:3 Rdn:3 */
-TEST(andRegister, UseLowestRegisterForBothArgsAndResultShouldBeZero)
+/* NOTE: APSR_C state is maintained by this instruction. */
+TEST(andRegister, UseLowestRegisterForBothArgs)
 {
     emitInstruction16("0100000000mmmddd", R0, R0);
-    setExpectedXPSRflags("nZ");
+    setExpectedXPSRflags("nZc");
+    // Use a couple of tests to explicitly set/clear carry to verify both states are maintained.
+    clearCarry();
     setExpectedRegisterValue(R0, 0);
     pinkySimStep(&m_context);
 }
 
-TEST(andRegister, UseHighestRegisterForBothArgsAndRegisterWillBeUnchanged)
+TEST(andRegister, UseHighestRegisterForBothArgs)
 {
     emitInstruction16("0100000000mmmddd", R7, R7);
-    setExpectedXPSRflags("nz");
+    setExpectedXPSRflags("nzC");
+    setCarry();
     pinkySimStep(&m_context);
 }
 
@@ -54,20 +58,20 @@ TEST(andRegister, AndR3andR7)
 
 TEST(andRegister, UseAndToJustKeepNegativeSignBit)
 {
-    emitInstruction16("0100000000mmmddd", R7, R0);
-    setRegisterValue(R0, -1);
-    setRegisterValue(R7, 0x80000000);
+    emitInstruction16("0100000000mmmddd", R6, R1);
+    setRegisterValue(R1, -1);
+    setRegisterValue(R6, 0x80000000);
     setExpectedXPSRflags("Nz");
-    setExpectedRegisterValue(R0, 0x80000000);
+    setExpectedRegisterValue(R1, 0x80000000);
     pinkySimStep(&m_context);
 }
 
 TEST(andRegister, HaveAndResultNotBeSameAsEitherSource)
 {
-    emitInstruction16("0100000000mmmddd", R7, R0);
-    setRegisterValue(R0, 0x12345678);
-    setRegisterValue(R7, 0xF0F0F0F0);
+    emitInstruction16("0100000000mmmddd", R5, R2);
+    setRegisterValue(R2, 0x12345678);
+    setRegisterValue(R5, 0xF0F0F0F0);
     setExpectedXPSRflags("nz");
-    setExpectedRegisterValue(R0, 0x10305070);
+    setExpectedRegisterValue(R2, 0x10305070);
     pinkySimStep(&m_context);
 }

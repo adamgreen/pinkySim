@@ -32,6 +32,7 @@ TEST_GROUP_BASE(b, pinkySimBase)
 TEST(b, BEQ_NotTaken)
 {
     emitInstruction16("1101cccciiiiiiii", COND_EQ, 0);
+    // These tests set the APSR flags to specific value and expect them to be unmodified upon return.
     setExpectedXPSRflags("z");
     clearZero();
     pinkySimStep(&m_context);
@@ -325,7 +326,7 @@ TEST(b, BEQ_TakenWithLargesNegativeOffset)
 
 /* B - Encoding T2 (Unconditional)
    Encoding: 11100 Imm:11 */
-TEST(b, BAL_0Offset)
+TEST(b, BAL_ZeroOffset)
 {
     emitInstruction16("11100iiiiiiiiiii", 0);
     setExpectedRegisterValue(PC, INITIAL_PC + 4);

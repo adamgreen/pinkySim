@@ -30,82 +30,84 @@ TEST_GROUP_BASE(lsrRegister, pinkySimBase)
 
 /* LSR - Register (Logical Shift Right)
    Encoding: 010000 0011 Rm:3 Rdn:3 */
-TEST(lsrRegister, ShiftR7byR0WithValues1and1_CarryOutFromLSB)
+TEST(lsrRegister, ShiftValue1by1_CarryOutFromLowestBit)
 {
     emitInstruction16("0100000011mmmddd", R0, R7);
+    setExpectedXPSRflags("nZC");
     setRegisterValue(R0, 1);
     setRegisterValue(R7, 1);
-    setExpectedXPSRflags("nZC");
     setExpectedRegisterValue(R7, 0);
     pinkySimStep(&m_context);
 }
 
-TEST(lsrRegister, ShiftR7byR0WithValues1and0_MinimumShift_CarryUnmodified)
+TEST(lsrRegister, ShiftValue1by0_MinimumShift_CarryUnmodified)
 {
     emitInstruction16("0100000011mmmddd", R0, R7);
+    setExpectedXPSRflags("nzc");
+    clearCarry();
     setRegisterValue(R7, 1);
     setRegisterValue(R0, 0);
-    setExpectedXPSRflags("nz");
     setExpectedRegisterValue(R7, 1);
     pinkySimStep(&m_context);
 }
 
-TEST(lsrRegister, ShiftR2byR3WithValues2and1_NoCarry)
+TEST(lsrRegister, ShiftValue2by1_NoCarry)
 {
     emitInstruction16("0100000011mmmddd", R3, R2);
+    setExpectedXPSRflags("nzc");
     setRegisterValue(R2, 2);
     setRegisterValue(R3, 1);
-    setExpectedXPSRflags("nzc");
     setExpectedRegisterValue(R2, 2 >> 1);
     pinkySimStep(&m_context);
 }
 
-TEST(lsrRegister, ShiftR2byR3WithShiftOf31)
+TEST(lsrRegister, ShiftNegativeValueBy31)
 {
     emitInstruction16("0100000011mmmddd", R3, R2);
+    setExpectedXPSRflags("nzC");
     setRegisterValue(R2, -1);
     setRegisterValue(R3, 31);
-    setExpectedXPSRflags("nzC");
     setExpectedRegisterValue(R2, -1U >> 31);
     pinkySimStep(&m_context);
 }
 
-TEST(lsrRegister, ShiftR0byR7WithShiftOf32_CarryOutMSB)
+TEST(lsrRegister, ShiftNegativeValueBy32_CarryOutFromHighestBit)
 {
     emitInstruction16("0100000011mmmddd", R7, R0);
+    setExpectedXPSRflags("nZC");
     setRegisterValue(R0, 0x80000000);
     setRegisterValue(R7, 32);
-    setExpectedXPSRflags("nZC");
     setExpectedRegisterValue(R0, 0);
     pinkySimStep(&m_context);
 }
 
-TEST(lsrRegister, ShiftR2byR3WithShiftOf33)
+TEST(lsrRegister, ShiftNegativeValueBy33_ResultIsZero_CarryClear)
 {
     emitInstruction16("0100000011mmmddd", R3, R2);
+    setExpectedXPSRflags("nZc");
     setRegisterValue(R2, -1);
     setRegisterValue(R3, 33);
-    setExpectedXPSRflags("nZc");
     setExpectedRegisterValue(R2, 0);
     pinkySimStep(&m_context);
 }
 
-TEST(lsrRegister, ShiftR2byR3WithMaximumShiftOf255)
+TEST(lsrRegister, MaximumShiftOf255_ResultIsZero_CarryClear)
 {
     emitInstruction16("0100000011mmmddd", R3, R2);
+    setExpectedXPSRflags("nZc");
     setRegisterValue(R2, -1);
     setRegisterValue(R3, 255);
-    setExpectedXPSRflags("nZc");
     setExpectedRegisterValue(R2, 0);
     pinkySimStep(&m_context);
 }
 
-TEST(lsrRegister, ShiftR0byR7WithShiftOf256_ShouldBeTreatedAs0Shift_CarryUnmodified)
+TEST(lsrRegister, ShiftOf256_ShouldBeTreatedAs0Shift_CarryUnmodified)
 {
     emitInstruction16("0100000011mmmddd", R7, R0);
+    setExpectedXPSRflags("NzC");
+    setCarry();
     setRegisterValue(R0, -1);
     setRegisterValue(R7, 256);
-    setExpectedXPSRflags("Nz");
     setExpectedRegisterValue(R0, -1);
     pinkySimStep(&m_context);
 }

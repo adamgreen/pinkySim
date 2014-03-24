@@ -29,7 +29,7 @@ TEST_GROUP_BASE(ldrshRegister, pinkySimBase)
 
 /* LDRSH - Register
    Encoding: 0101 111 Rm:3 Rn:3 Rt:3 */
-TEST(ldrshRegister, UseAMixOfRegistersWordAligned)
+TEST(ldrshRegister, UseAMixOfRegistersWordAligned_NegativeValue)
 {
     emitInstruction16("0101111mmmnnnttt", R7, R3, R0);
     setRegisterValue(R3, INITIAL_PC);
@@ -39,7 +39,7 @@ TEST(ldrshRegister, UseAMixOfRegistersWordAligned)
     pinkySimStep(&m_context);
 }
 
-TEST(ldrshRegister, UseAnotherMixOfRegistersWordAligned)
+TEST(ldrshRegister, UseAnotherMixOfRegistersWordAligned_NegativeValue)
 {
     emitInstruction16("0101111mmmnnnttt", R1, R0, R7);
     setRegisterValue(R0, INITIAL_PC);
@@ -49,7 +49,7 @@ TEST(ldrshRegister, UseAnotherMixOfRegistersWordAligned)
     pinkySimStep(&m_context);
 }
 
-TEST(ldrshRegister, YetAnotherMixOfRegistersNotWordAligned)
+TEST(ldrshRegister, YetAnotherMixOfRegistersNotWordAligned_NegativeValue)
 {
     emitInstruction16("0101111mmmnnnttt", R0, R7, R4);
     setRegisterValue(R7, INITIAL_PC);

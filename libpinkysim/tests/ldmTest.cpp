@@ -29,9 +29,9 @@ TEST_GROUP_BASE(ldm, pinkySimBase)
 
 /* LDM
    Encoding: 1100 1 Rn:3 RegisterList:8 */
-TEST(ldm, JustPopR0WithR7AsAddress)
+TEST(ldm, JustPopR0WithR7AsAddress_WritebackNewAddressToR7)
 {
-    emitInstruction16("11001nnnrrrrrrrr", 7, (1 << 0));
+    emitInstruction16("11001nnnrrrrrrrr", R7, (1 << 0));
     setRegisterValue(R7, INITIAL_PC + 16);
     setExpectedRegisterValue(R7, INITIAL_PC + 16 + 1 * 4);
     setExpectedRegisterValue(R0, 0xFFFFFFFF);
@@ -39,9 +39,9 @@ TEST(ldm, JustPopR0WithR7AsAddress)
     pinkySimStep(&m_context);
 }
 
-TEST(ldm, JustPopR7WithR0AsAddress)
+TEST(ldm, JustPopR7WithR0AsAddress_WritebackNewAddressToR0)
 {
-    emitInstruction16("11001nnnrrrrrrrr", 0, (1 << 7));
+    emitInstruction16("11001nnnrrrrrrrr", R0, (1 << 7));
     setRegisterValue(R0, INITIAL_PC + 16);
     setExpectedRegisterValue(R0, INITIAL_PC + 16 + 1 * 4);
     setExpectedRegisterValue(R7, 0xFFFFFFFF);
@@ -51,7 +51,7 @@ TEST(ldm, JustPopR7WithR0AsAddress)
 
 TEST(ldm, PopAllNoWriteback)
 {
-    emitInstruction16("11001nnnrrrrrrrr", 0, 0xFF);
+    emitInstruction16("11001nnnrrrrrrrr", R0, 0xFF);
     setRegisterValue(R0, INITIAL_PC + 16);
     setExpectedRegisterValue(R0, 0);
     setExpectedRegisterValue(R1, 1);
@@ -66,9 +66,9 @@ TEST(ldm, PopAllNoWriteback)
     pinkySimStep(&m_context);
 }
 
-TEST(ldm, PopAllButAddressRegisterWhichWillGetWriteback)
+TEST(ldm, PopAllButAddressRegister_WritebackNewAddress)
 {
-    emitInstruction16("11001nnnrrrrrrrr", 7, 0x7F);
+    emitInstruction16("11001nnnrrrrrrrr", R7, 0x7F);
     setRegisterValue(R7, INITIAL_PC + 16);
     setExpectedRegisterValue(R0, 0);
     setExpectedRegisterValue(R1, 1);

@@ -27,7 +27,7 @@ TEST_GROUP_BASE(adr, pinkySimBase)
 };
 
 
-/* ADR
+/* ADR (ADDress of label)
    Encoding: 1010 0 Rd:3 Imm:8 */
 TEST(adr, LowestRegisterWithLargestOffset)
 {
@@ -43,7 +43,7 @@ TEST(adr, HighesttRegisterWithSmallestOffset)
     pinkySimStep(&m_context);
 }
 
-TEST(adr, pcNotWordAligned)
+TEST(adr, pcWillNeedToBeWordAlignedBeforeAdd)
 {
     // Emit UNDEFINED 16-bit instruction.
     emitInstruction16("1101111000000000");

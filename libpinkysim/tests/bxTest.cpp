@@ -29,7 +29,7 @@ TEST_GROUP_BASE(bx, pinkySimBase)
 
 /* BX (Branch and Exchange)
    Encoding: 010001 11 0 Rm:4 (0)(0)(0) */
-TEST(bx, UseLowestRegisterToBranchToEvenAddressWhichClearsThumbMode)
+TEST(bx, UseLowestRegisterToBranchToEvenAddressWhichClearsThumbModeToCauseHardFaultOnNextInstruction)
 {
     emitInstruction16("010001110mmmm000", R0);
     setExpectedXPSRflags("t");
@@ -40,15 +40,12 @@ TEST(bx, UseLowestRegisterToBranchToEvenAddressWhichClearsThumbMode)
     pinkySimStep(&m_context);
 }
 
-TEST(bx, UseHighestRegisterToBranchToOddAddressWhichIsOk)
+TEST(bx, UseHighestRegisterToBranchToOddAddressWhichIsRequiredForThumb)
 {
     emitInstruction16("010001110mmmm000", LR);
-    setRegisterValue(LR, 0x1);
-    setExpectedRegisterValue(PC, 0x0);
+    setRegisterValue(LR, (INITIAL_PC + 16) | 1);
+    setExpectedRegisterValue(PC, INITIAL_PC + 16);
     pinkySimStep(&m_context);
-
-    // UNDONE: Could place a BKPT insstruction at branch destination.
-    //pinkySimStep(&m_context);
 }
 
 TEST(bx, UnpredictableToUseR15)

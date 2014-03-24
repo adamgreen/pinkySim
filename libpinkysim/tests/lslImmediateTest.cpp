@@ -40,20 +40,22 @@ TEST_GROUP_BASE(lslImmediate, pinkySimBase)
 TEST(lslImmediate, MovR7toR0_CarryUnmodified)
 {
     emitInstruction16("00000iiiiimmmddd", IMM_0, R7, R0);
-    setExpectedXPSRflags("nz");
+    setExpectedXPSRflags("nzc");
+    clearCarry();
     setExpectedRegisterValue(R0, 0x77777777U);
     pinkySimStep(&m_context);
 }
 
-TEST(lslImmediate, MovR0toR7IsZeroAndCarryUnmodified)
+TEST(lslImmediate, MovR0toR7_ZeroResultAndCarryUnmodified)
 {
     emitInstruction16("00000iiiiimmmddd", IMM_0, R0, R7);
-    setExpectedXPSRflags("nZ");
+    setExpectedXPSRflags("nZC");
+    setCarry();
     setExpectedRegisterValue(R7, 0x0);
     pinkySimStep(&m_context);
 }
 
-TEST(lslImmediate, R1by3toR0IsNegative)
+TEST(lslImmediate, ShiftR1by3_ResultInNegativeValue)
 {
     emitInstruction16("00000iiiiimmmddd", IMM_3, R1, R0);
     setExpectedXPSRflags("Nzc");
@@ -61,7 +63,7 @@ TEST(lslImmediate, R1by3toR0IsNegative)
     pinkySimStep(&m_context);
 }
 
-TEST(lslImmediate, R1by4toR0HasCarryOut)
+TEST(lslImmediate, ShiftR1by4_HasCarryOut)
 {
     emitInstruction16("00000iiiiimmmddd", IMM_4, R1, R0);
     setExpectedXPSRflags("nzC");
@@ -69,29 +71,29 @@ TEST(lslImmediate, R1by4toR0HasCarryOut)
     pinkySimStep(&m_context);
 }
 
-TEST(lslImmediate, R0by31)
+TEST(lslImmediate, ShiftR0by31_PushesLowestbitIntoSignBit)
 {
     emitInstruction16("00000iiiiimmmddd", IMM_31, R0, R0);
     setExpectedXPSRflags("Nzc");
+    setRegisterValue(R0, 1U);
     setExpectedRegisterValue(R0, 1U << 31);
-    m_context.R[R0] = 1U;
     pinkySimStep(&m_context);
 }
 
-TEST(lslImmediate, R0by1WithCarryOut)
+TEST(lslImmediate, CarryOutFromHighestBit)
 {
     emitInstruction16("00000iiiiimmmddd", IMM_1, R0, R0);
     setExpectedXPSRflags("nzC");
+    setRegisterValue(R0, 0xA0000000U);
     setExpectedRegisterValue(R0, 0xA0000000U << 1);
-    m_context.R[R0] = 0xA0000000U;
     pinkySimStep(&m_context);
 }
 
-TEST(lslImmediate, R0by31WithCarryOut)
+TEST(lslImmediate, CarryOutFromLowestBit)
 {
     emitInstruction16("00000iiiiimmmddd", IMM_31, R0, R0);
     setExpectedXPSRflags("nZC");
+    setRegisterValue(R0, 0x2U);
     setExpectedRegisterValue(R0, 0x2U << 31);
-    m_context.R[R0] = 0x2U;
     pinkySimStep(&m_context);
 }

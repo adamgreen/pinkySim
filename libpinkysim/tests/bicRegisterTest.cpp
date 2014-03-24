@@ -29,12 +29,14 @@ TEST_GROUP_BASE(bicRegister, pinkySimBase)
 
 /* BIC - Register
    Encoding: 010000 1110 Rm:3 Rdn:3 */
+/* NOTE: APSR_C state is maintained by this instruction. */
 TEST(bicRegister, UseLowestRegisterForBothArgs)
 {
     emitInstruction16("0100001110mmmddd", R0, R0);
+    // Use a couple of tests to explicitly set/clear carry to verify both states are maintained.
     setExpectedXPSRflags("nZc");
-    setExpectedRegisterValue(R0, 0);
     clearCarry();
+    setExpectedRegisterValue(R0, 0);
     pinkySimStep(&m_context);
 }
 
@@ -42,8 +44,8 @@ TEST(bicRegister, UseHighestRegisterForBothArgs)
 {
     emitInstruction16("0100001110mmmddd", R7, R7);
     setExpectedXPSRflags("nZC");
-    setExpectedRegisterValue(R7, 0);
     setCarry();
+    setExpectedRegisterValue(R7, 0);
     pinkySimStep(&m_context);
 }
 
@@ -57,10 +59,10 @@ TEST(bicRegister, UseR3andR7)
 
 TEST(bicRegister, UseBicToClearLSbit)
 {
-    emitInstruction16("0100001110mmmddd", R7, R0);
-    setRegisterValue(R0, -1);
-    setRegisterValue(R7, 1);
+    emitInstruction16("0100001110mmmddd", R6, R1);
+    setRegisterValue(R1, -1);
+    setRegisterValue(R6, 1);
     setExpectedXPSRflags("Nz");
-    setExpectedRegisterValue(R0, -1U & ~1);
+    setExpectedRegisterValue(R1, -1U & ~1);
     pinkySimStep(&m_context);
 }

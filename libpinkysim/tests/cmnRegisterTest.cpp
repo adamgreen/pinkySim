@@ -29,13 +29,6 @@ TEST_GROUP_BASE(cmnRegister, pinkySimBase)
 
 /* CMN - Register (Compare Negative)
    Encoding: 010000 1011 Rm:3 Rn:3 */
-TEST(cmnRegister, UseR1ForAllArgsResultsInAllFlagsCleared)
-{
-    emitInstruction16("0100001011mmmnnn", R1, R1);
-    setExpectedXPSRflags("nzcv");
-    pinkySimStep(&m_context);
-}
-
 TEST(cmnRegister, UseLowestRegisterForAllArgs)
 {
     emitInstruction16("0100001011mmmnnn", R0, R0);
@@ -43,7 +36,7 @@ TEST(cmnRegister, UseLowestRegisterForAllArgs)
     pinkySimStep(&m_context);
 }
 
-TEST(cmnRegister, UseHigestRegister)
+TEST(cmnRegister, UseHigestRegisterForAllArgs)
 {
     emitInstruction16("0100001011mmmnnn", R7, R7);
     setExpectedXPSRflags("NzcV");
@@ -57,6 +50,7 @@ TEST(cmnRegister, UseDifferentRegistersForEachArg)
     pinkySimStep(&m_context);
 }
 
+// Force APSR flags to be set which haven't already been covered above.
 TEST(cmnRegister, ForceCarryWithNoOverflow)
 {
     emitInstruction16("0100001011mmmnnn", R1, R2);

@@ -49,10 +49,10 @@ TEST(ldrhImmediate, UseAnotherMixOfRegistersNotWordAligned)
 
 TEST(ldrhImmediate, LargestOffset)
 {
-    emitInstruction16("10001iiiiinnnttt", 31, R0, R7);
-    setRegisterValue(R0, INITIAL_PC);
+    emitInstruction16("10001iiiiinnnttt", 31, R1, R6);
+    setRegisterValue(R1, INITIAL_PC);
     SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 60, 0xBAADFEED, READ_ONLY);
-    setExpectedRegisterValue(R7, 0xBAAD);
+    setExpectedRegisterValue(R6, 0xBAAD);
     pinkySimStep(&m_context);
 }
 

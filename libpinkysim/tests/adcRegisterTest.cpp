@@ -27,18 +27,19 @@ TEST_GROUP_BASE(adcRegister, pinkySimBase)
 };
 
 
-/* ADC - Register (ADD with Carry)
+/* ADC - Register (ADd with Carry)
    Encoding: 010000 0101 Rm:3 Rdn:3 */
-TEST(adcRegister, UseR1ForAllArgsAndCarryOverflowZeroNegativeFlagsShouldBeClear)
+TEST(adcRegister, UseR1ForAllArgs)
 {
     emitInstruction16("0100000101mmmddd", R1, R1);
     setExpectedXPSRflags("nzcv");
     setExpectedRegisterValue(R1, 0x11111111U + 0x11111111U);
+    // Carry In state is important for ADC tests.
     clearCarry();
     pinkySimStep(&m_context);
 }
 
-TEST(adcRegister, UseLowestRegisterForAllArgsAndOnlyZeroFlagShouldBeSet)
+TEST(adcRegister, UseLowestRegisterForAllArgs)
 {
     emitInstruction16("0100000101mmmddd", R0, R0);
     setExpectedXPSRflags("nZcv");
@@ -47,16 +48,7 @@ TEST(adcRegister, UseLowestRegisterForAllArgsAndOnlyZeroFlagShouldBeSet)
     pinkySimStep(&m_context);
 }
 
-TEST(adcRegister, Add0to0WithCarryInSetToGiveAResultOf1)
-{
-    emitInstruction16("0100000101mmmddd", R0, R0);
-    setExpectedXPSRflags("nzcv");
-    setExpectedRegisterValue(R0, 0U + 0U + 1U);
-    setCarry();
-    pinkySimStep(&m_context);
-}
-
-TEST(adcRegister, UseHigestRegisterForAllArgsAndWillBeNegativeBecauseOfOverflow)
+TEST(adcRegister, UseHigestRegisterForAllArgsPositiveOverflow)
 {
     emitInstruction16("0100000101mmmddd", R7, R7);
     setExpectedXPSRflags("NzcV");
@@ -73,8 +65,17 @@ TEST(adcRegister, UseDifferentRegistersForEachArg)
     clearCarry();
     pinkySimStep(&m_context);
 }
+TEST(adcRegister, Add0to0WithCarryInSetToGiveAResultOf1)
+{
+    emitInstruction16("0100000101mmmddd", R0, R0);
+    setExpectedXPSRflags("nzcv");
+    setExpectedRegisterValue(R0, 0U + 0U + 1U);
+    setCarry();
+    pinkySimStep(&m_context);
+}
 
-TEST(adcRegister, ForceCarryWithNoOverflow)
+// Force APSR flags to be set which haven't already been covered above.
+TEST(adcRegister, ForceCarryOut)
 {
     emitInstruction16("0100000101mmmddd", R1, R2);
     setExpectedXPSRflags("nZCv");
@@ -85,7 +86,7 @@ TEST(adcRegister, ForceCarryWithNoOverflow)
     pinkySimStep(&m_context);
 }
 
-TEST(adcRegister, ForceCarryAndOverflow)
+TEST(adcRegister, ForceCarryOutAndOverflow)
 {
     emitInstruction16("0100000101mmmddd", R1, R2);
     setExpectedXPSRflags("nzCV");
