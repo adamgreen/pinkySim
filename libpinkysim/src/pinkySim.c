@@ -2974,7 +2974,7 @@ static int bl(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
         //if (inITBlock(pContext) && !LastinITBlock(pContext))
         //    return PINKYSIM_STEP_UNPREDICTABLE;
 
-        nextInstrAddr = getReg(pContext, PC) - 2;
+        nextInstrAddr = getReg(pContext, PC);
         setReg(pContext, LR, nextInstrAddr | 1);
         branchWritePC(pContext, getReg(pContext, PC) + imm32);
     }
