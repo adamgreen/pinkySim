@@ -31,7 +31,7 @@ TEST_GROUP_BASE(stm, pinkySimBase)
    Encoding: 1100 0 Rn:3 RegisterList:8 */
 TEST(stm, JustPushR0WithR7AsAddress)
 {
-    emitInstruction16("11000nnnrrrrrrrr", 7, (1 << 0));
+    emitInstruction16("11000nnnrrrrrrrr", R7, (1 << 0));
     setRegisterValue(R7, INITIAL_PC + 16);
     setExpectedRegisterValue(R7, INITIAL_PC + 16 + 1 * 4);
     SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 16, 0xFFFFFFFF, READ_WRITE);
@@ -41,7 +41,7 @@ TEST(stm, JustPushR0WithR7AsAddress)
 
 TEST(stm, JustPushR7WithR0AsAddress)
 {
-    emitInstruction16("11000nnnrrrrrrrr", 0, (1 << 7));
+    emitInstruction16("11000nnnrrrrrrrr", R0, (1 << 7));
     setRegisterValue(R0, INITIAL_PC + 16);
     setExpectedRegisterValue(R0, INITIAL_PC + 16 + 1 * 4);
     SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 16, 0xFFFFFFFF, READ_WRITE);
@@ -51,7 +51,7 @@ TEST(stm, JustPushR7WithR0AsAddress)
 
 TEST(stm, PushAllWithR0AsAddress)
 {
-    emitInstruction16("11000nnnrrrrrrrr", 0, 0xFF);
+    emitInstruction16("11000nnnrrrrrrrr", R0, 0xFF);
     setRegisterValue(R0, INITIAL_PC + 16);
     setExpectedRegisterValue(R0, INITIAL_PC + 16 + 8 * 4);
     for (int i = 0 ; i < 8 ; i++)
@@ -64,7 +64,7 @@ TEST(stm, PushAllWithR0AsAddress)
 
 TEST(stm, PushAllButR7WithR7AsAddress)
 {
-    emitInstruction16("11000nnnrrrrrrrr", 7, 0x7F);
+    emitInstruction16("11000nnnrrrrrrrr", R7, 0x7F);
     setRegisterValue(R7, INITIAL_PC + 16);
     setExpectedRegisterValue(R7, INITIAL_PC + 16 + 7 * 4);
     for (int i = 0 ; i < 7 ; i++)
@@ -76,7 +76,7 @@ TEST(stm, PushAllButR7WithR7AsAddress)
 
 TEST(stm, HardFaultFromInvalidMemoryWrite)
 {
-    emitInstruction16("11000nnnrrrrrrrr", 0, 1 << 0);
+    emitInstruction16("11000nnnrrrrrrrr", R0, 1 << 0);
     setRegisterValue(R0, 0xFFFFFFFC);
     setExpectedStepReturn(PINKYSIM_STEP_HARDFAULT);
     setExpectedRegisterValue(PC, INITIAL_PC);
@@ -85,14 +85,14 @@ TEST(stm, HardFaultFromInvalidMemoryWrite)
 
 TEST(stm, UnpredictableToPushNoRegisters)
 {
-    emitInstruction16("11000nnnrrrrrrrr", 0, 0);
+    emitInstruction16("11000nnnrrrrrrrr", R0, 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
     pinkySimStep(&m_context);
 }
 
 TEST(stm, UnpredictableToPushWritebackRegisterWhichIsntFirstSaved)
 {
-    emitInstruction16("11000nnnrrrrrrrr", 7, 0xFF);
+    emitInstruction16("11000nnnrrrrrrrr", R7, 0xFF);
     setRegisterValue(R7, INITIAL_PC + 16);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
     pinkySimStep(&m_context);

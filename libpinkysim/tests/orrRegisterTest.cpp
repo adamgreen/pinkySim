@@ -68,10 +68,10 @@ TEST(orrRegister, UseOrToTurnOnNegativeSignBit)
 
 TEST(orrRegister, HaveAndResultNotBeSameAsEitherSource)
 {
-    emitInstruction16("0100001100mmmddd", R7, R0);
+    emitInstruction16("0100001100mmmddd", R0, R7);
     setRegisterValue(R0, 0x12345678);
     setRegisterValue(R7, 0xF0F0F0F0);
     setExpectedXPSRflags("Nz");
-    setExpectedRegisterValue(R0, 0xF2F4F6F8);
+    setExpectedRegisterValue(R7, 0xF2F4F6F8);
     pinkySimStep(&m_context);
 }

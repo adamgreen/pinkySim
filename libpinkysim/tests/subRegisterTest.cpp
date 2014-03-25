@@ -29,7 +29,7 @@ TEST_GROUP_BASE(subRegister, pinkySimBase)
 
 /* SUB - Register
    Encoding: 000 11 0 1 Rm:3 Rn:3 Rd:3 */
-TEST(subRegister, UseLowestRegisterForAllArgsAndShouldBeZeroWithCarrySetForNoBorrow)
+TEST(subRegister, UseLowestRegisterForAllArgs)
 {
     emitInstruction16("0001101mmmnnnddd", R0, R0, R0);
     setExpectedXPSRflags("nZCv");
@@ -37,7 +37,7 @@ TEST(subRegister, UseLowestRegisterForAllArgsAndShouldBeZeroWithCarrySetForNoBor
     pinkySimStep(&m_context);
 }
 
-TEST(subRegister, UseHigestRegisterForAllArgsAndShouldBeZeroWithCarrySetForNoBorrow)
+TEST(subRegister, UseHigestRegisterForAllArgs)
 {
     emitInstruction16("0001101mmmnnnddd", R7, R7, R7);
     setExpectedXPSRflags("nZCv");
@@ -45,7 +45,7 @@ TEST(subRegister, UseHigestRegisterForAllArgsAndShouldBeZeroWithCarrySetForNoBor
     pinkySimStep(&m_context);
 }
 
-TEST(subRegister, UseDifferentRegistersForEachArgAndOnlyCarryShouldBeSetToIndicateNoBorrow)
+TEST(subRegister, UseDifferentRegistersForEachArg)
 {
     emitInstruction16("0001101mmmnnnddd", R1, R2, R0);
     setExpectedXPSRflags("nzCv");
@@ -53,6 +53,7 @@ TEST(subRegister, UseDifferentRegistersForEachArgAndOnlyCarryShouldBeSetToIndica
     pinkySimStep(&m_context);
 }
 
+// Force APSR flags to be set which haven't already been covered above.
 TEST(subRegister, ForceCarryClearToIndicateBorrowAndResultWillBeNegative)
 {
     emitInstruction16("0001101mmmnnnddd", R1, R0, R2);
@@ -78,6 +79,6 @@ TEST(subRegister, ForcePositiveOverflow)
     setExpectedXPSRflags("NzcV");
     setRegisterValue(R2, 0x7FFFFFFFU);
     setRegisterValue(R1, -1U);
-    setExpectedRegisterValue(R0, 0x7FFFFFFF + 1);
+    setExpectedRegisterValue(R0, 0x7FFFFFFFU + 1U);
     pinkySimStep(&m_context);
 }

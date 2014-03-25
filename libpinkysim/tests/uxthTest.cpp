@@ -27,7 +27,7 @@ TEST_GROUP_BASE(uxth, pinkySimBase)
 };
 
 
-/* UXTH (Unsigned ExTend Halfword
+/* UXTH (Unsigned ExTend Halfword)
    Encoding: 1011 0010 10 Rm:3 Rd:3 */
 TEST(uxth, ExtendLowestRegisterIntoHighestRegister_PositiveValue)
 {
@@ -45,10 +45,18 @@ TEST(uxth, ExtendHighestRegisterIntoLowestRegister_NegativeValue)
     pinkySimStep(&m_context);
 }
 
-TEST(uxth, ZeroOutUpperHalfword)
+TEST(uxth, OverwriteUpperBits_PositiveValue)
 {
-    emitInstruction16("1011001010mmmddd", R0, R7);
-    setRegisterValue(R0, 0xFFFFFFFF);
-    setExpectedRegisterValue(R7, 0xFFFF);
+    emitInstruction16("1011001010mmmddd", R6, R1);
+    setRegisterValue(R6, 0xF00D7FFF);
+    setExpectedRegisterValue(R1, 0x7FFF);
+    pinkySimStep(&m_context);
+}
+
+TEST(uxth, OverwriteUpperBits_NegativeValue)
+{
+    emitInstruction16("1011001010mmmddd", R2, R5);
+    setRegisterValue(R2, 0xF00D8000);
+    setExpectedRegisterValue(R5, 0x8000);
     pinkySimStep(&m_context);
 }

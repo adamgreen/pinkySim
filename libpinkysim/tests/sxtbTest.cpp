@@ -27,7 +27,7 @@ TEST_GROUP_BASE(sxtb, pinkySimBase)
 };
 
 
-/* SXTH (Sign ExTend Byte
+/* SXTB (Sign ExTend Byte)
    Encoding: 1011 0010 01 Rm:3 Rd:3 */
 TEST(sxtb, SignExtendLowestRegisterIntoHighestRegister_PositiveValue)
 {
@@ -42,5 +42,21 @@ TEST(sxtb, SignExtendHighestRegisterIntoLowestRegister_NegativeValue)
     emitInstruction16("1011001001mmmddd", R0, R7);
     setRegisterValue(R0, 0x80);
     setExpectedRegisterValue(R7, 0xFFFFFF80);
+    pinkySimStep(&m_context);
+}
+
+TEST(sxtb, OverwriteUpperBits_PositiveValue)
+{
+    emitInstruction16("1011001001mmmddd", R6, R1);
+    setRegisterValue(R6, 0xBADBAD7F);
+    setExpectedRegisterValue(R1, 0x7F);
+    pinkySimStep(&m_context);
+}
+
+TEST(sxtb, OverwriteUpperBits_NegativeValue)
+{
+    emitInstruction16("1011001001mmmddd", R2, R5);
+    setRegisterValue(R2, 0xBADBAD80);
+    setExpectedRegisterValue(R5, 0xFFFFFF80);
     pinkySimStep(&m_context);
 }

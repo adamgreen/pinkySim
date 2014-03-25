@@ -33,9 +33,12 @@ TEST(bx, UseLowestRegisterToBranchToEvenAddressWhichClearsThumbModeToCauseHardFa
 {
     emitInstruction16("010001110mmmm000", R0);
     setExpectedXPSRflags("t");
-    setExpectedRegisterValue(PC, 0x0);
+    setRegisterValue(R0, INITIAL_PC + 16);
+    setExpectedRegisterValue(PC, INITIAL_PC + 16);
     pinkySimStep(&m_context);
     
+    const uint16_t NOP = 0xBF00;
+    SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 16, NOP, READ_ONLY);
     setExpectedStepReturn(PINKYSIM_STEP_HARDFAULT);
     pinkySimStep(&m_context);
 }

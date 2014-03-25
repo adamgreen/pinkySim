@@ -67,7 +67,7 @@ TEST(strImmediate, T1AttemptStoreToInvalidAddress)
 
 
 
-/* STR - Immediate Encoding T2
+/* STR - Immediate Encoding T2 (SP is base register)
    Encoding: 1001 0 Rt:3 Imm:8 */
 TEST(strImmediate, T2HighestRegisterWithSmallestImmediateOffset)
 {

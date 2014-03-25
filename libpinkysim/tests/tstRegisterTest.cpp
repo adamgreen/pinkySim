@@ -29,17 +29,21 @@ TEST_GROUP_BASE(tstRegister, pinkySimBase)
 
 /* TST - Register
    Encoding: 010000 1000 Rm:3 Rn:3 */
+/* NOTE: APSR_C state is maintained by this instruction. */
 TEST(tstRegister, UseLowestRegisterForBothArgsAndResultShouldBeZero)
 {
     emitInstruction16("0100001000mmmnnn", R0, R0);
-    setExpectedXPSRflags("nZ");
+    // Use a couple of tests to explicitly set/clear carry to verify both states are maintained.
+    setExpectedXPSRflags("nZc");
+    clearCarry();
     pinkySimStep(&m_context);
 }
 
 TEST(tstRegister, UseHighestRegisterForBothArgsAndRegisterWillBeUnchanged)
 {
     emitInstruction16("0100001000mmmnnn", R7, R7);
-    setExpectedXPSRflags("nz");
+    setExpectedXPSRflags("nzC");
+    setCarry();
     pinkySimStep(&m_context);
 }
 
