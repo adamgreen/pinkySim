@@ -2,7 +2,7 @@
 SILENCE = @
 
 #---- Outputs ----#
-COMPONENT_NAME = pinkysim
+COMPONENT_NAME = common
 CPPUTEST_LIB_DIR = ../lib
 
 #--- Inputs ----#
@@ -34,7 +34,5 @@ INCLUDE_DIRS =\
   $(CPPUTEST_HOME)/include/ \
   ../include/               \
   tests/                    \
-
-USER_LIBS = ../lib/libcommon.a
 
 include $(CPPUTEST_HOME)/build/MakefileWorker.mk

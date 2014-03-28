@@ -23,6 +23,9 @@
 #define busErrorException                   4
 #define alignmentException                  5
 #define bkptException                       6
+#define invalidHexDigitException            7
+#define invalidValueException               8
+#define bufferOverrunException              9
 
 
 #ifndef __debugbreak
