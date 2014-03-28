@@ -6,6 +6,7 @@
 *.a
 *.gcda
 *.gcno
+debug
 gcov/
 Debug/
 Release/
