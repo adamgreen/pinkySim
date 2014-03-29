@@ -26,6 +26,7 @@
 #define invalidHexDigitException            7
 #define invalidValueException               8
 #define bufferOverrunException              9
+#define badResponseException                10
 
 
 #ifndef __debugbreak
