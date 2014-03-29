@@ -21,7 +21,9 @@ extern "C"
 #include "commMock.h"
 
 static const char  g_emptyPacket[] = "$#00";
-static Buffer      g_receiveBuffer;
+static Buffer      g_receiveBuffer1;
+static Buffer      g_receiveBuffer2;
+static Buffer*     g_pReceiveBuffer;
 static char*       g_pTransmitDataBufferStart;
 static char*       g_pTransmitDataBufferEnd;
 static char*       g_pTransmitDataBufferCurr;
@@ -34,7 +36,16 @@ static size_t   getTransmitDataBufferSize();
 
 void mockCommInitReceiveData(const char* pDataToReceive)
 {
-    bufferInit(&g_receiveBuffer, (char*)pDataToReceive, strlen(pDataToReceive));
+    bufferInit(&g_receiveBuffer1, (char*)pDataToReceive, strlen(pDataToReceive));
+    bufferInit(&g_receiveBuffer2, (char*)g_emptyPacket, strlen(g_emptyPacket));
+    g_pReceiveBuffer = &g_receiveBuffer1;
+}
+
+void mockCommInitReceiveData(const char* pDataToReceive1, const char* pDataToReceive2)
+{
+    bufferInit(&g_receiveBuffer1, (char*)pDataToReceive1, strlen(pDataToReceive1));
+    bufferInit(&g_receiveBuffer2, (char*)pDataToReceive2, strlen(pDataToReceive2));
+    g_pReceiveBuffer = &g_receiveBuffer1;
 }
 
 void mockCommInitTransmitDataBuffer(size_t Size)
@@ -69,7 +80,7 @@ uint32_t commHasReceiveData(void)
 {
     if (isReceiveBufferEmpty())
     {
-        bufferInit(&g_receiveBuffer, (char*)g_emptyPacket, strlen(g_emptyPacket));
+        g_pReceiveBuffer = &g_receiveBuffer2;
         return 0;
     }
     
@@ -80,7 +91,7 @@ int commReceiveChar(void)
 {
     waitForReceiveData();
 
-    int character = bufferReadChar(&g_receiveBuffer);
+    int character = bufferReadChar(g_pReceiveBuffer);
 
     clearExceptionCode();
 
@@ -95,7 +106,7 @@ void commSendChar(int character)
 
 static uint32_t isReceiveBufferEmpty()
 {
-    return (uint32_t)(bufferBytesLeft(&g_receiveBuffer) == 0);
+    return (uint32_t)(bufferBytesLeft(g_pReceiveBuffer) == 0);
 }
 
 static void waitForReceiveData()

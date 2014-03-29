@@ -13,10 +13,11 @@
 #ifndef _COMM_MOCK_H_
 #define _COMM_MOCK_H_
 
-void        mockCommInitReceiveData(const char* pDataToReceive);
-void        mockCommInitTransmitDataBuffer(size_t Size);
-void        mockCommUninitTransmitDataBuffer(void);
-int         mockCommDoesTransmittedDataEqual(const char* thisString);
-void        mockCommSetShareFlag(int flag);
+void mockCommInitReceiveData(const char* pDataToReceive);
+void mockCommInitReceiveData(const char* pDataToReceive1, const char* pDataToReceive2);
+void mockCommInitTransmitDataBuffer(size_t Size);
+void mockCommUninitTransmitDataBuffer(void);
+int  mockCommDoesTransmittedDataEqual(const char* thisString);
+void mockCommSetShareFlag(int flag);
 
 #endif /* _COMM_MOCK_H_ */
