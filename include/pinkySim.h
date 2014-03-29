@@ -85,11 +85,11 @@ typedef struct PinkySimContext
 {
     IMemory* pMemory;
     uint32_t R[13];
-    uint32_t lr;
     uint32_t spMain;
+    uint32_t lr;
     uint32_t pc;
-    uint32_t newPC;
     uint32_t xPSR;
+    uint32_t newPC;
     uint32_t PRIMASK;
     uint32_t CONTROL;
 } PinkySimContext;
