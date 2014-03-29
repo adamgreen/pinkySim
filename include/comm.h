@@ -21,14 +21,5 @@
 uint32_t  commHasReceiveData(void);
 int       commReceiveChar(void);
 void      commSendChar(int character);
-int       commCausedInterrupt(void);
-void      commClearInterrupt(void);
-int       commShouldWaitForGdbConnect(void);
-int       commSharingWithApplication(void);
-void      commPrepareToWaitForGdbConnection(void);
-int       commIsWaitingForGdbToConnect(void);
-void      commWaitForReceiveDataToStop(void);
-int       commUartIndex(void);
-
 
 #endif /* _COMM_H_ */
