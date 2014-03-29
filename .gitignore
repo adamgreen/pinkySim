@@ -1,6 +1,7 @@
 .DS_Store
 *_tests
 *_tests.exe
+*_tests.txt
 *.o
 *.d
 *.a
@@ -10,4 +11,3 @@ debug
 gcov/
 Debug/
 Release/
-pinkysim_tests.txt
