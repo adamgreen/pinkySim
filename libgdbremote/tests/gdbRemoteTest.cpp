@@ -413,7 +413,3 @@ TEST(gdbRemote, gdbRemoteSingleStep_ThrowsExceptionIfResponseIsNotTPacket)
     CHECK_EQUAL(badResponseException, getExceptionCode());
     CHECK( mockCommDoesTransmittedDataEqual(appendChecksums("$s#+")) );
 }
-
-
-
-// Handle PRIMASK special register as well.
