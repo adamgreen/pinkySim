@@ -11,6 +11,7 @@
     GNU General Public License for more details.
 */
 #include <commSerial.h>
+#include <dirent.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +33,9 @@ typedef struct CommSerial
 CommSerial g_serial;
 
 
+static int openMbedSerial(void);
+
+
 __throws void commSerialInit(const char* pDevicePath, uint32_t baudRate, uint32_t msecTimeout)
 {
     int            result = -1;
@@ -39,7 +43,10 @@ __throws void commSerialInit(const char* pDevicePath, uint32_t baudRate, uint32_
     
     memset(&g_serial, 0, sizeof(g_serial));
 
-    g_serial.file = open(pDevicePath, O_RDWR | O_NONBLOCK);
+    if (pDevicePath)
+        g_serial.file = open(pDevicePath, O_RDWR | O_NONBLOCK);
+    else
+        g_serial.file = openMbedSerial();
     if (g_serial.file == -1)
     {
         perror("error: Failed to open serial port");
@@ -94,6 +101,35 @@ __throws void commSerialInit(const char* pDevicePath, uint32_t baudRate, uint32_
     
     /* This might only be required due to the mbed CDC firmware. */
     usleep(100000);
+}
+
+/* Find the first device named /dev/tty.usbmodem* on OS X and open it. */
+static int openMbedSerial(void)
+{
+    int            serialFile = -1;
+    DIR*           pDir = NULL;
+    struct dirent* pDirEntry = NULL;
+    
+    pDir = opendir("/dev");
+    if (!pDir)
+        __throw(serialException);
+    
+    while (NULL != (pDirEntry = readdir(pDir)))
+    {
+        if (pDirEntry->d_name == strcasestr(pDirEntry->d_name, "tty.usbmodem"))
+        {
+            char pathname[128];
+            
+            snprintf(pathname, sizeof(pathname), "/dev/%s", pDirEntry->d_name);
+            serialFile = open(pathname, O_RDWR | O_NONBLOCK);
+            break;
+        }
+    }
+    
+    if (pDir)
+        closedir(pDir);
+
+    return serialFile;
 }
 
 

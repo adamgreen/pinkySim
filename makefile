@@ -1,6 +1,6 @@
 # Directories to be built
 DIRS=CppUTest libcommon libpinkysim
-TESTDIRS=libgdbremote
+TESTDIRS=libgdbremote libcommserial
 DIRSCLEAN = $(addsuffix .clean,$(DIRS) $(TESTDIRS))
 
 all: $(DIRS)
