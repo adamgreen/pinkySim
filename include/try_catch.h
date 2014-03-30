@@ -27,6 +27,8 @@
 #define invalidValueException               8
 #define bufferOverrunException              9
 #define badResponseException                10
+#define serialException                     11
+#define timeoutException                    12
 
 
 #ifndef __debugbreak

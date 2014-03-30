@@ -22,4 +22,5 @@ uint32_t  commHasReceiveData(void);
 int       commReceiveChar(void);
 void      commSendChar(int character);
 
+
 #endif /* _COMM_H_ */
