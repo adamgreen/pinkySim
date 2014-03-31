@@ -15,6 +15,7 @@
 extern "C"
 {
     #include <gdbRemote.h>
+    #include <signal.h>
 }
 
 // Include C++ headers for test harness.
@@ -397,11 +398,25 @@ TEST(gdbRemote, gdbRemoteWriteMemory_ThrowsExceptionIfResponseIsNotOk)
 
 TEST(gdbRemote, gdbRemoteSingleStep_SendsStepCommandAndReceivesExpectedTResult)
 {
-    mockCommInitReceiveData(appendChecksums("+$T01#"));
+    mockCommInitReceiveData(appendChecksums("+$T05#"));
     
-    gdbRemoteSingleStep();
+    int signal = gdbRemoteSingleStep();
 
     CHECK( mockCommDoesTransmittedDataEqual(appendChecksums("$s#+")) );
+    CHECK_EQUAL(SIGTRAP, signal);
+}
+
+TEST(gdbRemote, gdbRemoteSingleStep_SkipOutputResponses)
+{
+    char outputPacket[16];
+    
+    strcpy(outputPacket, appendChecksums("+$Off#"));
+    mockCommInitReceiveData(outputPacket, appendChecksums("$T05#"));
+    
+    int signal = gdbRemoteSingleStep();
+
+    CHECK( mockCommDoesTransmittedDataEqual(appendChecksums("$s#++")) );
+    CHECK_EQUAL(SIGTRAP, signal);
 }
 
 TEST(gdbRemote, gdbRemoteSingleStep_ThrowsExceptionIfResponseIsNotTPacket)

@@ -23,7 +23,7 @@ static void verifyOkResponse(void);
 static void sendReadMemoryCommand(uint32_t address, uint32_t readSize);
 static void sendWriteMemoryCommand(uint32_t address, const void* pWriteBuffer, uint32_t writeSize);
 static void sendSingleStepCommand(void);
-static void verifyTResponse(void);
+static int  parseSingleStepResponse(void);
 
 
 void gdbRemoteGetRegisters(PinkySimContext* pContext)
@@ -162,10 +162,10 @@ static void sendWriteMemoryCommand(uint32_t address, const void* pWriteBuffer, u
 
 
 
-void gdbRemoteSingleStep(void)
+int gdbRemoteSingleStep(void)
 {
     sendSingleStepCommand();
-    verifyTResponse();
+    return parseSingleStepResponse();
 }
 
 static void sendSingleStepCommand(void)
@@ -182,15 +182,26 @@ static void sendSingleStepCommand(void)
     packetSend(&packet, &buffer);
 }
 
-static void verifyTResponse(void)
+static int parseSingleStepResponse(void)
 {
-    Buffer            buffer;
-    Packet            packet;
-    char              data[512];
+    Buffer  buffer;
+    Packet  packet;
+    char    data[512];
+    char    packetType;
 
     bufferInit(&buffer, data, sizeof(data));
     packetInit(&packet);
     packetGet(&packet, &buffer);
-    if (!bufferIsNextCharEqualTo(&buffer, 'T'))
+    
+    while ('O' == (packetType = bufferReadChar(&buffer)))
+    {
+        bufferInit(&buffer, data, sizeof(data));
+        packetInit(&packet);
+        packetGet(&packet, &buffer);
+    }
+    
+    if (packetType == 'T')
+        return (int)bufferReadByteAsHex(&buffer);
+    else
         __throw(badResponseException);
 }

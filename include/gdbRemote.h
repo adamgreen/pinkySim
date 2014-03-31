@@ -21,7 +21,7 @@ void gdbRemoteGetRegisters(PinkySimContext* pContext);
 void gdbRemoteSetRegisters(const PinkySimContext* pContext);
 void gdbRemoteReadMemory(uint32_t address, void* pReadBuffer, uint32_t readSize);
 void gdbRemoteWriteMemory(uint32_t address, const void* pWriteBuffer, uint32_t writeSize);
-void gdbRemoteSingleStep(void);
+int  gdbRemoteSingleStep(void);
 
 
 #endif /* _GDB_REMOTE_H_ */
