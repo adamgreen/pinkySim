@@ -62,6 +62,7 @@ TEST(pinkySim, Encoding1ThatShouldProduceUnpredictableError)
 {
     emitInstruction16("0100010100000000");
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
 
@@ -69,6 +70,7 @@ TEST(pinkySim, Encoding2ThatShouldProduceUnpredictableError)
 {
     emitInstruction16("0100010100111111");
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
 

@@ -107,5 +107,6 @@ TEST(pop, UnpredictableToPopNoRegisters)
 {
     emitInstruction16("1011110Prrrrrrrr", 0, 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }

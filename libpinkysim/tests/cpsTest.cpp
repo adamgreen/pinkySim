@@ -49,6 +49,7 @@ TEST(cps, UnpredictableBecauseOfBit0)
 {
     emitInstruction16("10110110011i0011", 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
 
@@ -56,12 +57,14 @@ TEST(cps, UnpredictableBecauseOfBit1)
 {
     emitInstruction16("10110110011i0000", 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
 TEST(cps, UnpredictableBecauseOfBit2)
 {
     emitInstruction16("10110110011i0110", 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
 
@@ -69,5 +72,6 @@ TEST(cps, UnpredictableBecauseOfBit3)
 {
     emitInstruction16("10110110011i1010", 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }

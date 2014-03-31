@@ -55,6 +55,7 @@ TEST(bx, UnpredictableToUseR15)
 {
     emitInstruction16("010001110mmmm000", PC);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
 
@@ -62,6 +63,7 @@ TEST(bx, UnpredictableForBit0ToBeHigh)
 {
     emitInstruction16("010001110mmmm001", R0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
 
@@ -69,6 +71,7 @@ TEST(bx, UnpredictableForBit1ToBeHigh)
 {
     emitInstruction16("010001110mmmm010", R0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
 
@@ -76,5 +79,6 @@ TEST(bx, UnpredictableForBit2ToBeHigh)
 {
     emitInstruction16("010001110mmmm100", R0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }

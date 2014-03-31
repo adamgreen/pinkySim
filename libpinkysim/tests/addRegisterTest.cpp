@@ -169,5 +169,6 @@ TEST(addRegister, T2ItIsUnpredictableToHaveBothArgsBePC)
 {
     emitInstruction16("01000100dmmmmddd", PC, PC);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }

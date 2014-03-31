@@ -87,6 +87,7 @@ TEST(stm, UnpredictableToPushNoRegisters)
 {
     emitInstruction16("11000nnnrrrrrrrr", R0, 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
 
@@ -95,5 +96,6 @@ TEST(stm, UnpredictableToPushWritebackRegisterWhichIsntFirstSaved)
     emitInstruction16("11000nnnrrrrrrrr", R7, 0xFF);
     setRegisterValue(R7, INITIAL_PC + 16);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }

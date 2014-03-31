@@ -207,6 +207,8 @@ int pinkySimStep(PinkySimContext* pContext)
             return PINKYSIM_STEP_BKPT;
         case undefinedException:
             return PINKYSIM_STEP_UNDEFINED;
+        case unpredictableException:
+            return PINKYSIM_STEP_UNPREDICTABLE;
         default:
             return PINKYSIM_STEP_HARDFAULT;
         }
@@ -1350,7 +1352,7 @@ static int specialDataAndBranchExchange(PinkySimContext* pContext, uint16_t inst
     if ((instr & 0x0300) == 0x0000)
         result = addRegisterT2(pContext, instr);
     else if ((instr & 0x03C0) == 0x0100)
-        result = PINKYSIM_STEP_UNPREDICTABLE;
+        __throw(unpredictableException)
     else if (((instr & 0x03C0) == 0x0140) || ((instr & 0x0380) == 0x0180))
         result = cmpRegisterT2(pContext, instr);
     else if ((instr & 0x0300) == 0x0200)
@@ -1377,10 +1379,10 @@ static int addRegisterT2(PinkySimContext* pContext, uint16_t instr)
         AddResults      addResults;
 
         if (d == 15 && m == 15)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         // UNDONE: inITBlock() always returns FALSE for ARMv6-m so this assert will never fire.
         //if (d == 15 && inITBlock(pContext) && !LastinITBlock(pContext))
-        //    return PINKYSIM_STEP_UNPREDICTABLE;
+        //    __throw(unpredictableException);
         
         // UNDONE: Only Thumb2 instructions require this shifted value.
         shifted = shift(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
@@ -1440,9 +1442,9 @@ static int cmpRegisterT2(PinkySimContext* pContext, uint16_t instr)
         
         // UNDONE: This scenario is caught up above in specialDataAndBranchExchange()
         //if (n < 8 && m < 8)
-        //    return PINKYSIM_STEP_UNPREDICTABLE;
+        //    __throw(unpredictableException);
         if (n == 15 || m == 15)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         
         // UNDONE: Only Thumb2 instructions require this shifted value.
         shifted = shift(getReg(pContext, m), decodedShift.type, decodedShift.n, pContext->xPSR & APSR_C);
@@ -1508,11 +1510,11 @@ static int bx(PinkySimContext* pContext, uint16_t instr)
         
         // UNDONE: inITBlock() always returns FALSE for ARMv6-m so this assert will never fire.
         //if (inITBlock(pContext) && !LastinITBlock(pContext))
-        //    return PINKYSIM_STEP_UNPREDICTABLE;
+        //    __throw(unpredictableException);
         if ((instr & 0x7) != 0x0)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         if (m == 15)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         
         bxWritePC(pContext, getReg(pContext, m));
     }
@@ -1542,11 +1544,11 @@ static int blx(PinkySimContext* pContext, uint16_t instr)
         
         // UNDONE: inITBlock() always returns FALSE for ARMv6-m so this assert will never fire.
         //if (inITBlock(pContext) && !LastinITBlock(pContext))
-        //    return PINKYSIM_STEP_UNPREDICTABLE;
+        //    __throw(unpredictableException);
         if ((instr & 0x7) != 0x0)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         if (m == 15)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         
         target = getReg(pContext, m);
         nextInstrAddr = getReg(pContext, PC) - 2;
@@ -2399,7 +2401,7 @@ static int push(PinkySimContext* pContext, uint16_t instr)
         int         i;
         
         if (bitCount(registers) < 1)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         
         address = getReg(pContext, SP) - 4 * bitCount(registers);
         for (i = 0 ; i <= 14 ; i++)
@@ -2435,7 +2437,7 @@ static int cps(PinkySimContext* pContext, uint16_t instr)
         uint32_t im = instr & (1 << 4);
         
         if ((instr & 0xF) != 0x2)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         
         if (currentModeIsPrivileged(pContext))
         {
@@ -2516,10 +2518,10 @@ static int pop(PinkySimContext* pContext, uint16_t instr)
         int         i;
         
         if (bitCount(registers) < 1)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         // UNDONE: Never in IT blocks in ARMv6-M.
         //if ((registers & (1 << 15)) && inITBlock(pContext) && !LastinITBlock(pContext))
-        //    return PINKYSIM_STEP_UNPREDICTABLE;
+        //    __throw(unpredictableException);
         
         address = getReg(pContext, SP);
         for (i = 0 ; i <= 7 ; i++)
@@ -2617,9 +2619,9 @@ static int stm(PinkySimContext* pContext, uint16_t instr)
         int         i;
         
         if (bitCount(registers) < 1)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         if ((registers & (1 << n)) && wback && isNotLowestBitSet(registers, n))
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         
         
         address = getReg(pContext, n);
@@ -2654,7 +2656,7 @@ static int ldm(PinkySimContext* pContext, uint16_t instr)
         int         i;
         
         if (bitCount(registers) < 1)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         
         address = getReg(pContext, n);
         for (i = 0 ; i <= 7 ; i++)
@@ -2675,17 +2677,11 @@ static int ldm(PinkySimContext* pContext, uint16_t instr)
 static int conditionalBranchAndSupervisor(PinkySimContext* pContext, uint16_t instr)
 {
     if ((instr & 0x0F00) == 0x0E00)
-    {
-        __throw(undefinedException);
-    }
+        __throw(undefinedException)
     else if ((instr & 0x0F00) == 0x0F00)
-    {
         return svc(pContext, instr);
-    }
     else
-    {
         return conditionalBranch(pContext, instr);
-    }
 }
 
 static int svc(PinkySimContext* pContext, uint16_t instr)
@@ -2804,11 +2800,11 @@ static int msr(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
         uint32_t value;
         
         if (n == 13 || n == 15)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         if (SYSm == 4 || (SYSm > 9 && SYSm < 16) || (SYSm > 16 && SYSm < 20) || (SYSm > 20))
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         if ((instr1 & 0x0010) != 0x0000 || (instr2 & 0x3F00) != 0x0800)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
             
         value = getReg(pContext, n);
         switch (SYSm >> 3)
@@ -2870,7 +2866,7 @@ static int dsb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
     if (conditionPassedForNonBranchInstr(pContext))
     {
         if ((instr1 & 0x000F) != 0x000F || (instr2 & 0x2F00) != 0x0F00)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
             
     }
 
@@ -2882,7 +2878,7 @@ static int dmb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
     if (conditionPassedForNonBranchInstr(pContext))
     {
         if ((instr1 & 0x000F) != 0x000F || (instr2 & 0x2F00) != 0x0F00)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
             
     }
 
@@ -2894,7 +2890,7 @@ static int isb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
     if (conditionPassedForNonBranchInstr(pContext))
     {
         if ((instr1 & 0x000F) != 0x000F || (instr2 & 0x2F00) != 0x0F00)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
             
     }
 
@@ -2910,11 +2906,11 @@ static int mrs(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
         uint32_t value = 0;
         
         if (d == 13 || d == 15)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         if (SYSm == 4 || (SYSm > 9 && SYSm < 16) || (SYSm > 16 && SYSm < 20) || (SYSm > 20))
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
         if ((instr1 & 0x001F) != 0x000F || (instr2 & 0x2000) != 0x0000)
-            return PINKYSIM_STEP_UNPREDICTABLE;
+            __throw(unpredictableException);
             
         switch (SYSm >> 3)
         {
@@ -2974,7 +2970,7 @@ static int bl(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
         
         // UNDONE: inITBlock() always returns FALSE for ARMv6-m so this assert will never fire.
         //if (inITBlock(pContext) && !LastinITBlock(pContext))
-        //    return PINKYSIM_STEP_UNPREDICTABLE;
+        //    __throw(unpredictableException);
 
         nextInstrAddr = getReg(pContext, PC);
         setReg(pContext, LR, nextInstrAddr | 1);
