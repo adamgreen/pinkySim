@@ -205,6 +205,8 @@ int pinkySimStep(PinkySimContext* pContext)
         {
         case bkptException:
             return PINKYSIM_STEP_BKPT;
+        case undefinedException:
+            return PINKYSIM_STEP_UNDEFINED;
         default:
             return PINKYSIM_STEP_HARDFAULT;
         }
@@ -2548,7 +2550,7 @@ static int hints(PinkySimContext* pContext, uint16_t instr)
     int      result = PINKYSIM_STEP_UNDEFINED;
     
     if (opB != 0x0000)
-        return PINKYSIM_STEP_UNDEFINED;
+        __throw(undefinedException);
     switch (opA)
     {
     case 0:
@@ -2672,16 +2674,18 @@ static int ldm(PinkySimContext* pContext, uint16_t instr)
 
 static int conditionalBranchAndSupervisor(PinkySimContext* pContext, uint16_t instr)
 {
-    int result = PINKYSIM_STEP_UNDEFINED;
-
     if ((instr & 0x0F00) == 0x0E00)
-        result = PINKYSIM_STEP_UNDEFINED;
+    {
+        __throw(undefinedException);
+    }
     else if ((instr & 0x0F00) == 0x0F00)
-        result = svc(pContext, instr);
+    {
+        return svc(pContext, instr);
+    }
     else
-        result = conditionalBranch(pContext, instr);
-
-    return result;
+    {
+        return conditionalBranch(pContext, instr);
+    }
 }
 
 static int svc(PinkySimContext* pContext, uint16_t instr)
@@ -2779,18 +2783,16 @@ static int executeInstruction32(PinkySimContext* pContext, uint16_t instr1)
 
 static int branchAndMiscellaneousControl(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
 {
-    int      result = PINKYSIM_STEP_UNDEFINED;
-
     if ((instr2 & 0x5000) == 0x0000 && (instr1 & 0x07E0) == 0x0380)
-        result = msr(pContext, instr1, instr2);
+        return msr(pContext, instr1, instr2);
     else if ((instr2 & 0x5000) == 0x0000 && (instr1 & 0x07F0) == 0x03B0)
-        result = miscellaneousControl(pContext, instr1, instr2);
+        return miscellaneousControl(pContext, instr1, instr2);
     else if ((instr2 & 0x5000) == 0x0000 && (instr1 & 0x07E0) == 0x03E0)
-        result = mrs(pContext, instr1, instr2);
+        return mrs(pContext, instr1, instr2);
     else if ((instr2 & 0x5000) == 0x5000)
-        result = bl(pContext, instr1, instr2);
+        return bl(pContext, instr1, instr2);
 
-    return result;
+    __throw(undefinedException);
 }
 
 static int msr(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)

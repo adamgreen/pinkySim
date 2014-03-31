@@ -30,6 +30,7 @@ TEST(pinkySim, Undedfined16BitWithAllZeroesForImmedaite)
 {
     emitInstruction16("11011110iiiiiiii", 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
 
@@ -37,6 +38,7 @@ TEST(pinkySim, Undedfined16BitWithAllOnesForImmedaite)
 {
     emitInstruction16("11011110iiiiiiii", -1);
     setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
 
@@ -44,6 +46,7 @@ TEST(pinkySim, Undefined32BitWithAllZeroesForImmediate)
 {
     emitInstruction32("111101111111iiii", "1010iiiiiiiiiiii", 0, 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
 
@@ -51,6 +54,7 @@ TEST(pinkySim, Undefined32BitWithAllOnesForImmediate)
 {
     emitInstruction32("111101111111iiii", "1010iiiiiiiiiiii", -1, -1);
     setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
+    setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
 
@@ -77,6 +81,7 @@ TEST(pinkySim, HintEncodingsThatShouldProduceUndefinedError)
         {
             emitInstruction16("10111111aaaabbbb", opA, opB);
             setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
+            setExpectedRegisterValue(PC, INITIAL_PC);
             pinkySimStep(&m_context);
             initContext();
         }
