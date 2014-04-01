@@ -30,7 +30,7 @@ TEST_GROUP_BASE(mrs, pinkySimBase)
 #ifdef THUNK2REAL
     #define IPSR_VAL 0x0
 #else
-    #define IPSR_VAL IPSR_VAL
+    #define IPSR_VAL 0x20
 #endif
 
 
