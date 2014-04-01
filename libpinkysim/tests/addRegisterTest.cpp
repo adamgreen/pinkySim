@@ -125,19 +125,20 @@ TEST(addRegister, T2OverflowFromLowestNegativeValue)
     pinkySimStep(&m_context);
 }
 
-TEST(addRegister, T2Add1ToSP)
+TEST(addRegister, T2Add4ToSP)
 {
     emitInstruction16("01000100dmmmmddd", SP, R1);
-    setRegisterValue(R1, 1);
-    setExpectedRegisterValue(SP, INITIAL_SP + 1);
+    setRegisterValue(SP, INITIAL_SP - 4);
+    setRegisterValue(R1, 4);
+    setExpectedRegisterValue(SP, INITIAL_SP - 4 + 4);
     pinkySimStep(&m_context);
 }
 
-TEST(addRegister, T2Subtract1FromSP)
+TEST(addRegister, T2Subtract4FromSP)
 {
     emitInstruction16("01000100dmmmmddd", SP, R1);
-    setRegisterValue(R1, -1);
-    setExpectedRegisterValue(SP, INITIAL_SP - 1);
+    setRegisterValue(R1, -4);
+    setExpectedRegisterValue(SP, INITIAL_SP - 4);
     pinkySimStep(&m_context);
 }
 
@@ -165,7 +166,7 @@ TEST(addRegister, T2Add2ToPC)
     pinkySimStep(&m_context);
 }
 
-TEST(addRegister, T2ItIsUnpredictableToHaveBothArgsBePC)
+TEST_SIM_ONLY(addRegister, T2ItIsUnpredictableToHaveBothArgsBePC)
 {
     emitInstruction16("01000100dmmmmddd", PC, PC);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);

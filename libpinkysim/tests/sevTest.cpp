@@ -29,7 +29,7 @@ TEST_GROUP_BASE(sev, pinkySimBase)
 
 /* SEV
    Encoding: 1011 1111 0100 0000 */
-TEST(sev, BasicTest)
+TEST_SIM_ONLY(sev, BasicTest)
 {
     emitInstruction16("1011111101000000");
     setExpectedStepReturn(PINKYSIM_STEP_UNSUPPORTED);

@@ -57,20 +57,23 @@ TEST(addSP, T1UseIntermediateValues)
 TEST(addSP, T2SmallestImmediate)
 {
     emitInstruction16("101100000iiiiiii", 0);
-    setExpectedRegisterValue(SP, INITIAL_SP + 0);
+    setRegisterValue(SP, INITIAL_PC + 1024);
+    setExpectedRegisterValue(SP, INITIAL_PC + 1024 + 0);
     pinkySimStep(&m_context);
 }
 
 TEST(addSP, T2LargestImmediate)
 {
     emitInstruction16("101100000iiiiiii", 127);
-    setExpectedRegisterValue(SP, INITIAL_SP + 127 * 4);
+    setRegisterValue(SP, INITIAL_PC + 1024);
+    setExpectedRegisterValue(SP, INITIAL_PC + 1024 + 127 * 4);
     pinkySimStep(&m_context);
 }
 
 TEST(addSP, T2IntermediateValues)
 {
     emitInstruction16("101100000iiiiiii", 64);
-    setExpectedRegisterValue(SP, INITIAL_SP + 64 * 4);
+    setRegisterValue(SP, INITIAL_PC + 1024);
+    setExpectedRegisterValue(SP, INITIAL_PC + 1024 + 64 * 4);
     pinkySimStep(&m_context);
 }

@@ -42,7 +42,7 @@ TEST(dsb, OptionSetTo0)
     pinkySimStep(&m_context);
 }
 
-TEST(dsb, UnpredictableBecauseOfBit1_0)
+TEST_SIM_ONLY(dsb, UnpredictableBecauseOfBit1_0)
 {
     emitInstruction32("1111001110111110", "100011110100oooo", 15);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -50,7 +50,7 @@ TEST(dsb, UnpredictableBecauseOfBit1_0)
     pinkySimStep(&m_context);
 }
 
-TEST(dsb, UnpredictableBecauseOfBit1_1)
+TEST_SIM_ONLY(dsb, UnpredictableBecauseOfBit1_1)
 {
     emitInstruction32("1111001110111101", "100011110100oooo", 15);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -58,7 +58,7 @@ TEST(dsb, UnpredictableBecauseOfBit1_1)
     pinkySimStep(&m_context);
 }
 
-TEST(dsb, UnpredictableBecauseOfBit1_2)
+TEST_SIM_ONLY(dsb, UnpredictableBecauseOfBit1_2)
 {
     emitInstruction32("1111001110111011", "100011110100oooo", 15);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -66,7 +66,7 @@ TEST(dsb, UnpredictableBecauseOfBit1_2)
     pinkySimStep(&m_context);
 }
 
-TEST(dsb, UnpredictableBecauseOfBit1_3)
+TEST_SIM_ONLY(dsb, UnpredictableBecauseOfBit1_3)
 {
     emitInstruction32("1111001110110111", "100011110100oooo", 15);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -74,7 +74,7 @@ TEST(dsb, UnpredictableBecauseOfBit1_3)
     pinkySimStep(&m_context);
 }
 
-TEST(dsb, UnpredictableBecauseOfBit2_8)
+TEST_SIM_ONLY(dsb, UnpredictableBecauseOfBit2_8)
 {
     emitInstruction32("1111001110111111", "100011100100oooo", 15);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -82,7 +82,7 @@ TEST(dsb, UnpredictableBecauseOfBit2_8)
     pinkySimStep(&m_context);
 }
 
-TEST(dsb, UnpredictableBecauseOfBit2_9)
+TEST_SIM_ONLY(dsb, UnpredictableBecauseOfBit2_9)
 {
     emitInstruction32("1111001110111111", "100011010100oooo", 15);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -90,7 +90,7 @@ TEST(dsb, UnpredictableBecauseOfBit2_9)
     pinkySimStep(&m_context);
 }
 
-TEST(dsb, UnpredictableBecauseOfBit2_10)
+TEST_SIM_ONLY(dsb, UnpredictableBecauseOfBit2_10)
 {
     emitInstruction32("1111001110111111", "100010110100oooo", 15);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -98,7 +98,7 @@ TEST(dsb, UnpredictableBecauseOfBit2_10)
     pinkySimStep(&m_context);
 }
 
-TEST(dsb, UnpredictableBecauseOfBit2_11)
+TEST_SIM_ONLY(dsb, UnpredictableBecauseOfBit2_11)
 {
     emitInstruction32("1111001110111111", "100001110100oooo", 15);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -106,7 +106,7 @@ TEST(dsb, UnpredictableBecauseOfBit2_11)
     pinkySimStep(&m_context);
 }
 
-TEST(dsb, UnpredictableBecauseOfBit2_13)
+TEST_SIM_ONLY(dsb, UnpredictableBecauseOfBit2_13)
 {
     emitInstruction32("1111001110111111", "101011110100oooo", 15);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);

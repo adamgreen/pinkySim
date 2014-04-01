@@ -27,8 +27,13 @@ extern "C"
 // Initial values for special registers.
 #define INITIAL_SP 0x10008000
 #define INITIAL_LR 0xFFFFFFFF
-#define INITIAL_PC 0x10000000
+#define INITIAL_PC 0x10004000
 
+#ifdef THUNK2REAL
+    #define TEST_SIM_ONLY IGNORE_TEST
+#else
+    #define TEST_SIM_ONLY TEST
+#endif
 
 class pinkySimBase : public Utest
 {

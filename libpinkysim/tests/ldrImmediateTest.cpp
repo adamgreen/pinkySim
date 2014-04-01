@@ -72,8 +72,8 @@ TEST(ldrImmediate, T1AttemptLoadFromInvalidAddress)
 TEST(ldrImmediate, T2UseHighestRegisterWithSmallestOffset)
 {
     emitInstruction16("10011tttiiiiiiii", R7, 0);
-    setRegisterValue(SP, INITIAL_PC + 4);
-    SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 4, 0xBAADFEED, READ_ONLY);
+    setRegisterValue(SP, INITIAL_PC + 1024);
+    SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 1024, 0xBAADFEED, READ_ONLY);
     setExpectedRegisterValue(R7, 0xBAADFEED);
     pinkySimStep(&m_context);
 }
@@ -81,22 +81,23 @@ TEST(ldrImmediate, T2UseHighestRegisterWithSmallestOffset)
 TEST(ldrImmediate, T2UseLowestRegisterWithLargestOffset)
 {
     emitInstruction16("10011tttiiiiiiii", R0, 255);
-    setRegisterValue(SP, INITIAL_PC);
-    SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 255 * 4, 0xBAADFEED, READ_ONLY);
+    setRegisterValue(SP, INITIAL_PC + 1024);
+    SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 1024 + 255 * 4, 0xBAADFEED, READ_ONLY);
     setExpectedRegisterValue(R0, 0xBAADFEED);
     pinkySimStep(&m_context);
 }
 
-TEST(ldrImmediate, T2AttemptUnalignedLoad)
+TEST_SIM_ONLY(ldrImmediate, T2AttemptUnalignedLoad)
 {
     emitInstruction16("10011tttiiiiiiii", R2, 0);
-    setRegisterValue(SP, INITIAL_PC + 2);
+    setRegisterValue(SP, INITIAL_PC + 1026);
     setExpectedStepReturn(PINKYSIM_STEP_HARDFAULT);
     setExpectedRegisterValue(PC, INITIAL_PC);
+    SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 1024, 0xBAADFEED, READ_ONLY);
     pinkySimStep(&m_context);
 }
 
-TEST(ldrImmediate, T2AttemptLoadFromInvalidAddress)
+TEST_SIM_ONLY(ldrImmediate, T2AttemptLoadFromInvalidAddress)
 {
     emitInstruction16("10011tttiiiiiiii", R2, 0);
     setRegisterValue(R3, 0xFFFFFFFC);

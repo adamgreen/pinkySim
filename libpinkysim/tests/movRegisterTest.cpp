@@ -59,14 +59,16 @@ TEST(movRegister, MoveLowRegisterToLHighRegister)
 TEST(movRegister, MoveOddAddressIntoPCAndMakeSureLSbitIsCleared)
 {
     emitInstruction16("01000110dmmmmddd", PC, R1);
-    setExpectedRegisterValue(PC, 0x11111110);
+    setRegisterValue(R1, INITIAL_PC + 1025);
+    setExpectedRegisterValue(PC, INITIAL_PC + 1024);
     pinkySimStep(&m_context);
 }
 
 TEST(movRegister, MoveEvenAddressIntoPC)
 {
     emitInstruction16("01000110dmmmmddd", PC, R2);
-    setExpectedRegisterValue(PC, 0x22222222);
+    setRegisterValue(R2, INITIAL_PC + 1024);
+    setExpectedRegisterValue(PC, INITIAL_PC + 1024);
     pinkySimStep(&m_context);
 }
 

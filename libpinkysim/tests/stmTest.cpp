@@ -83,7 +83,7 @@ TEST(stm, HardFaultFromInvalidMemoryWrite)
     pinkySimStep(&m_context);
 }
 
-TEST(stm, UnpredictableToPushNoRegisters)
+TEST_SIM_ONLY(stm, UnpredictableToPushNoRegisters)
 {
     emitInstruction16("11000nnnrrrrrrrr", R0, 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -91,7 +91,7 @@ TEST(stm, UnpredictableToPushNoRegisters)
     pinkySimStep(&m_context);
 }
 
-TEST(stm, UnpredictableToPushWritebackRegisterWhichIsntFirstSaved)
+TEST_SIM_ONLY(stm, UnpredictableToPushWritebackRegisterWhichIsntFirstSaved)
 {
     emitInstruction16("11000nnnrrrrrrrr", R7, 0xFF);
     setRegisterValue(R7, INITIAL_PC + 16);

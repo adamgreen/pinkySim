@@ -58,7 +58,7 @@ TEST(pinkySim, Undefined32BitWithAllOnesForImmediate)
     pinkySimStep(&m_context);
 }
 
-TEST(pinkySim, Encoding1ThatShouldProduceUnpredictableError)
+TEST_SIM_ONLY(pinkySim, Encoding1ThatShouldProduceUnpredictableError)
 {
     emitInstruction16("0100010100000000");
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -66,7 +66,7 @@ TEST(pinkySim, Encoding1ThatShouldProduceUnpredictableError)
     pinkySimStep(&m_context);
 }
 
-TEST(pinkySim, Encoding2ThatShouldProduceUnpredictableError)
+TEST_SIM_ONLY(pinkySim, Encoding2ThatShouldProduceUnpredictableError)
 {
     emitInstruction16("0100010100111111");
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -74,7 +74,7 @@ TEST(pinkySim, Encoding2ThatShouldProduceUnpredictableError)
     pinkySimStep(&m_context);
 }
 
-TEST(pinkySim, HintEncodingsThatShouldProduceUndefinedError)
+TEST_SIM_ONLY(pinkySim, HintEncodingsThatShouldProduceUndefinedError)
 {
     // opA = XXXX opB != 0
     for (uint32_t opA = 0 ; opA < 16 ; opA++)

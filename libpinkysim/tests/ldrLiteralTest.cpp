@@ -60,10 +60,10 @@ TEST(ldrLiteral, LoadMaximumOffsetIntoLowestRegister)
 
 TEST(ldrLiteral, AttemptToLoadFromInvalidAddress)
 {
-    m_emitAddress = INITIAL_SP - 4;
-    setRegisterValue(PC, INITIAL_SP - 4);
-    setExpectedRegisterValue(PC, INITIAL_SP - 4);
-    SimpleMemory_SetMemory(m_context.pMemory, INITIAL_SP - 4, 0, READ_WRITE);
+    m_emitAddress = INITIAL_SP - 128;
+    setRegisterValue(PC, INITIAL_SP - 128);
+    setExpectedRegisterValue(PC, INITIAL_SP - 128);
+    SimpleMemory_SetMemory(m_context.pMemory, INITIAL_SP - 128, 0, READ_WRITE);
     emitInstruction16("01001tttiiiiiiii", R0, 255);
     setExpectedStepReturn(PINKYSIM_STEP_HARDFAULT);
     pinkySimStep(&m_context);

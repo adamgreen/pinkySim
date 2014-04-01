@@ -29,7 +29,7 @@ TEST_GROUP_BASE(cps, pinkySimBase)
 
 /* CPS
    Encoding: 1011 0110 011 im:1 (0)(0)(1)(0) */
-TEST(cps, InterruptEnable)
+TEST_SIM_ONLY(cps, InterruptEnable)
 {
     emitInstruction16("10110110011i0010", 0);
     m_context.PRIMASK |= PRIMASK_PM;
@@ -37,15 +37,15 @@ TEST(cps, InterruptEnable)
     CHECK_FALSE(m_context.PRIMASK & PRIMASK_PM);
 }
 
-TEST(cps, InterruptDisable)
+TEST_SIM_ONLY(cps, InterruptDisable)
 {
     emitInstruction16("10110110011i0010", 1);
-    m_context.PRIMASK &= !PRIMASK_PM;
+    m_context.PRIMASK &= ~PRIMASK_PM;
     pinkySimStep(&m_context);
     CHECK_TRUE(m_context.PRIMASK & PRIMASK_PM);
 }
 
-TEST(cps, UnpredictableBecauseOfBit0)
+TEST_SIM_ONLY(cps, UnpredictableBecauseOfBit0)
 {
     emitInstruction16("10110110011i0011", 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -53,14 +53,14 @@ TEST(cps, UnpredictableBecauseOfBit0)
     pinkySimStep(&m_context);
 }
 
-TEST(cps, UnpredictableBecauseOfBit1)
+TEST_SIM_ONLY(cps, UnpredictableBecauseOfBit1)
 {
     emitInstruction16("10110110011i0000", 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
     setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
-TEST(cps, UnpredictableBecauseOfBit2)
+TEST_SIM_ONLY(cps, UnpredictableBecauseOfBit2)
 {
     emitInstruction16("10110110011i0110", 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -68,7 +68,7 @@ TEST(cps, UnpredictableBecauseOfBit2)
     pinkySimStep(&m_context);
 }
 
-TEST(cps, UnpredictableBecauseOfBit3)
+TEST_SIM_ONLY(cps, UnpredictableBecauseOfBit3)
 {
     emitInstruction16("10110110011i1010", 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);

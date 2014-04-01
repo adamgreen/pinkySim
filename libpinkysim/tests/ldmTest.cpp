@@ -92,7 +92,7 @@ TEST(ldm, HardFaultFromInvalidMemoryRead)
     pinkySimStep(&m_context);
 }
 
-TEST(ldm, UnpredictableToPopNoRegisters)
+TEST_SIM_ONLY(ldm, UnpredictableToPopNoRegisters)
 {
     emitInstruction16("11001nnnrrrrrrrr", 0, 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);

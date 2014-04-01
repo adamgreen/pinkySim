@@ -53,7 +53,7 @@ TEST(blx, UseHighestRegisterToBranchToOddAddressAsRequiredForThumb)
     pinkySimStep(&m_context);
 }
 
-TEST(blx, UnpredictableToUseR15)
+TEST_SIM_ONLY(blx, UnpredictableToUseR15)
 {
     emitInstruction16("010001111mmmm000", PC);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -61,7 +61,7 @@ TEST(blx, UnpredictableToUseR15)
     pinkySimStep(&m_context);
 }
 
-TEST(blx, UnpredictableForBit0ToBeHigh)
+TEST_SIM_ONLY(blx, UnpredictableForBit0ToBeHigh)
 {
     emitInstruction16("010001111mmmm001", R0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -69,7 +69,7 @@ TEST(blx, UnpredictableForBit0ToBeHigh)
     pinkySimStep(&m_context);
 }
 
-TEST(blx, UnpredictableForBit1ToBeHigh)
+TEST_SIM_ONLY(blx, UnpredictableForBit1ToBeHigh)
 {
     emitInstruction16("010001111mmmm010", R0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
@@ -77,7 +77,7 @@ TEST(blx, UnpredictableForBit1ToBeHigh)
     pinkySimStep(&m_context);
 }
 
-TEST(blx, UnpredictableForBit2ToBeHigh)
+TEST_SIM_ONLY(blx, UnpredictableForBit2ToBeHigh)
 {
     emitInstruction16("010001111mmmm100", R0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);

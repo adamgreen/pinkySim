@@ -62,10 +62,11 @@ TEST(strhRegister, YetAnotherMixOfRegistersNotWordAligned)
 TEST(strhRegister, AttemptUnalignedStore)
 {
     emitInstruction16("0101001mmmnnnttt", R7, R3, R0);
-    setRegisterValue(R3, INITIAL_PC);
+    setRegisterValue(R3, INITIAL_PC + 1024);
     setRegisterValue(R7, 1);
     setExpectedStepReturn(PINKYSIM_STEP_HARDFAULT);
     setExpectedRegisterValue(PC, INITIAL_PC);
+    SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 1024, 0xBAADFEED, READ_WRITE);
     pinkySimStep(&m_context);
 }
 

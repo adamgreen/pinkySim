@@ -29,7 +29,7 @@ TEST_GROUP_BASE(yield, pinkySimBase)
 
 /* YIELD
    Encoding: 1011 1111 0001 0000 */
-TEST(yield, BasicTest)
+TEST_SIM_ONLY(yield, BasicTest)
 {
     emitInstruction16("1011111100010000");
     setExpectedStepReturn(PINKYSIM_STEP_UNSUPPORTED);

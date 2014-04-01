@@ -94,7 +94,7 @@ TEST(pop, PopToSetPCToEvenAddressWhichGeneratesHardFault)
     pinkySimStep(&m_context);
 }
 
-TEST(pop, HardFaultFromInvalidMemoryRead)
+TEST_SIM_ONLY(pop, HardFaultFromInvalidMemoryRead)
 {
     emitInstruction16("1011110Prrrrrrrr", 0, 1);
     setRegisterValue(SP, 0xFFFFFFFC);
@@ -103,7 +103,7 @@ TEST(pop, HardFaultFromInvalidMemoryRead)
     pinkySimStep(&m_context);
 }
 
-TEST(pop, UnpredictableToPopNoRegisters)
+TEST_SIM_ONLY(pop, UnpredictableToPopNoRegisters)
 {
     emitInstruction16("1011110Prrrrrrrr", 0, 0);
     setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
