@@ -8,6 +8,7 @@
 *.gcda
 *.gcno
 debug
+libthunk2real/serial.log
 gcov/
 Debug/
 Release/
