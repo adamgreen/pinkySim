@@ -39,7 +39,8 @@ TEST(bl, OffsetOf0)
     pinkySimStep(&m_context);
 }
 
-TEST(bl, MaximumPositiveOffset)
+// UNDONE: These should be runnable on real hardware once I fix MRI issue.
+TEST_SIM_ONLY(bl, MaximumPositiveOffset)
 {
     emitInstruction32("11110Siiiiiiiiii", "11j1kiiiiiiiiiii", 0, 0x3FF, 0, 0, 0x7FF);
     setExpectedRegisterValue(PC, INITIAL_PC + 4 + 16777214);
@@ -47,7 +48,7 @@ TEST(bl, MaximumPositiveOffset)
     pinkySimStep(&m_context);
 }
 
-TEST(bl, MaximumNegativeOffset)
+TEST_SIM_ONLY(bl, MaximumNegativeOffset)
 {
     emitInstruction32("11110Siiiiiiiiii", "11j1kiiiiiiiiiii", 1, 0, 0, 0, 0);
     setExpectedRegisterValue(PC, INITIAL_PC + 4 - 16777216);
