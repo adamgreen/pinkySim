@@ -2282,7 +2282,7 @@ END GROUP
 LOAD /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crtend.o
 LOAD /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crtn.o
 
-.text           0x0000000000000000     0x4170
+.text           0x0000000000000000     0x419c
  *(.isr_vector)
  .isr_vector    0x0000000000000000       0xcc ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(startup_LPC17xx.o)
                 0x0000000000000000                __isr_vector
@@ -2312,609 +2312,611 @@ LOAD /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-
                 0x0000000000000298        0x4 LPC1768/./main.o
  .text._ZL25disallowUnalignedAccessesv
                 0x000000000000029c       0x1c LPC1768/./main.o
+ .text._ZL44noForce8ByteAlignmentDuringExceptionStackingv
+                0x00000000000002b8       0x1c LPC1768/./main.o
  .text._ZL55configureHighestMpuRegionToAccessAllMemoryWithNoCachingv
-                0x00000000000002b8       0x24 LPC1768/./main.o
+                0x00000000000002d4       0x24 LPC1768/./main.o
  .text._ZL19disableWriteCachingv
-                0x00000000000002dc       0x10 LPC1768/./main.o
- .text.main     0x00000000000002ec       0x18 LPC1768/./main.o
-                0x00000000000002ec                main
- .text._start   0x0000000000000304       0x4c LPC1768/gcc4mbed.o
-                0x0000000000000304                _start
+                0x00000000000002f8       0x10 LPC1768/./main.o
+ .text.main     0x0000000000000308       0x1c LPC1768/./main.o
+                0x0000000000000308                main
+ .text._start   0x0000000000000324       0x4c LPC1768/gcc4mbed.o
+                0x0000000000000324                _start
  .text.__wrap_semihost_connected
-                0x0000000000000350        0x8 LPC1768/gcc4mbed.o
-                0x0000000000000350                __wrap_semihost_connected
+                0x0000000000000370        0x8 LPC1768/gcc4mbed.o
+                0x0000000000000370                __wrap_semihost_connected
  .text.__mriInit
-                0x0000000000000358       0x50 ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x0000000000000358                __mriInit
+                0x0000000000000378       0x50 ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x0000000000000378                __mriInit
  .text.__mriCore_InitBuffer
-                0x00000000000003a8       0x20 ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x00000000000003a8                __mriCore_InitBuffer
+                0x00000000000003c8       0x20 ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x00000000000003c8                __mriCore_InitBuffer
  .text.__mriCore_PrepareStringResponse
-                0x00000000000003c8       0x18 ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x00000000000003c8                __mriCore_PrepareStringResponse
+                0x00000000000003e8       0x18 ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x00000000000003e8                __mriCore_PrepareStringResponse
  .text.__mriCore_WasControlCFlagSentFromGdb
-                0x00000000000003e0       0x10 ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x00000000000003e0                __mriCore_WasControlCFlagSentFromGdb
+                0x0000000000000400       0x10 ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x0000000000000400                __mriCore_WasControlCFlagSentFromGdb
  .text.__mriCore_IsWaitingForGdbToConnect
-                0x00000000000003f0       0x1c ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x00000000000003f0                __mriCore_IsWaitingForGdbToConnect
+                0x0000000000000410       0x1c ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x0000000000000410                __mriCore_IsWaitingForGdbToConnect
  .text.__mriCore_RecordControlCFlagSentFromGdb
-                0x000000000000040c       0x18 ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x000000000000040c                __mriCore_RecordControlCFlagSentFromGdb
+                0x000000000000042c       0x18 ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x000000000000042c                __mriCore_RecordControlCFlagSentFromGdb
  .text.__mriCore_WasSemihostCallCancelledByGdb
-                0x0000000000000424       0x14 ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x0000000000000424                __mriCore_WasSemihostCallCancelledByGdb
+                0x0000000000000444       0x14 ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x0000000000000444                __mriCore_WasSemihostCallCancelledByGdb
  .text.__mriCore_FlagSemihostCallAsHandled
-                0x0000000000000438       0x24 ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x0000000000000438                __mriCore_FlagSemihostCallAsHandled
+                0x0000000000000458       0x24 ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x0000000000000458                __mriCore_FlagSemihostCallAsHandled
  .text.__mriCore_IsFirstException
-                0x000000000000045c       0x10 ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x000000000000045c                __mriCore_IsFirstException
+                0x000000000000047c       0x10 ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x000000000000047c                __mriCore_IsFirstException
  .text.__mriCore_SetSignalValue
-                0x000000000000046c        0xc ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x000000000000046c                __mriCore_SetSignalValue
+                0x000000000000048c        0xc ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x000000000000048c                __mriCore_SetSignalValue
  .text.__mriCore_GetSignalValue
-                0x0000000000000478        0xc ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x0000000000000478                __mriCore_GetSignalValue
+                0x0000000000000498        0xc ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x0000000000000498                __mriCore_GetSignalValue
  .text.__mriCore_SetSemihostReturnValues
-                0x0000000000000484        0xc ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x0000000000000484                __mriCore_SetSemihostReturnValues
+                0x00000000000004a4        0xc ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x00000000000004a4                __mriCore_SetSemihostReturnValues
  .text.__mriCore_GetSemihostReturnCode
-                0x0000000000000490        0xc ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x0000000000000490                __mriCore_GetSemihostReturnCode
+                0x00000000000004b0        0xc ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x00000000000004b0                __mriCore_GetSemihostReturnCode
  .text.__mriCore_GetBuffer
-                0x000000000000049c        0x8 ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x000000000000049c                __mriCore_GetBuffer
+                0x00000000000004bc        0x8 ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x00000000000004bc                __mriCore_GetBuffer
  .text.__mriCore_GetInitializedBuffer
-                0x00000000000004a4       0x10 ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x00000000000004a4                __mriCore_GetInitializedBuffer
+                0x00000000000004c4       0x10 ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x00000000000004c4                __mriCore_GetInitializedBuffer
  .text.__mriCore_SendPacketToGdb
-                0x00000000000004b4       0x38 ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x00000000000004b4                __mriCore_SendPacketToGdb
+                0x00000000000004d4       0x38 ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x00000000000004d4                __mriCore_SendPacketToGdb
  .text.__mriCore_GdbCommandHandlingLoop
-                0x00000000000004ec       0x60 ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x00000000000004ec                __mriCore_GdbCommandHandlingLoop
+                0x000000000000050c       0x60 ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x000000000000050c                __mriCore_GdbCommandHandlingLoop
  .text.__mriDebugException
-                0x000000000000054c       0xa0 ../../../gcc4mbed/mri/mri.ar(mri.o)
-                0x000000000000054c                __mriDebugException
+                0x000000000000056c       0xa0 ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x000000000000056c                __mriDebugException
  .text.HexCharToNibble
-                0x00000000000005ec       0x38 ../../../gcc4mbed/mri/mri.ar(packet.o)
+                0x000000000000060c       0x38 ../../../gcc4mbed/mri/mri.ar(packet.o)
  .text.__mriPacket_Init
-                0x0000000000000624        0x8 ../../../gcc4mbed/mri/mri.ar(packet.o)
-                0x0000000000000624                __mriPacket_Init
+                0x0000000000000644        0x8 ../../../gcc4mbed/mri/mri.ar(packet.o)
+                0x0000000000000644                __mriPacket_Init
  .text.__mriPacket_GetFromGDB
-                0x000000000000062c       0xa0 ../../../gcc4mbed/mri/mri.ar(packet.o)
-                0x000000000000062c                __mriPacket_GetFromGDB
+                0x000000000000064c       0xa0 ../../../gcc4mbed/mri/mri.ar(packet.o)
+                0x000000000000064c                __mriPacket_GetFromGDB
  .text.__mriPacket_SendToGDB
-                0x00000000000006cc       0x6c ../../../gcc4mbed/mri/mri.ar(packet.o)
-                0x00000000000006cc                __mriPacket_SendToGDB
+                0x00000000000006ec       0x6c ../../../gcc4mbed/mri/mri.ar(packet.o)
+                0x00000000000006ec                __mriPacket_SendToGDB
  .text.clearTokenObject
-                0x0000000000000738       0x16 ../../../gcc4mbed/mri/mri.ar(token.o)
- *fill*         0x000000000000074e        0x2 00
+                0x0000000000000758       0x16 ../../../gcc4mbed/mri/mri.ar(token.o)
+ *fill*         0x000000000000076e        0x2 00
  .text.__mriToken_Init
-                0x0000000000000750       0x14 ../../../gcc4mbed/mri/mri.ar(token.o)
-                0x0000000000000750                __mriToken_Init
+                0x0000000000000770       0x14 ../../../gcc4mbed/mri/mri.ar(token.o)
+                0x0000000000000770                __mriToken_Init
  .text.__mriToken_SplitString
-                0x0000000000000764       0xb4 ../../../gcc4mbed/mri/mri.ar(token.o)
-                0x0000000000000764                __mriToken_SplitString
+                0x0000000000000784       0xb4 ../../../gcc4mbed/mri/mri.ar(token.o)
+                0x0000000000000784                __mriToken_SplitString
  .text.__mriToken_MatchingString
-                0x0000000000000818       0x2a ../../../gcc4mbed/mri/mri.ar(token.o)
-                0x0000000000000818                __mriToken_MatchingString
+                0x0000000000000838       0x2a ../../../gcc4mbed/mri/mri.ar(token.o)
+                0x0000000000000838                __mriToken_MatchingString
  .text.__mriToken_MatchingStringPrefix
-                0x0000000000000842       0x2c ../../../gcc4mbed/mri/mri.ar(token.o)
-                0x0000000000000842                __mriToken_MatchingStringPrefix
- *fill*         0x000000000000086e        0x2 00
+                0x0000000000000862       0x2c ../../../gcc4mbed/mri/mri.ar(token.o)
+                0x0000000000000862                __mriToken_MatchingStringPrefix
+ *fill*         0x000000000000088e        0x2 00
  .text.findDWTComparator
-                0x0000000000000870       0x54 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000890       0x54 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
  .text.getFPBCodeComparatorCount
-                0x00000000000008c4       0x18 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x00000000000008e4       0x18 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
  .text.prepareToAccessMPURegion
-                0x00000000000008dc       0x1c ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x00000000000008fc       0x1c ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
  .text.displayMemFaultCauseToGdbConsole
-                0x00000000000008f8       0xa4 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000918       0xa4 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
  .text.displayBusFaultCauseToGdbConsole
-                0x000000000000099c       0xb4 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x00000000000009bc       0xb4 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
  .text.displayUsageFaultCauseToGdbConsole
-                0x0000000000000a50       0x84 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000a70       0x84 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
  .text.calculateFPBComparatorValue
-                0x0000000000000ad4       0x38 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000af4       0x38 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
  .text.findFPBBreakpointComparator
-                0x0000000000000b0c       0x34 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000b2c       0x34 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
  .text.isMPUNotPresent
-                0x0000000000000b40       0x18 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000b60       0x18 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
  .text.sendRegisterForTResponse
-                0x0000000000000b58       0x34 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000b78       0x34 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
  .text.__mriPlatform_DisableSingleStep
-                0x0000000000000b8c       0x24 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000b8c                __mriPlatform_DisableSingleStep
+                0x0000000000000bac       0x24 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000bac                __mriPlatform_DisableSingleStep
  .text.__mriCortexMInit
-                0x0000000000000bb0       0xb0 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000bb0                __mriCortexMInit
+                0x0000000000000bd0       0xb0 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000bd0                __mriCortexMInit
  .text.__mriPlatform_EnableSingleStep
-                0x0000000000000c60       0x68 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000c60                __mriPlatform_EnableSingleStep
+                0x0000000000000c80       0x68 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000c80                __mriPlatform_EnableSingleStep
  .text.__mriPlatform_IsSingleStepping
-                0x0000000000000cc8       0x10 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000cc8                __mriPlatform_IsSingleStepping
+                0x0000000000000ce8       0x10 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000ce8                __mriPlatform_IsSingleStepping
  .text.__mriPlatform_GetPacketBuffer
-                0x0000000000000cd8        0x8 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000cd8                __mriPlatform_GetPacketBuffer
+                0x0000000000000cf8        0x8 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000cf8                __mriPlatform_GetPacketBuffer
  .text.__mriPlatform_GetPacketBufferSize
-                0x0000000000000ce0        0x4 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000ce0                __mriPlatform_GetPacketBufferSize
+                0x0000000000000d00        0x4 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000d00                __mriPlatform_GetPacketBufferSize
  .text.__mriPlatform_DetermineCauseOfException
-                0x0000000000000ce4       0x68 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000ce4                __mriPlatform_DetermineCauseOfException
+                0x0000000000000d04       0x68 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000d04                __mriPlatform_DetermineCauseOfException
  .text.__mriPlatform_DisplayFaultCauseToGdbConsole
-                0x0000000000000d4c       0x8c ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000d4c                __mriPlatform_DisplayFaultCauseToGdbConsole
+                0x0000000000000d6c       0x8c ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000d6c                __mriPlatform_DisplayFaultCauseToGdbConsole
  .text.__mriPlatform_EnteringDebugger
-                0x0000000000000dd8       0xfc ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000dd8                __mriPlatform_EnteringDebugger
+                0x0000000000000df8       0xfc ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000df8                __mriPlatform_EnteringDebugger
  .text.__mriPlatform_LeavingDebugger
-                0x0000000000000ed4       0xa0 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000ed4                __mriPlatform_LeavingDebugger
+                0x0000000000000ef4       0xac ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000ef4                __mriPlatform_LeavingDebugger
  .text.__mriPlatform_GetProgramCounter
-                0x0000000000000f74        0xc ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000f74                __mriPlatform_GetProgramCounter
+                0x0000000000000fa0        0xc ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000fa0                __mriPlatform_GetProgramCounter
  .text.__mriPlatform_SetProgramCounter
-                0x0000000000000f80        0xc ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000f80                __mriPlatform_SetProgramCounter
+                0x0000000000000fac        0xc ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000fac                __mriPlatform_SetProgramCounter
  .text.__mriPlatform_AdvanceProgramCounterToNextInstruction
-                0x0000000000000f8c       0x34 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000f8c                __mriPlatform_AdvanceProgramCounterToNextInstruction
+                0x0000000000000fb8       0x34 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000fb8                __mriPlatform_AdvanceProgramCounterToNextInstruction
  .text.__mriPlatform_IsCurrentInstructionHardcodedBreakpoint
-                0x0000000000000fc0       0x18 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000fc0                __mriPlatform_IsCurrentInstructionHardcodedBreakpoint
+                0x0000000000000fec       0x18 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000000fec                __mriPlatform_IsCurrentInstructionHardcodedBreakpoint
  .text.__mriPlatform_WasProgramCounterModifiedByUser
-                0x0000000000000fd8       0x18 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000fd8                __mriPlatform_WasProgramCounterModifiedByUser
+                0x0000000000001004       0x18 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000001004                __mriPlatform_WasProgramCounterModifiedByUser
  .text.__mriPlatform_TypeOfCurrentInstruction
-                0x0000000000000ff0       0x28 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000000ff0                __mriPlatform_TypeOfCurrentInstruction
+                0x000000000000101c       0x28 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x000000000000101c                __mriPlatform_TypeOfCurrentInstruction
  .text.__mriPlatform_GetSemihostCallParameters
-                0x0000000000001018       0x24 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000001018                __mriPlatform_GetSemihostCallParameters
+                0x0000000000001044       0x24 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000001044                __mriPlatform_GetSemihostCallParameters
  .text.__mriPlatform_SetSemihostCallReturnValue
-                0x000000000000103c        0xc ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x000000000000103c                __mriPlatform_SetSemihostCallReturnValue
+                0x0000000000001068        0xc ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000001068                __mriPlatform_SetSemihostCallReturnValue
  .text.__mriPlatform_WasMemoryFaultEncountered
-                0x0000000000001048       0x24 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000001048                __mriPlatform_WasMemoryFaultEncountered
+                0x0000000000001074       0x24 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000001074                __mriPlatform_WasMemoryFaultEncountered
  .text.__mriPlatform_WriteTResponseRegistersToBuffer
-                0x000000000000106c       0x3c ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x000000000000106c                __mriPlatform_WriteTResponseRegistersToBuffer
+                0x0000000000001098       0x3c ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000001098                __mriPlatform_WriteTResponseRegistersToBuffer
  .text.__mriPlatform_CopyContextToBuffer
-                0x00000000000010a8       0x20 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x00000000000010a8                __mriPlatform_CopyContextToBuffer
+                0x00000000000010d4       0x20 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x00000000000010d4                __mriPlatform_CopyContextToBuffer
  .text.__mriPlatform_CopyContextFromBuffer
-                0x00000000000010c8       0x38 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x00000000000010c8                __mriPlatform_CopyContextFromBuffer
+                0x00000000000010f4       0x38 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x00000000000010f4                __mriPlatform_CopyContextFromBuffer
  .text.__mriPlatform_SetHardwareBreakpoint
-                0x0000000000001100       0x70 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000001100                __mriPlatform_SetHardwareBreakpoint
+                0x000000000000112c       0x70 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x000000000000112c                __mriPlatform_SetHardwareBreakpoint
  .text.__mriPlatform_ClearHardwareBreakpoint
-                0x0000000000001170       0x38 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000001170                __mriPlatform_ClearHardwareBreakpoint
+                0x000000000000119c       0x38 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x000000000000119c                __mriPlatform_ClearHardwareBreakpoint
  .text.__mriPlatform_SetHardwareWatchpoint
-                0x00000000000011a8       0x90 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x00000000000011a8                __mriPlatform_SetHardwareWatchpoint
+                0x00000000000011d4       0x90 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x00000000000011d4                __mriPlatform_SetHardwareWatchpoint
  .text.__mriPlatform_ClearHardwareWatchpoint
-                0x0000000000001238       0x54 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000001238                __mriPlatform_ClearHardwareWatchpoint
+                0x0000000000001264       0x54 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x0000000000001264                __mriPlatform_ClearHardwareWatchpoint
  .text.__mriPlatform_GetTargetXmlSize
-                0x000000000000128c        0x6 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x000000000000128c                __mriPlatform_GetTargetXmlSize
- *fill*         0x0000000000001292        0x2 00
+                0x00000000000012b8        0x6 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x00000000000012b8                __mriPlatform_GetTargetXmlSize
+ *fill*         0x00000000000012be        0x2 00
  .text.__mriPlatform_GetTargetXml
-                0x0000000000001294        0x8 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x0000000000001294                __mriPlatform_GetTargetXml
+                0x00000000000012c0        0x8 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x00000000000012c0                __mriPlatform_GetTargetXml
  .text.__mriPlatform_CommUartIndex
-                0x000000000000129c       0x1c ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
-                0x000000000000129c                __mriPlatform_CommUartIndex
+                0x00000000000012c8       0x1c ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
+                0x00000000000012c8                __mriPlatform_CommUartIndex
  .text.__mriPlatform_CommHasReceiveData
-                0x00000000000012b8       0x14 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
-                0x00000000000012b8                __mriPlatform_CommHasReceiveData
+                0x00000000000012e4       0x14 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
+                0x00000000000012e4                __mriPlatform_CommHasReceiveData
  .text.__mriPlatform_CommReceiveChar
-                0x00000000000012cc       0x18 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
-                0x00000000000012cc                __mriPlatform_CommReceiveChar
+                0x00000000000012f8       0x18 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
+                0x00000000000012f8                __mriPlatform_CommReceiveChar
  .text.__mriPlatform_CommSendChar
-                0x00000000000012e4       0x1c ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
-                0x00000000000012e4                __mriPlatform_CommSendChar
+                0x0000000000001310       0x1c ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
+                0x0000000000001310                __mriPlatform_CommSendChar
  .text.__mriPlatform_CommCausedInterrupt
-                0x0000000000001300       0x18 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
-                0x0000000000001300                __mriPlatform_CommCausedInterrupt
+                0x000000000000132c       0x18 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
+                0x000000000000132c                __mriPlatform_CommCausedInterrupt
  .text.__mriPlatform_CommClearInterrupt
-                0x0000000000001318       0x10 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
-                0x0000000000001318                __mriPlatform_CommClearInterrupt
+                0x0000000000001344       0x10 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
+                0x0000000000001344                __mriPlatform_CommClearInterrupt
  .text.__mriPlatform_CommSharingWithApplication
-                0x0000000000001328       0x10 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
-                0x0000000000001328                __mriPlatform_CommSharingWithApplication
+                0x0000000000001354       0x10 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
+                0x0000000000001354                __mriPlatform_CommSharingWithApplication
  .text.__mriPlatform_CommShouldWaitForGdbConnect
-                0x0000000000001338       0x1c ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
-                0x0000000000001338                __mriPlatform_CommShouldWaitForGdbConnect
+                0x0000000000001364       0x1c ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
+                0x0000000000001364                __mriPlatform_CommShouldWaitForGdbConnect
  .text.__mriPlatform_CommIsWaitingForGdbToConnect
-                0x0000000000001354       0x1c ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
-                0x0000000000001354                __mriPlatform_CommIsWaitingForGdbToConnect
+                0x0000000000001380       0x1c ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
+                0x0000000000001380                __mriPlatform_CommIsWaitingForGdbToConnect
  .text.__mriPlatform_CommPrepareToWaitForGdbConnection
-                0x0000000000001370       0x18 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
-                0x0000000000001370                __mriPlatform_CommPrepareToWaitForGdbConnection
+                0x000000000000139c       0x18 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
+                0x000000000000139c                __mriPlatform_CommPrepareToWaitForGdbConnection
  .text.__mriLpc176xUart_Init
-                0x0000000000001388      0x2ac ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
-                0x0000000000001388                __mriLpc176xUart_Init
+                0x00000000000013b4      0x2ac ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
+                0x00000000000013b4                __mriLpc176xUart_Init
  .text.__mriPlatform_CommWaitForReceiveDataToStop
-                0x0000000000001634       0x54 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
-                0x0000000000001634                __mriPlatform_CommWaitForReceiveDataToStop
+                0x0000000000001660       0x54 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
+                0x0000000000001660                __mriPlatform_CommWaitForReceiveDataToStop
  .text.__mriLpc176x_Init
-                0x0000000000001688       0x38 ../../../gcc4mbed/mri/mri.ar(lpc176x.o)
-                0x0000000000001688                __mriLpc176x_Init
+                0x00000000000016b4       0x38 ../../../gcc4mbed/mri/mri.ar(lpc176x.o)
+                0x00000000000016b4                __mriLpc176x_Init
  .text.__mriPlatform_GetDeviceMemoryMapXmlSize
-                0x00000000000016c0        0x6 ../../../gcc4mbed/mri/mri.ar(lpc176x.o)
-                0x00000000000016c0                __mriPlatform_GetDeviceMemoryMapXmlSize
- *fill*         0x00000000000016c6        0x2 00
+                0x00000000000016ec        0x6 ../../../gcc4mbed/mri/mri.ar(lpc176x.o)
+                0x00000000000016ec                __mriPlatform_GetDeviceMemoryMapXmlSize
+ *fill*         0x00000000000016f2        0x2 00
  .text.__mriPlatform_GetDeviceMemoryMapXml
-                0x00000000000016c8        0x8 ../../../gcc4mbed/mri/mri.ar(lpc176x.o)
-                0x00000000000016c8                __mriPlatform_GetDeviceMemoryMapXml
+                0x00000000000016f4        0x8 ../../../gcc4mbed/mri/mri.ar(lpc176x.o)
+                0x00000000000016f4                __mriPlatform_GetDeviceMemoryMapXml
  .text.__mriPlatform_Init
-                0x00000000000016d0       0x94 ../../../gcc4mbed/mri/mri.ar(mbed1768.o)
-                0x00000000000016d0                __mriPlatform_Init
+                0x00000000000016fc       0x94 ../../../gcc4mbed/mri/mri.ar(mbed1768.o)
+                0x00000000000016fc                __mriPlatform_Init
  .text.__mriMbed1768_GetMbedUid
-                0x0000000000001764        0x8 ../../../gcc4mbed/mri/mri.ar(mbed1768.o)
-                0x0000000000001764                __mriMbed1768_GetMbedUid
+                0x0000000000001790        0x8 ../../../gcc4mbed/mri/mri.ar(mbed1768.o)
+                0x0000000000001790                __mriMbed1768_GetMbedUid
  .text.__mriSemihost_IsDebuggeeMakingSemihostCall
-                0x000000000000176c       0x14 ../../../gcc4mbed/mri/mri.ar(semihost.o)
-                0x000000000000176c                __mriSemihost_IsDebuggeeMakingSemihostCall
+                0x0000000000001798       0x14 ../../../gcc4mbed/mri/mri.ar(semihost.o)
+                0x0000000000001798                __mriSemihost_IsDebuggeeMakingSemihostCall
  .text.__mriSemihost_HandleSemihostRequest
-                0x0000000000001780       0x2c ../../../gcc4mbed/mri/mri.ar(semihost.o)
-                0x0000000000001780                __mriSemihost_HandleSemihostRequest
+                0x00000000000017ac       0x2c ../../../gcc4mbed/mri/mri.ar(semihost.o)
+                0x00000000000017ac                __mriSemihost_HandleSemihostRequest
  .text.__mriSemihost_HandleNewlibSemihostRequest
-                0x00000000000017ac       0xfc ../../../gcc4mbed/mri/mri.ar(semihost_newlib.o)
-                0x00000000000017ac                __mriSemihost_HandleNewlibSemihostRequest
+                0x00000000000017d8       0xfc ../../../gcc4mbed/mri/mri.ar(semihost_newlib.o)
+                0x00000000000017d8                __mriSemihost_HandleNewlibSemihostRequest
  .text.convertBytesTransferredToBytesNotTransferred
-                0x00000000000018a8       0x18 ../../../gcc4mbed/mri/mri.ar(semihost_mbed.o)
+                0x00000000000018d4       0x18 ../../../gcc4mbed/mri/mri.ar(semihost_mbed.o)
  .text.__mriSemihost_HandleMbedSemihostRequest
-                0x00000000000018c0      0x12a ../../../gcc4mbed/mri/mri.ar(semihost_mbed.o)
-                0x00000000000018c0                __mriSemihost_HandleMbedSemihostRequest
- *fill*         0x00000000000019ea        0x2 00
- .text          0x00000000000019ec      0x1a8 ../../../gcc4mbed/mri/mri.ar(cortex-m_asm.o)
-                0x00000000000019ec                __mriGetIPSR
-                0x00000000000019f2                __mriSetBASEPRI
-                0x00000000000019f8                __mriGetBASEPRI
-                0x00000000000019fe                __mriDSB
-                0x0000000000001a04                __mriISB
-                0x0000000000001b42                HardFault_Handler
-                0x0000000000001b46                MemManage_Handler
-                0x0000000000001b4a                BusFault_Handler
-                0x0000000000001b4e                UsageFault_Handler
-                0x0000000000001b52                DebugMon_Handler
-                0x0000000000001b56                UART0_IRQHandler
-                0x0000000000001b5a                UART1_IRQHandler
-                0x0000000000001b5e                UART2_IRQHandler
-                0x0000000000001b62                UART3_IRQHandler
- .text          0x0000000000001b94       0x2c ../../../gcc4mbed/mri/mri.ar(mbed1768_asm.o)
-                0x0000000000001b94                __mriDisableMbed
-                0x0000000000001bac                __mriGetMbedUid
- .text          0x0000000000001bc0       0x24 ../../../gcc4mbed/mri/mri.ar(newlib_asm.o)
-                0x0000000000001bc0                __mriNewlib_SemihostWrite
-                0x0000000000001bc4                __mriNewlib_SemihostRead
-                0x0000000000001bc8                __mriNewLib_SemihostOpen
-                0x0000000000001bcc                __mriNewLib_SemihostRename
-                0x0000000000001bd0                __mriNewLib_SemihostUnlink
-                0x0000000000001bd4                __mriNewLib_SemihostStat
-                0x0000000000001bd8                __mriNewlib_SemihostLSeek
-                0x0000000000001bdc                __mriNewlib_SemihostClose
-                0x0000000000001be0                __mriNewlib_SemihostFStat
+                0x00000000000018ec      0x12a ../../../gcc4mbed/mri/mri.ar(semihost_mbed.o)
+                0x00000000000018ec                __mriSemihost_HandleMbedSemihostRequest
+ *fill*         0x0000000000001a16        0x2 00
+ .text          0x0000000000001a18      0x1a8 ../../../gcc4mbed/mri/mri.ar(cortex-m_asm.o)
+                0x0000000000001a18                __mriGetIPSR
+                0x0000000000001a1e                __mriSetBASEPRI
+                0x0000000000001a24                __mriGetBASEPRI
+                0x0000000000001a2a                __mriDSB
+                0x0000000000001a30                __mriISB
+                0x0000000000001b6e                HardFault_Handler
+                0x0000000000001b72                MemManage_Handler
+                0x0000000000001b76                BusFault_Handler
+                0x0000000000001b7a                UsageFault_Handler
+                0x0000000000001b7e                DebugMon_Handler
+                0x0000000000001b82                UART0_IRQHandler
+                0x0000000000001b86                UART1_IRQHandler
+                0x0000000000001b8a                UART2_IRQHandler
+                0x0000000000001b8e                UART3_IRQHandler
+ .text          0x0000000000001bc0       0x2c ../../../gcc4mbed/mri/mri.ar(mbed1768_asm.o)
+                0x0000000000001bc0                __mriDisableMbed
+                0x0000000000001bd8                __mriGetMbedUid
+ .text          0x0000000000001bec       0x24 ../../../gcc4mbed/mri/mri.ar(newlib_asm.o)
+                0x0000000000001bec                __mriNewlib_SemihostWrite
+                0x0000000000001bf0                __mriNewlib_SemihostRead
+                0x0000000000001bf4                __mriNewLib_SemihostOpen
+                0x0000000000001bf8                __mriNewLib_SemihostRename
+                0x0000000000001bfc                __mriNewLib_SemihostUnlink
+                0x0000000000001c00                __mriNewLib_SemihostStat
+                0x0000000000001c04                __mriNewlib_SemihostLSeek
+                0x0000000000001c08                __mriNewlib_SemihostClose
+                0x0000000000001c0c                __mriNewlib_SemihostFStat
  .text.HexCharToNibble
-                0x0000000000001be4       0x38 ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001c10       0x38 ../../../gcc4mbed/mri/mri.ar(buffer.o)
  .text.__mriBuffer_Init
-                0x0000000000001c1c        0xa ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001c1c                __mriBuffer_Init
+                0x0000000000001c48        0xa ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001c48                __mriBuffer_Init
  .text.__mriBuffer_Reset
-                0x0000000000001c26        0x6 ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001c26                __mriBuffer_Reset
+                0x0000000000001c52        0x6 ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001c52                __mriBuffer_Reset
  .text.__mriBuffer_SetEndOfBuffer
-                0x0000000000001c2c        0x6 ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001c2c                __mriBuffer_SetEndOfBuffer
+                0x0000000000001c58        0x6 ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001c58                __mriBuffer_SetEndOfBuffer
  .text.__mriBuffer_BytesLeft
-                0x0000000000001c32       0x10 ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001c32                __mriBuffer_BytesLeft
- *fill*         0x0000000000001c42        0x2 00
+                0x0000000000001c5e       0x10 ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001c5e                __mriBuffer_BytesLeft
+ *fill*         0x0000000000001c6e        0x2 00
  .text.throwExceptionAndFlagBufferOverrunIfBufferLeftIsSmallerThan
-                0x0000000000001c44       0x28 ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001c70       0x28 ../../../gcc4mbed/mri/mri.ar(buffer.o)
  .text.__mriBuffer_OverrunDetected
-                0x0000000000001c6c        0xe ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001c6c                __mriBuffer_OverrunDetected
- *fill*         0x0000000000001c7a        0x2 00
+                0x0000000000001c98        0xe ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001c98                __mriBuffer_OverrunDetected
+ *fill*         0x0000000000001ca6        0x2 00
  .text.__mriBuffer_WriteChar
-                0x0000000000001c7c       0x24 ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001c7c                __mriBuffer_WriteChar
+                0x0000000000001ca8       0x24 ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001ca8                __mriBuffer_WriteChar
  .text.__mriBuffer_ReadChar
-                0x0000000000001ca0       0x28 ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001ca0                __mriBuffer_ReadChar
+                0x0000000000001ccc       0x28 ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001ccc                __mriBuffer_ReadChar
  .text.__mriBuffer_WriteByteAsHex
-                0x0000000000001cc8       0x38 ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001cc8                __mriBuffer_WriteByteAsHex
+                0x0000000000001cf4       0x38 ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001cf4                __mriBuffer_WriteByteAsHex
  .text.__mriBuffer_ReadByteAsHex
-                0x0000000000001d00       0x4c ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001d00                __mriBuffer_ReadByteAsHex
+                0x0000000000001d2c       0x4c ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001d2c                __mriBuffer_ReadByteAsHex
  .text.__mriBuffer_WriteSizedString
-                0x0000000000001d4c       0x34 ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001d4c                __mriBuffer_WriteSizedString
+                0x0000000000001d78       0x34 ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001d78                __mriBuffer_WriteSizedString
  .text.__mriBuffer_WriteString
-                0x0000000000001d80       0x1a ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001d80                __mriBuffer_WriteString
- *fill*         0x0000000000001d9a        0x2 00
+                0x0000000000001dac       0x1a ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001dac                __mriBuffer_WriteString
+ *fill*         0x0000000000001dc6        0x2 00
  .text.__mriBuffer_ReadUIntegerAsHex
-                0x0000000000001d9c       0x5c ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001d9c                __mriBuffer_ReadUIntegerAsHex
+                0x0000000000001dc8       0x5c ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001dc8                __mriBuffer_ReadUIntegerAsHex
  .text.__mriBuffer_WriteUIntegerAsHex
-                0x0000000000001df8       0x54 ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001df8                __mriBuffer_WriteUIntegerAsHex
+                0x0000000000001e24       0x54 ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001e24                __mriBuffer_WriteUIntegerAsHex
  .text.__mriBuffer_WriteIntegerAsHex
-                0x0000000000001e4c       0x30 ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001e4c                __mriBuffer_WriteIntegerAsHex
+                0x0000000000001e78       0x30 ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001e78                __mriBuffer_WriteIntegerAsHex
  .text.__mriBuffer_IsNextCharEqualTo
-                0x0000000000001e7c       0x34 ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001e7c                __mriBuffer_IsNextCharEqualTo
+                0x0000000000001ea8       0x34 ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001ea8                __mriBuffer_IsNextCharEqualTo
  .text.__mriBuffer_ReadIntegerAsHex
-                0x0000000000001eb0       0x54 ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001eb0                __mriBuffer_ReadIntegerAsHex
+                0x0000000000001edc       0x54 ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001edc                __mriBuffer_ReadIntegerAsHex
  .text.__mriBuffer_MatchesString
-                0x0000000000001f04       0x54 ../../../gcc4mbed/mri/mri.ar(buffer.o)
-                0x0000000000001f04                __mriBuffer_MatchesString
+                0x0000000000001f30       0x54 ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x0000000000001f30                __mriBuffer_MatchesString
  .text.handleBreakpointWatchpointException
-                0x0000000000001f58       0x24 ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
+                0x0000000000001f84       0x24 ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
  .text.parseBreakpointWatchpointCommandArguments
-                0x0000000000001f7c       0x4c ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
+                0x0000000000001fa8       0x4c ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
  .text.handleWatchpointRemoveCommand
-                0x0000000000001fc8       0x30 ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
+                0x0000000000001ff4       0x30 ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
  .text.handleWatchpointSetCommand
-                0x0000000000001ff8       0x30 ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
+                0x0000000000002024       0x30 ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
  .text.__mriCmd_HandleBreakpointWatchpointSetCommand
-                0x0000000000002028       0x6c ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
-                0x0000000000002028                __mriCmd_HandleBreakpointWatchpointSetCommand
+                0x0000000000002054       0x6c ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
+                0x0000000000002054                __mriCmd_HandleBreakpointWatchpointSetCommand
  .text.__mriCmd_HandleBreakpointWatchpointRemoveCommand
-                0x0000000000002094       0x6c ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
-                0x0000000000002094                __mriCmd_HandleBreakpointWatchpointRemoveCommand
+                0x00000000000020c0       0x6c ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
+                0x00000000000020c0                __mriCmd_HandleBreakpointWatchpointRemoveCommand
  .text.__mriCmd_ReadUIntegerArgument
-                0x0000000000002100       0x1c ../../../gcc4mbed/mri/mri.ar(cmd_common.o)
-                0x0000000000002100                __mriCmd_ReadUIntegerArgument
+                0x000000000000212c       0x1c ../../../gcc4mbed/mri/mri.ar(cmd_common.o)
+                0x000000000000212c                __mriCmd_ReadUIntegerArgument
  .text.__mriCmd_ThrowIfNextCharIsNotEqualTo
-                0x000000000000211c       0x1c ../../../gcc4mbed/mri/mri.ar(cmd_common.o)
-                0x000000000000211c                __mriCmd_ThrowIfNextCharIsNotEqualTo
+                0x0000000000002148       0x1c ../../../gcc4mbed/mri/mri.ar(cmd_common.o)
+                0x0000000000002148                __mriCmd_ThrowIfNextCharIsNotEqualTo
  .text.__mriCmd_ReadAddressAndLengthArguments
-                0x0000000000002138       0x30 ../../../gcc4mbed/mri/mri.ar(cmd_common.o)
-                0x0000000000002138                __mriCmd_ReadAddressAndLengthArguments
+                0x0000000000002164       0x30 ../../../gcc4mbed/mri/mri.ar(cmd_common.o)
+                0x0000000000002164                __mriCmd_ReadAddressAndLengthArguments
  .text.__mriCmd_ReadAddressAndLengthArgumentsWithColon
-                0x0000000000002168       0x24 ../../../gcc4mbed/mri/mri.ar(cmd_common.o)
-                0x0000000000002168                __mriCmd_ReadAddressAndLengthArgumentsWithColon
+                0x0000000000002194       0x24 ../../../gcc4mbed/mri/mri.ar(cmd_common.o)
+                0x0000000000002194                __mriCmd_ReadAddressAndLengthArgumentsWithColon
  .text.__mriCmd_HandleContinueCommand
-                0x000000000000218c       0x3c ../../../gcc4mbed/mri/mri.ar(cmd_continue.o)
-                0x000000000000218c                __mriCmd_HandleContinueCommand
+                0x00000000000021b8       0x3c ../../../gcc4mbed/mri/mri.ar(cmd_continue.o)
+                0x00000000000021b8                __mriCmd_HandleContinueCommand
  .text.processGdbFileResponseCommands
-                0x00000000000021c8       0x28 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x00000000000021f4       0x28 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
  .text.__mriIssueGdbFileOpenRequest
-                0x00000000000021f0       0x5c ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
-                0x00000000000021f0                __mriIssueGdbFileOpenRequest
+                0x000000000000221c       0x5c ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x000000000000221c                __mriIssueGdbFileOpenRequest
  .text.__mriIssueGdbFileWriteRequest
-                0x000000000000224c       0x48 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
-                0x000000000000224c                __mriIssueGdbFileWriteRequest
+                0x0000000000002278       0x48 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x0000000000002278                __mriIssueGdbFileWriteRequest
  .text.__mriIssueGdbFileReadRequest
-                0x0000000000002294       0x48 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
-                0x0000000000002294                __mriIssueGdbFileReadRequest
+                0x00000000000022c0       0x48 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x00000000000022c0                __mriIssueGdbFileReadRequest
  .text.__mriIssueGdbFileCloseRequest
-                0x00000000000022dc       0x28 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
-                0x00000000000022dc                __mriIssueGdbFileCloseRequest
+                0x0000000000002308       0x28 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x0000000000002308                __mriIssueGdbFileCloseRequest
  .text.__mriIssueGdbFileSeekRequest
-                0x0000000000002304       0x48 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
-                0x0000000000002304                __mriIssueGdbFileSeekRequest
+                0x0000000000002330       0x48 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x0000000000002330                __mriIssueGdbFileSeekRequest
  .text.__mriIssueGdbFileFStatRequest
-                0x000000000000234c       0x3c ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
-                0x000000000000234c                __mriIssueGdbFileFStatRequest
+                0x0000000000002378       0x3c ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x0000000000002378                __mriIssueGdbFileFStatRequest
  .text.__mriIssueGdbFileUnlinkRequest
-                0x0000000000002388       0x3c ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
-                0x0000000000002388                __mriIssueGdbFileUnlinkRequest
+                0x00000000000023b4       0x3c ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x00000000000023b4                __mriIssueGdbFileUnlinkRequest
  .text.__mriIssueGdbFileStatRequest
-                0x00000000000023c4       0x50 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
-                0x00000000000023c4                __mriIssueGdbFileStatRequest
+                0x00000000000023f0       0x50 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x00000000000023f0                __mriIssueGdbFileStatRequest
  .text.__mriIssueGdbFileRenameRequest
-                0x0000000000002414       0x68 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
-                0x0000000000002414                __mriIssueGdbFileRenameRequest
+                0x0000000000002440       0x68 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x0000000000002440                __mriIssueGdbFileRenameRequest
  .text.__mriHandleFileIOCommand
-                0x000000000000247c       0x48 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
-                0x000000000000247c                __mriHandleFileIOCommand
+                0x00000000000024a8       0x48 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x00000000000024a8                __mriHandleFileIOCommand
  .text.__mriCmd_HandleMemoryReadCommand
-                0x00000000000024c4       0x3c ../../../gcc4mbed/mri/mri.ar(cmd_memory.o)
-                0x00000000000024c4                __mriCmd_HandleMemoryReadCommand
+                0x00000000000024f0       0x3c ../../../gcc4mbed/mri/mri.ar(cmd_memory.o)
+                0x00000000000024f0                __mriCmd_HandleMemoryReadCommand
  .text.__mriCmd_HandleMemoryWriteCommand
-                0x0000000000002500       0x48 ../../../gcc4mbed/mri/mri.ar(cmd_memory.o)
-                0x0000000000002500                __mriCmd_HandleMemoryWriteCommand
+                0x000000000000252c       0x48 ../../../gcc4mbed/mri/mri.ar(cmd_memory.o)
+                0x000000000000252c                __mriCmd_HandleMemoryWriteCommand
  .text.__mriCmd_HandleBinaryMemoryWriteCommand
-                0x0000000000002548       0x64 ../../../gcc4mbed/mri/mri.ar(cmd_memory.o)
-                0x0000000000002548                __mriCmd_HandleBinaryMemoryWriteCommand
+                0x0000000000002574       0x64 ../../../gcc4mbed/mri/mri.ar(cmd_memory.o)
+                0x0000000000002574                __mriCmd_HandleBinaryMemoryWriteCommand
  .text.handleQueryTransferReadCommand
-                0x00000000000025ac       0x5a ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
- *fill*         0x0000000000002606        0x2 00
+                0x00000000000025d8       0x5a ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
+ *fill*         0x0000000000002632        0x2 00
  .text.readQueryTransferReadArguments
-                0x0000000000002608       0xa4 ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
+                0x0000000000002634       0xa4 ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
  .text.__mriCmd_HandleQueryCommand
-                0x00000000000026ac      0x100 ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
-                0x00000000000026ac                __mriCmd_HandleQueryCommand
+                0x00000000000026d8      0x100 ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
+                0x00000000000026d8                __mriCmd_HandleQueryCommand
  .text.__mriCmd_Send_T_StopResponse
-                0x00000000000027ac       0x28 ../../../gcc4mbed/mri/mri.ar(cmd_registers.o)
-                0x00000000000027ac                __mriCmd_Send_T_StopResponse
+                0x00000000000027d8       0x28 ../../../gcc4mbed/mri/mri.ar(cmd_registers.o)
+                0x00000000000027d8                __mriCmd_Send_T_StopResponse
  .text.__mriCmd_HandleRegisterReadCommand
-                0x00000000000027d4        0xe ../../../gcc4mbed/mri/mri.ar(cmd_registers.o)
-                0x00000000000027d4                __mriCmd_HandleRegisterReadCommand
- *fill*         0x00000000000027e2        0x2 00
+                0x0000000000002800        0xe ../../../gcc4mbed/mri/mri.ar(cmd_registers.o)
+                0x0000000000002800                __mriCmd_HandleRegisterReadCommand
+ *fill*         0x000000000000280e        0x2 00
  .text.__mriCmd_HandleRegisterWriteCommand
-                0x00000000000027e4       0x2c ../../../gcc4mbed/mri/mri.ar(cmd_registers.o)
-                0x00000000000027e4                __mriCmd_HandleRegisterWriteCommand
+                0x0000000000002810       0x2c ../../../gcc4mbed/mri/mri.ar(cmd_registers.o)
+                0x0000000000002810                __mriCmd_HandleRegisterWriteCommand
  .text.__mriCmd_HandleSingleStepCommand
-                0x0000000000002810       0x1a ../../../gcc4mbed/mri/mri.ar(cmd_step.o)
-                0x0000000000002810                __mriCmd_HandleSingleStepCommand
+                0x000000000000283c       0x1a ../../../gcc4mbed/mri/mri.ar(cmd_step.o)
+                0x000000000000283c                __mriCmd_HandleSingleStepCommand
  .text.__mriGdbConsole_WriteString
-                0x000000000000282a       0x4e ../../../gcc4mbed/mri/mri.ar(gdb_console.o)
-                0x000000000000282a                __mriGdbConsole_WriteString
+                0x0000000000002856       0x4e ../../../gcc4mbed/mri/mri.ar(gdb_console.o)
+                0x0000000000002856                __mriGdbConsole_WriteString
  .text.__mriGdbConsole_WriteHexValue
-                0x0000000000002878       0x38 ../../../gcc4mbed/mri/mri.ar(gdb_console.o)
-                0x0000000000002878                __mriGdbConsole_WriteHexValue
+                0x00000000000028a4       0x38 ../../../gcc4mbed/mri/mri.ar(gdb_console.o)
+                0x00000000000028a4                __mriGdbConsole_WriteHexValue
  .text.writeBinaryBufferToByteMemory
-                0x00000000000028b0       0x64 ../../../gcc4mbed/mri/mri.ar(memory.o)
+                0x00000000000028dc       0x64 ../../../gcc4mbed/mri/mri.ar(memory.o)
  .text.writeHexBufferToByteMemory
-                0x0000000000002914       0x40 ../../../gcc4mbed/mri/mri.ar(memory.o)
+                0x0000000000002940       0x40 ../../../gcc4mbed/mri/mri.ar(memory.o)
  .text.readMemoryBytesIntoHexBuffer
-                0x0000000000002954       0x2e ../../../gcc4mbed/mri/mri.ar(memory.o)
+                0x0000000000002980       0x2e ../../../gcc4mbed/mri/mri.ar(memory.o)
  .text.__mriMem_ReadMemoryIntoHexBuffer
-                0x0000000000002982       0x5a ../../../gcc4mbed/mri/mri.ar(memory.o)
-                0x0000000000002982                __mriMem_ReadMemoryIntoHexBuffer
+                0x00000000000029ae       0x5a ../../../gcc4mbed/mri/mri.ar(memory.o)
+                0x00000000000029ae                __mriMem_ReadMemoryIntoHexBuffer
  .text.__mriMem_WriteHexBufferToMemory
-                0x00000000000029dc       0x50 ../../../gcc4mbed/mri/mri.ar(memory.o)
-                0x00000000000029dc                __mriMem_WriteHexBufferToMemory
+                0x0000000000002a08       0x50 ../../../gcc4mbed/mri/mri.ar(memory.o)
+                0x0000000000002a08                __mriMem_WriteHexBufferToMemory
  .text.__mriMem_WriteBinaryBufferToMemory
-                0x0000000000002a2c       0x50 ../../../gcc4mbed/mri/mri.ar(memory.o)
-                0x0000000000002a2c                __mriMem_WriteBinaryBufferToMemory
+                0x0000000000002a58       0x50 ../../../gcc4mbed/mri/mri.ar(memory.o)
+                0x0000000000002a58                __mriMem_WriteBinaryBufferToMemory
  .text.__mriPlatform_MemRead32
-                0x0000000000002a7c        0x4 ../../../gcc4mbed/mri/mri.ar(native-mem.o)
-                0x0000000000002a7c                __mriPlatform_MemRead32
+                0x0000000000002aa8        0x4 ../../../gcc4mbed/mri/mri.ar(native-mem.o)
+                0x0000000000002aa8                __mriPlatform_MemRead32
  .text.__mriPlatform_MemRead16
-                0x0000000000002a80        0x6 ../../../gcc4mbed/mri/mri.ar(native-mem.o)
-                0x0000000000002a80                __mriPlatform_MemRead16
+                0x0000000000002aac        0x6 ../../../gcc4mbed/mri/mri.ar(native-mem.o)
+                0x0000000000002aac                __mriPlatform_MemRead16
  .text.__mriPlatform_MemRead8
-                0x0000000000002a86        0x4 ../../../gcc4mbed/mri/mri.ar(native-mem.o)
-                0x0000000000002a86                __mriPlatform_MemRead8
+                0x0000000000002ab2        0x4 ../../../gcc4mbed/mri/mri.ar(native-mem.o)
+                0x0000000000002ab2                __mriPlatform_MemRead8
  .text.__mriPlatform_MemWrite32
-                0x0000000000002a8a        0x4 ../../../gcc4mbed/mri/mri.ar(native-mem.o)
-                0x0000000000002a8a                __mriPlatform_MemWrite32
+                0x0000000000002ab6        0x4 ../../../gcc4mbed/mri/mri.ar(native-mem.o)
+                0x0000000000002ab6                __mriPlatform_MemWrite32
  .text.__mriPlatform_MemWrite16
-                0x0000000000002a8e        0x4 ../../../gcc4mbed/mri/mri.ar(native-mem.o)
-                0x0000000000002a8e                __mriPlatform_MemWrite16
+                0x0000000000002aba        0x4 ../../../gcc4mbed/mri/mri.ar(native-mem.o)
+                0x0000000000002aba                __mriPlatform_MemWrite16
  .text.__mriPlatform_MemWrite8
-                0x0000000000002a92        0x4 ../../../gcc4mbed/mri/mri.ar(native-mem.o)
-                0x0000000000002a92                __mriPlatform_MemWrite8
- *fill*         0x0000000000002a96        0x2 00
+                0x0000000000002abe        0x4 ../../../gcc4mbed/mri/mri.ar(native-mem.o)
+                0x0000000000002abe                __mriPlatform_MemWrite8
+ *fill*         0x0000000000002ac2        0x2 00
  .text.NVIC_SetVector
-                0x0000000000002a98       0x84 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(cmsis_nvic.o)
-                0x0000000000002a98                NVIC_SetVector
+                0x0000000000002ac4       0x84 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(cmsis_nvic.o)
+                0x0000000000002ac4                NVIC_SetVector
  .text.SystemInit
-                0x0000000000002b1c      0x190 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(system_LPC17xx.o)
-                0x0000000000002b1c                SystemInit
- .text.exit     0x0000000000002cac       0x20 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(exit.o)
-                0x0000000000002cac                exit
+                0x0000000000002b48      0x190 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(system_LPC17xx.o)
+                0x0000000000002b48                SystemInit
+ .text.exit     0x0000000000002cd8       0x20 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(exit.o)
+                0x0000000000002cd8                exit
  .text.mbed_interface_connected
-                0x0000000000002ccc        0xc ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(mbed_interface.o)
-                0x0000000000002ccc                mbed_interface_connected
+                0x0000000000002cf8        0xc ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(mbed_interface.o)
+                0x0000000000002cf8                mbed_interface_connected
  .text.__semihost
-                0x0000000000002cd8       0x20 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
+                0x0000000000002d04       0x20 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
  .text.semihost_exit
-                0x0000000000002cf8       0x18 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
-                0x0000000000002cf8                semihost_exit
- .text          0x0000000000002d10       0x90 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(startup_LPC17xx.o)
-                0x0000000000002d10                Reset_Handler
-                0x0000000000002d44                NMI_Handler
-                0x0000000000002d4e                SVC_Handler
-                0x0000000000002d52                PendSV_Handler
-                0x0000000000002d54                SysTick_Handler
-                0x0000000000002d56                Default_Handler
-                0x0000000000002d56                DEF_IRQHandler
-                0x0000000000002d58                WDT_IRQHandler
-                0x0000000000002d5a                TIMER0_IRQHandler
-                0x0000000000002d5c                TIMER1_IRQHandler
-                0x0000000000002d5e                TIMER2_IRQHandler
-                0x0000000000002d60                TIMER3_IRQHandler
-                0x0000000000002d6a                PWM1_IRQHandler
-                0x0000000000002d6c                I2C0_IRQHandler
-                0x0000000000002d6e                I2C1_IRQHandler
-                0x0000000000002d70                I2C2_IRQHandler
-                0x0000000000002d72                SPI_IRQHandler
-                0x0000000000002d74                SSP0_IRQHandler
-                0x0000000000002d76                SSP1_IRQHandler
-                0x0000000000002d78                PLL0_IRQHandler
-                0x0000000000002d7a                RTC_IRQHandler
-                0x0000000000002d7c                EINT0_IRQHandler
-                0x0000000000002d7e                EINT1_IRQHandler
-                0x0000000000002d80                EINT2_IRQHandler
-                0x0000000000002d82                EINT3_IRQHandler
-                0x0000000000002d84                ADC_IRQHandler
-                0x0000000000002d86                BOD_IRQHandler
-                0x0000000000002d88                USB_IRQHandler
-                0x0000000000002d8a                CAN_IRQHandler
-                0x0000000000002d8c                DMA_IRQHandler
-                0x0000000000002d8e                I2S_IRQHandler
-                0x0000000000002d90                ENET_IRQHandler
-                0x0000000000002d92                RIT_IRQHandler
-                0x0000000000002d94                MCPWM_IRQHandler
-                0x0000000000002d96                QEI_IRQHandler
-                0x0000000000002d98                PLL1_IRQHandler
-                0x0000000000002d9a                USBActivity_IRQHandler
-                0x0000000000002d9c                CANActivity_IRQHandler
+                0x0000000000002d24       0x18 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
+                0x0000000000002d24                semihost_exit
+ .text          0x0000000000002d3c       0x90 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(startup_LPC17xx.o)
+                0x0000000000002d3c                Reset_Handler
+                0x0000000000002d70                NMI_Handler
+                0x0000000000002d7a                SVC_Handler
+                0x0000000000002d7e                PendSV_Handler
+                0x0000000000002d80                SysTick_Handler
+                0x0000000000002d82                Default_Handler
+                0x0000000000002d82                DEF_IRQHandler
+                0x0000000000002d84                WDT_IRQHandler
+                0x0000000000002d86                TIMER0_IRQHandler
+                0x0000000000002d88                TIMER1_IRQHandler
+                0x0000000000002d8a                TIMER2_IRQHandler
+                0x0000000000002d8c                TIMER3_IRQHandler
+                0x0000000000002d96                PWM1_IRQHandler
+                0x0000000000002d98                I2C0_IRQHandler
+                0x0000000000002d9a                I2C1_IRQHandler
+                0x0000000000002d9c                I2C2_IRQHandler
+                0x0000000000002d9e                SPI_IRQHandler
+                0x0000000000002da0                SSP0_IRQHandler
+                0x0000000000002da2                SSP1_IRQHandler
+                0x0000000000002da4                PLL0_IRQHandler
+                0x0000000000002da6                RTC_IRQHandler
+                0x0000000000002da8                EINT0_IRQHandler
+                0x0000000000002daa                EINT1_IRQHandler
+                0x0000000000002dac                EINT2_IRQHandler
+                0x0000000000002dae                EINT3_IRQHandler
+                0x0000000000002db0                ADC_IRQHandler
+                0x0000000000002db2                BOD_IRQHandler
+                0x0000000000002db4                USB_IRQHandler
+                0x0000000000002db6                CAN_IRQHandler
+                0x0000000000002db8                DMA_IRQHandler
+                0x0000000000002dba                I2S_IRQHandler
+                0x0000000000002dbc                ENET_IRQHandler
+                0x0000000000002dbe                RIT_IRQHandler
+                0x0000000000002dc0                MCPWM_IRQHandler
+                0x0000000000002dc2                QEI_IRQHandler
+                0x0000000000002dc4                PLL1_IRQHandler
+                0x0000000000002dc6                USBActivity_IRQHandler
+                0x0000000000002dc8                CANActivity_IRQHandler
  .text.pin_function
-                0x0000000000002da0       0x88 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
-                0x0000000000002da0                pin_function
+                0x0000000000002dcc       0x88 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
+                0x0000000000002dcc                pin_function
  .text.pin_mode
-                0x0000000000002e28      0x124 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
-                0x0000000000002e28                pin_mode
+                0x0000000000002e54      0x124 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
+                0x0000000000002e54                pin_mode
  .text.gpio_write
-                0x0000000000002f4c       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
+                0x0000000000002f78       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
  .text.mbed_die
-                0x0000000000002f74       0xc8 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
-                0x0000000000002f74                mbed_die
- .text.wait_ms  0x000000000000303c       0x1c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
-                0x000000000000303c                wait_ms
- .text.wait_us  0x0000000000003058       0x24 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
-                0x0000000000003058                wait_us
+                0x0000000000002fa0       0xc8 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
+                0x0000000000002fa0                mbed_die
+ .text.wait_ms  0x0000000000003068       0x1c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
+                0x0000000000003068                wait_ms
+ .text.wait_us  0x0000000000003084       0x24 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
+                0x0000000000003084                wait_us
  .text.gpio_set
-                0x000000000000307c       0x24 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
-                0x000000000000307c                gpio_set
+                0x00000000000030a8       0x24 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
+                0x00000000000030a8                gpio_set
  .text.gpio_init
-                0x00000000000030a0       0x8c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
-                0x00000000000030a0                gpio_init
+                0x00000000000030cc       0x8c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
+                0x00000000000030cc                gpio_init
  .text.gpio_dir
-                0x000000000000312c       0x48 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
-                0x000000000000312c                gpio_dir
+                0x0000000000003158       0x48 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
+                0x0000000000003158                gpio_dir
  .text.NVIC_EnableIRQ
-                0x0000000000003174       0x30 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
+                0x00000000000031a0       0x30 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
  .text.us_ticker_init
-                0x00000000000031a4       0xbc ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
-                0x00000000000031a4                us_ticker_init
+                0x00000000000031d0       0xbc ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
+                0x00000000000031d0                us_ticker_init
  .text.us_ticker_read
-                0x0000000000003260       0x24 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
-                0x0000000000003260                us_ticker_read
+                0x000000000000328c       0x24 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
+                0x000000000000328c                us_ticker_read
  .text.us_ticker_set_interrupt
-                0x0000000000003284       0x2c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
-                0x0000000000003284                us_ticker_set_interrupt
+                0x00000000000032b0       0x2c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
+                0x00000000000032b0                us_ticker_set_interrupt
  .text.us_ticker_disable_interrupt
-                0x00000000000032b0       0x1c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
-                0x00000000000032b0                us_ticker_disable_interrupt
+                0x00000000000032dc       0x1c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
+                0x00000000000032dc                us_ticker_disable_interrupt
  .text.us_ticker_clear_interrupt
-                0x00000000000032cc       0x10 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
-                0x00000000000032cc                us_ticker_clear_interrupt
+                0x00000000000032f8       0x10 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
+                0x00000000000032f8                us_ticker_clear_interrupt
  .text.us_ticker_irq_handler
-                0x00000000000032dc       0x94 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
-                0x00000000000032dc                us_ticker_irq_handler
+                0x0000000000003308       0x94 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
+                0x0000000000003308                us_ticker_irq_handler
  .text.__libc_init_array
-                0x0000000000003370       0x4c /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-init.o)
-                0x0000000000003370                __libc_init_array
- .text.memcpy   0x00000000000033bc       0x12 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-memcpy.o)
-                0x00000000000033bc                memcpy
- .text.memset   0x00000000000033ce       0x10 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-memset.o)
-                0x00000000000033ce                memset
- .text.strcmp   0x00000000000033de       0x16 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strcmp.o)
-                0x00000000000033de                strcmp
- .text.strlen   0x00000000000033f4       0x10 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strlen.o)
-                0x00000000000033f4                strlen
- .text.strncmp  0x0000000000003404       0x2e /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strncmp.o)
-                0x0000000000003404                strncmp
- .text.strstr   0x0000000000003432       0x2e /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strstr.o)
-                0x0000000000003432                strstr
+                0x000000000000339c       0x4c /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-init.o)
+                0x000000000000339c                __libc_init_array
+ .text.memcpy   0x00000000000033e8       0x12 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-memcpy.o)
+                0x00000000000033e8                memcpy
+ .text.memset   0x00000000000033fa       0x10 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-memset.o)
+                0x00000000000033fa                memset
+ .text.strcmp   0x000000000000340a       0x16 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strcmp.o)
+                0x000000000000340a                strcmp
+ .text.strlen   0x0000000000003420       0x10 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strlen.o)
+                0x0000000000003420                strlen
+ .text.strncmp  0x0000000000003430       0x2e /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strncmp.o)
+                0x0000000000003430                strncmp
+ .text.strstr   0x000000000000345e       0x2e /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strstr.o)
+                0x000000000000345e                strstr
  *(.init)
- .init          0x0000000000003460        0x4 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crti.o
-                0x0000000000003460                _init
- .init          0x0000000000003464        0x8 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crtn.o
+ .init          0x000000000000348c        0x4 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crti.o
+                0x000000000000348c                _init
+ .init          0x0000000000003490        0x8 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crtn.o
  *(.fini)
- .fini          0x000000000000346c        0x4 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crti.o
-                0x000000000000346c                _fini
- .fini          0x0000000000003470        0x8 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crtn.o
+ .fini          0x0000000000003498        0x4 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crti.o
+                0x0000000000003498                _fini
+ .fini          0x000000000000349c        0x8 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crtn.o
  *crtbegin.o(.ctors)
  *crtbegin?.o(.ctors)
  *(EXCLUDE_FILE(*crtend.o *crtend?.o) .ctors)
@@ -2926,116 +2928,116 @@ LOAD /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-
  *(SORT(.dtors.*))
  *(.dtors)
  *(.rodata*)
- .rodata        0x0000000000003478       0x14 LPC1768/gcc4mbed.o
+ .rodata        0x00000000000034a4       0x14 LPC1768/gcc4mbed.o
  .rodata.str1.1
-                0x000000000000348c        0x4 ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x00000000000034b8        0x4 ../../../gcc4mbed/mri/mri.ar(mri.o)
                                           0x5 (size before relaxing)
  .rodata.commandTable.5674
-                0x0000000000003490       0x60 ../../../gcc4mbed/mri/mri.ar(mri.o)
+                0x00000000000034bc       0x60 ../../../gcc4mbed/mri/mri.ar(mri.o)
  .rodata.NibbleToHexChar
-                0x00000000000034f0       0x10 ../../../gcc4mbed/mri/mri.ar(packet.o)
+                0x000000000000351c       0x10 ../../../gcc4mbed/mri/mri.ar(packet.o)
  .rodata.str1.1
-                0x0000000000003500        0x3 ../../../gcc4mbed/mri/mri.ar(token.o)
+                0x000000000000352c        0x3 ../../../gcc4mbed/mri/mri.ar(token.o)
  .rodata.g_targetXml
-                0x0000000000003503      0x2ba ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
- *fill*         0x00000000000037bd        0x3 00
+                0x000000000000352f      0x2ba ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+ *fill*         0x00000000000037e9        0x3 00
  .rodata.debugEventToSignalMap.6975
-                0x00000000000037c0       0x20 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x00000000000037ec       0x20 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
  .rodata.__mriCortexMFakeStack
-                0x00000000000037e0       0x20 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                0x00000000000037e0                __mriCortexMFakeStack
+                0x000000000000380c       0x20 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x000000000000380c                __mriCortexMFakeStack
  .rodata.CSWTCH.106
-                0x0000000000003800        0x3 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x000000000000382c        0x3 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
  .rodata.str1.1
-                0x0000000000003803      0x1ff ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                0x000000000000382f      0x1ff ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
  .rodata.baudRatePrefix.7339
-                0x0000000000003a02        0xf ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
+                0x0000000000003a2e        0xf ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
  .rodata.str1.1
-                0x0000000000003a11       0x8e ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
+                0x0000000000003a3d       0x8e ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
  .rodata.g_memoryMapXml
-                0x0000000000003a9f      0x5c7 ../../../gcc4mbed/mri/mri.ar(lpc176x.o)
- .rodata        0x0000000000004066       0x24 ../../../gcc4mbed/mri/mri.ar(mbed1768.o)
+                0x0000000000003acb      0x5c7 ../../../gcc4mbed/mri/mri.ar(lpc176x.o)
+ .rodata        0x0000000000004092       0x24 ../../../gcc4mbed/mri/mri.ar(mbed1768.o)
  .rodata.NibbleToHexChar
-                0x000000000000408a       0x10 ../../../gcc4mbed/mri/mri.ar(buffer.o)
+                0x00000000000040b6       0x10 ../../../gcc4mbed/mri/mri.ar(buffer.o)
  .rodata.str1.1
-                0x000000000000409a        0xb ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
+                0x00000000000040c6        0xb ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
                                           0xc (size before relaxing)
  .rodata.gdbCloseCommand.4654
-                0x00000000000040a5        0x8 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x00000000000040d1        0x8 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
  .rodata.gdbStatCommand.4676
-                0x00000000000040ad        0x7 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x00000000000040d9        0x7 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
  .rodata.controlCFlag.4687
-                0x00000000000040b4        0x3 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x00000000000040e0        0x3 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
  .rodata.gdbCommand.4682
-                0x00000000000040b7        0x9 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x00000000000040e3        0x9 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
  .rodata.gdbWriteCommand.4644
-                0x00000000000040c0        0x8 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x00000000000040ec        0x8 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
  .rodata.gdbOpenCommand.4639
-                0x00000000000040c8        0x7 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x00000000000040f4        0x7 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
  .rodata.gdbStatCommand.4665
-                0x00000000000040cf        0x8 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x00000000000040fb        0x8 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
  .rodata.gdbReadCommand.4649
-                0x00000000000040d7        0x7 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x0000000000004103        0x7 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
  .rodata.gdbSeekCommand.4659
-                0x00000000000040de        0x8 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x000000000000410a        0x8 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
  .rodata.gdbUnlinkCommand.4670
-                0x00000000000040e6        0x9 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+                0x0000000000004112        0x9 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
  .rodata.str1.1
-                0x00000000000040ef        0x4 ../../../gcc4mbed/mri/mri.ar(cmd_memory.o)
+                0x000000000000411b        0x4 ../../../gcc4mbed/mri/mri.ar(cmd_memory.o)
                                           0xf (size before relaxing)
  .rodata.readCommand.4768
-                0x00000000000040f3        0x5 ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
+                0x000000000000411f        0x5 ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
  .rodata.qXferCommand.4745
-                0x00000000000040f8        0x5 ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
+                0x0000000000004124        0x5 ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
  .rodata.qSupportedCommand.4744
-                0x00000000000040fd        0xa ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
+                0x0000000000004129        0xa ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
  .rodata.targetXmlAnnex.4773
-                0x0000000000004107        0xb ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
+                0x0000000000004133        0xb ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
  .rodata.str1.1
-                0x0000000000004112        0xb ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
+                0x000000000000413e        0xb ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
                                          0x10 (size before relaxing)
  .rodata.querySupportResponse.4749
-                0x000000000000411d       0x38 ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
+                0x0000000000004149       0x38 ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
  .rodata.featureObject.4757
-                0x0000000000004155        0x9 ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
+                0x0000000000004181        0x9 ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
  .rodata.memoryMapObject.4756
-                0x000000000000415e        0xb ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
+                0x000000000000418a        0xb ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
  .rodata.str1.1
                 0x0000000000000000        0x7 ../../../gcc4mbed/mri/mri.ar(cmd_registers.o)
  .rodata.str1.1
-                0x0000000000004169        0x3 ../../../gcc4mbed/mri/mri.ar(gdb_console.o)
+                0x0000000000004195        0x3 ../../../gcc4mbed/mri/mri.ar(gdb_console.o)
  *(.eh_frame*)
- .eh_frame      0x000000000000416c        0x0 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crtbegin.o
- .eh_frame      0x000000000000416c        0x4 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crtend.o
+ .eh_frame      0x0000000000004198        0x0 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crtbegin.o
+ .eh_frame      0x0000000000004198        0x4 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crtend.o
 
-.glue_7         0x0000000000004170        0x0
+.glue_7         0x000000000000419c        0x0
  .glue_7        0x0000000000000000        0x0 linker stubs
 
-.glue_7t        0x0000000000004170        0x0
+.glue_7t        0x000000000000419c        0x0
  .glue_7t       0x0000000000000000        0x0 linker stubs
 
-.vfp11_veneer   0x0000000000004170        0x0
+.vfp11_veneer   0x000000000000419c        0x0
  .vfp11_veneer  0x0000000000000000        0x0 linker stubs
 
-.v4_bx          0x0000000000004170        0x0
+.v4_bx          0x000000000000419c        0x0
  .v4_bx         0x0000000000000000        0x0 linker stubs
 
-.iplt           0x0000000000004170        0x0
+.iplt           0x000000000000419c        0x0
  .iplt          0x0000000000000000        0x0 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crtbegin.o
 
-.rel.dyn        0x0000000000004170        0x0
+.rel.dyn        0x000000000000419c        0x0
  .rel.iplt      0x0000000000000000        0x0 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crtbegin.o
 
 .ARM.extab
  *(.ARM.extab* .gnu.linkonce.armextab.*)
-                0x0000000000004170                __exidx_start = .
+                0x000000000000419c                __exidx_start = .
 
 .ARM.exidx
  *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-                0x0000000000004170                __exidx_end = .
-                0x0000000000004170                __etext = .
+                0x000000000000419c                __exidx_end = .
+                0x000000000000419c                __etext = .
 
-.data           0x00000000100000c8       0x9c load address 0x0000000000004170
+.data           0x00000000100000c8       0x9c load address 0x000000000000419c
                 0x00000000100000c8                __data_start__ = .
                 0x00000000100000c8                Image$$RW_IRAM1$$Base = .
  *(vtable)
@@ -3064,13 +3066,13 @@ LOAD /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-
                 0x0000000010000164                . = ALIGN (0x4)
                 0x0000000010000164                __data_end__ = .
 
-.jcr            0x0000000010000164        0x0 load address 0x000000000000420c
+.jcr            0x0000000010000164        0x0 load address 0x0000000000004238
  .jcr           0x0000000010000164        0x0 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crtbegin.o
 
-.igot.plt       0x0000000010000164        0x0 load address 0x000000000000420c
+.igot.plt       0x0000000010000164        0x0 load address 0x0000000000004238
  .igot.plt      0x0000000000000000        0x0 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crtbegin.o
 
-.bss            0x0000000010000168      0x384 load address 0x0000000000004210
+.bss            0x0000000010000168      0x384 load address 0x0000000000004240
                 0x0000000010000168                __bss_start__ = .
  *(.bss*)
  .bss           0x0000000010000168       0x1c /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/armv7-m/crtbegin.o
@@ -3267,21 +3269,21 @@ OUTPUT(LPC1768/realarm.elf elf32-littlearm)
  .comment       0x0000000000000000       0x71 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
  .comment       0x0000000000000000       0x71 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
 
-.debug_info     0x0000000000000000     0x5381
- .debug_info    0x0000000000000000     0x1552 LPC1768/./main.o
- .debug_info    0x0000000000001552      0x23a LPC1768/gcc4mbed.o
- .debug_info    0x000000000000178c      0x432 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(cmsis_nvic.o)
- .debug_info    0x0000000000001bbe      0x37d ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(system_LPC17xx.o)
- .debug_info    0x0000000000001f3b       0xc2 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(exit.o)
- .debug_info    0x0000000000001ffd      0x225 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(mbed_interface.o)
- .debug_info    0x0000000000002222      0x524 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
- .debug_info    0x0000000000002746       0xca ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(startup_LPC17xx.o)
- .debug_info    0x0000000000002810      0x9c6 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
- .debug_info    0x00000000000031d6      0x95c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
- .debug_info    0x0000000000003b32      0x107 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
- .debug_info    0x0000000000003c39      0xd0a ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
- .debug_info    0x0000000000004943      0x7c3 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
- .debug_info    0x0000000000005106      0x27b ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
+.debug_info     0x0000000000000000     0x5394
+ .debug_info    0x0000000000000000     0x1565 LPC1768/./main.o
+ .debug_info    0x0000000000001565      0x23a LPC1768/gcc4mbed.o
+ .debug_info    0x000000000000179f      0x432 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(cmsis_nvic.o)
+ .debug_info    0x0000000000001bd1      0x37d ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(system_LPC17xx.o)
+ .debug_info    0x0000000000001f4e       0xc2 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(exit.o)
+ .debug_info    0x0000000000002010      0x225 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(mbed_interface.o)
+ .debug_info    0x0000000000002235      0x524 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
+ .debug_info    0x0000000000002759       0xca ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(startup_LPC17xx.o)
+ .debug_info    0x0000000000002823      0x9c6 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
+ .debug_info    0x00000000000031e9      0x95c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
+ .debug_info    0x0000000000003b45      0x107 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
+ .debug_info    0x0000000000003c4c      0xd0a ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
+ .debug_info    0x0000000000004956      0x7c3 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
+ .debug_info    0x0000000000005119      0x27b ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
 
 .debug_abbrev   0x0000000000000000      0xfb4
  .debug_abbrev  0x0000000000000000      0x2a1 LPC1768/./main.o
@@ -3314,50 +3316,50 @@ OUTPUT(LPC1768/realarm.elf elf32-littlearm)
  .debug_loc     0x00000000000008e6       0x8c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
  .debug_loc     0x0000000000000972       0xb0 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
 
-.debug_aranges  0x0000000000000000      0x3b0
+.debug_aranges  0x0000000000000000      0x3b8
  .debug_aranges
-                0x0000000000000000       0x90 LPC1768/./main.o
+                0x0000000000000000       0x98 LPC1768/./main.o
  .debug_aranges
-                0x0000000000000090       0x58 LPC1768/gcc4mbed.o
+                0x0000000000000098       0x58 LPC1768/gcc4mbed.o
  .debug_aranges
-                0x00000000000000e8       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(cmsis_nvic.o)
+                0x00000000000000f0       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(cmsis_nvic.o)
  .debug_aranges
-                0x0000000000000110       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(system_LPC17xx.o)
+                0x0000000000000118       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(system_LPC17xx.o)
  .debug_aranges
-                0x0000000000000138       0x20 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(exit.o)
+                0x0000000000000140       0x20 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(exit.o)
  .debug_aranges
-                0x0000000000000158       0x58 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(mbed_interface.o)
+                0x0000000000000160       0x58 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(mbed_interface.o)
  .debug_aranges
-                0x00000000000001b0       0xa8 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
+                0x00000000000001b8       0xa8 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
  .debug_aranges
-                0x0000000000000258       0x20 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(startup_LPC17xx.o)
+                0x0000000000000260       0x20 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(startup_LPC17xx.o)
  .debug_aranges
-                0x0000000000000278       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
+                0x0000000000000280       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
  .debug_aranges
-                0x00000000000002a0       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
+                0x00000000000002a8       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
  .debug_aranges
-                0x00000000000002c8       0x30 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
+                0x00000000000002d0       0x30 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
  .debug_aranges
-                0x00000000000002f8       0x38 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
+                0x0000000000000300       0x38 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
  .debug_aranges
-                0x0000000000000330       0x48 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
+                0x0000000000000338       0x48 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
  .debug_aranges
-                0x0000000000000378       0x38 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
+                0x0000000000000380       0x38 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
 
-.debug_ranges   0x0000000000000000      0x2c0
- .debug_ranges  0x0000000000000000       0x80 LPC1768/./main.o
- .debug_ranges  0x0000000000000080       0x48 LPC1768/gcc4mbed.o
- .debug_ranges  0x00000000000000c8       0x18 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(cmsis_nvic.o)
- .debug_ranges  0x00000000000000e0       0x18 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(system_LPC17xx.o)
- .debug_ranges  0x00000000000000f8       0x10 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(exit.o)
- .debug_ranges  0x0000000000000108       0x48 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(mbed_interface.o)
- .debug_ranges  0x0000000000000150       0x98 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
- .debug_ranges  0x00000000000001e8       0x18 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
- .debug_ranges  0x0000000000000200       0x18 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
- .debug_ranges  0x0000000000000218       0x20 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
- .debug_ranges  0x0000000000000238       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
- .debug_ranges  0x0000000000000260       0x38 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
- .debug_ranges  0x0000000000000298       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
+.debug_ranges   0x0000000000000000      0x2c8
+ .debug_ranges  0x0000000000000000       0x88 LPC1768/./main.o
+ .debug_ranges  0x0000000000000088       0x48 LPC1768/gcc4mbed.o
+ .debug_ranges  0x00000000000000d0       0x18 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(cmsis_nvic.o)
+ .debug_ranges  0x00000000000000e8       0x18 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(system_LPC17xx.o)
+ .debug_ranges  0x0000000000000100       0x10 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(exit.o)
+ .debug_ranges  0x0000000000000110       0x48 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(mbed_interface.o)
+ .debug_ranges  0x0000000000000158       0x98 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
+ .debug_ranges  0x00000000000001f0       0x18 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
+ .debug_ranges  0x0000000000000208       0x18 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
+ .debug_ranges  0x0000000000000220       0x20 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
+ .debug_ranges  0x0000000000000240       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
+ .debug_ranges  0x0000000000000268       0x38 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
+ .debug_ranges  0x00000000000002a0       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
 
 .debug_macro    0x0000000000000000     0x5fc8
  .debug_macro   0x0000000000000000      0x4bd LPC1768/./main.o
@@ -3443,74 +3445,74 @@ OUTPUT(LPC1768/realarm.elf elf32-littlearm)
  .debug_macro   0x0000000000005ee3       0x16 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
  .debug_macro   0x0000000000005ef9       0xcf ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
 
-.debug_line     0x0000000000000000     0x4210
- .debug_line    0x0000000000000000      0xb14 LPC1768/./main.o
- .debug_line    0x0000000000000b14      0x476 LPC1768/gcc4mbed.o
- .debug_line    0x0000000000000f8a      0x34b ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(cmsis_nvic.o)
- .debug_line    0x00000000000012d5      0x373 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(system_LPC17xx.o)
- .debug_line    0x0000000000001648      0x472 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(exit.o)
- .debug_line    0x0000000000001aba      0x635 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(mbed_interface.o)
- .debug_line    0x00000000000020ef      0x633 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
- .debug_line    0x0000000000002722       0xee ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(startup_LPC17xx.o)
- .debug_line    0x0000000000002810      0x524 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
- .debug_line    0x0000000000002d34      0x4e3 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
- .debug_line    0x0000000000003217      0x306 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
- .debug_line    0x000000000000351d      0x464 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
- .debug_line    0x0000000000003981      0x450 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
- .debug_line    0x0000000000003dd1      0x43f ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
+.debug_line     0x0000000000000000     0x4224
+ .debug_line    0x0000000000000000      0xb28 LPC1768/./main.o
+ .debug_line    0x0000000000000b28      0x476 LPC1768/gcc4mbed.o
+ .debug_line    0x0000000000000f9e      0x34b ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(cmsis_nvic.o)
+ .debug_line    0x00000000000012e9      0x373 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(system_LPC17xx.o)
+ .debug_line    0x000000000000165c      0x472 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(exit.o)
+ .debug_line    0x0000000000001ace      0x635 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(mbed_interface.o)
+ .debug_line    0x0000000000002103      0x633 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
+ .debug_line    0x0000000000002736       0xee ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(startup_LPC17xx.o)
+ .debug_line    0x0000000000002824      0x524 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
+ .debug_line    0x0000000000002d48      0x4e3 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
+ .debug_line    0x000000000000322b      0x306 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
+ .debug_line    0x0000000000003531      0x464 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
+ .debug_line    0x0000000000003995      0x450 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
+ .debug_line    0x0000000000003de5      0x43f ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
 
-.debug_str      0x0000000000000000    0x10413
- .debug_str     0x0000000000000000     0xe67c LPC1768/./main.o
-                                       0xe936 (size before relaxing)
- .debug_str     0x000000000000e67c      0x6d0 LPC1768/gcc4mbed.o
+.debug_str      0x0000000000000000    0x10467
+ .debug_str     0x0000000000000000     0xe6a9 LPC1768/./main.o
+                                       0xe963 (size before relaxing)
+ .debug_str     0x000000000000e6a9      0x6f7 LPC1768/gcc4mbed.o
                                        0xae5a (size before relaxing)
- .debug_str     0x000000000000ed4c      0x2d1 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(cmsis_nvic.o)
+ .debug_str     0x000000000000eda0      0x2d1 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(cmsis_nvic.o)
                                        0x8c69 (size before relaxing)
- .debug_str     0x000000000000f01d      0x480 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(system_LPC17xx.o)
+ .debug_str     0x000000000000f071      0x480 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(system_LPC17xx.o)
                                        0x8d57 (size before relaxing)
- .debug_str     0x000000000000f49d       0xd9 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(exit.o)
+ .debug_str     0x000000000000f4f1       0xd9 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(exit.o)
                                        0x8e23 (size before relaxing)
- .debug_str     0x000000000000f576       0xe5 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(mbed_interface.o)
+ .debug_str     0x000000000000f5ca       0xe5 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(mbed_interface.o)
                                        0xb439 (size before relaxing)
- .debug_str     0x000000000000f65b      0x3aa ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
+ .debug_str     0x000000000000f6af      0x3aa ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
                                        0xa869 (size before relaxing)
- .debug_str     0x000000000000fa05      0x49d ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
+ .debug_str     0x000000000000fa59      0x49d ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
                                        0xb5da (size before relaxing)
- .debug_str     0x000000000000fea2       0xaa ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
+ .debug_str     0x000000000000fef6       0xaa ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
                                        0x9082 (size before relaxing)
- .debug_str     0x000000000000ff4c       0x56 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
+ .debug_str     0x000000000000ffa0       0x56 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
                                        0x3013 (size before relaxing)
- .debug_str     0x000000000000ffa2      0x1da ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
+ .debug_str     0x000000000000fff6      0x1da ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
                                        0x91e0 (size before relaxing)
- .debug_str     0x000000000001017c      0x19f ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
+ .debug_str     0x00000000000101d0      0x19f ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
                                        0x917d (size before relaxing)
- .debug_str     0x000000000001031b       0xf8 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
+ .debug_str     0x000000000001036f       0xf8 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
                                        0x8d47 (size before relaxing)
 
-.debug_frame    0x0000000000000000      0x8ec
- .debug_frame   0x0000000000000000      0x158 LPC1768/./main.o
- .debug_frame   0x0000000000000158       0xc8 LPC1768/gcc4mbed.o
- .debug_frame   0x0000000000000220       0x38 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(cmsis_nvic.o)
- .debug_frame   0x0000000000000258       0x3c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(system_LPC17xx.o)
- .debug_frame   0x0000000000000294       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(exit.o)
- .debug_frame   0x00000000000002bc       0xd0 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(mbed_interface.o)
- .debug_frame   0x000000000000038c      0x1bc ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
- .debug_frame   0x0000000000000548       0x38 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
- .debug_frame   0x0000000000000580       0x3c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
- .debug_frame   0x00000000000005bc       0x58 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
- .debug_frame   0x0000000000000614       0x6c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
- .debug_frame   0x0000000000000680       0x88 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
- .debug_frame   0x0000000000000708       0x74 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
- .debug_frame   0x000000000000077c       0x2c /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-init.o)
- .debug_frame   0x00000000000007a8       0x28 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-memcpy.o)
- .debug_frame   0x00000000000007d0       0x20 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-memset.o)
- .debug_frame   0x00000000000007f0       0x64 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-reent.o)
- .debug_frame   0x0000000000000854       0x20 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strcmp.o)
- .debug_frame   0x0000000000000874       0x20 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strlen.o)
- .debug_frame   0x0000000000000894       0x2c /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strncmp.o)
- .debug_frame   0x00000000000008c0       0x2c /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strstr.o)
+.debug_frame    0x0000000000000000      0x8fc
+ .debug_frame   0x0000000000000000      0x168 LPC1768/./main.o
+ .debug_frame   0x0000000000000168       0xc8 LPC1768/gcc4mbed.o
+ .debug_frame   0x0000000000000230       0x38 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(cmsis_nvic.o)
+ .debug_frame   0x0000000000000268       0x3c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(system_LPC17xx.o)
+ .debug_frame   0x00000000000002a4       0x28 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(exit.o)
+ .debug_frame   0x00000000000002cc       0xd0 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(mbed_interface.o)
+ .debug_frame   0x000000000000039c      0x1bc ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(semihost_api.o)
+ .debug_frame   0x0000000000000558       0x38 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(pinmap.o)
+ .debug_frame   0x0000000000000590       0x3c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(board.o)
+ .debug_frame   0x00000000000005cc       0x58 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(wait_api.o)
+ .debug_frame   0x0000000000000624       0x6c ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(gpio_api.o)
+ .debug_frame   0x0000000000000690       0x88 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker.o)
+ .debug_frame   0x0000000000000718       0x74 ../../../gcc4mbed/external/mbed/libraries/Debug/NXP_LPC176X/mbed.a(us_ticker_api.o)
+ .debug_frame   0x000000000000078c       0x2c /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-init.o)
+ .debug_frame   0x00000000000007b8       0x28 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-memcpy.o)
+ .debug_frame   0x00000000000007e0       0x20 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-memset.o)
+ .debug_frame   0x0000000000000800       0x64 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-reent.o)
+ .debug_frame   0x0000000000000864       0x20 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strcmp.o)
+ .debug_frame   0x0000000000000884       0x20 /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strlen.o)
+ .debug_frame   0x00000000000008a4       0x2c /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strncmp.o)
+ .debug_frame   0x00000000000008d0       0x2c /depots/gcc-arm-none-eabi/install-native/lib/gcc/arm-none-eabi/4.7.4/../../../../arm-none-eabi/lib/armv7-m/libc_s.a(lib_a-strstr.o)
 
-.stab           0x0000000000000000     0xf5a0
+.stab           0x0000000000000000     0xf624
  .stab          0x0000000000000000     0x15a8 ../../../gcc4mbed/mri/mri.ar(mri.o)
                                        0x162c (size before relaxing)
  .stab          0x00000000000015a8      0x8ac ../../../gcc4mbed/mri/mri.ar(packet.o)
@@ -3519,43 +3521,43 @@ OUTPUT(LPC1768/realarm.elf elf32-littlearm)
                                         0xc78 (size before relaxing)
  .stab          0x0000000000002658      0x270 ../../../gcc4mbed/mri/mri.ar(try_catch.o)
                                         0x27c (size before relaxing)
- .stab          0x00000000000028c8     0x2d00 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
-                                       0x3318 (size before relaxing)
- .stab          0x00000000000055c8     0x1218 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
+ .stab          0x00000000000028c8     0x2d84 ../../../gcc4mbed/mri/mri.ar(cortex-m.o)
+                                       0x339c (size before relaxing)
+ .stab          0x000000000000564c     0x1218 ../../../gcc4mbed/mri/mri.ar(lpc176x_uart.o)
                                        0x1a34 (size before relaxing)
- .stab          0x00000000000067e0      0xac8 ../../../gcc4mbed/mri/mri.ar(lpc176x.o)
+ .stab          0x0000000000006864      0xac8 ../../../gcc4mbed/mri/mri.ar(lpc176x.o)
                                         0xe28 (size before relaxing)
- .stab          0x00000000000072a8      0x690 ../../../gcc4mbed/mri/mri.ar(mbed1768.o)
+ .stab          0x000000000000732c      0x690 ../../../gcc4mbed/mri/mri.ar(mbed1768.o)
                                         0xf18 (size before relaxing)
- .stab          0x0000000000007938      0x3cc ../../../gcc4mbed/mri/mri.ar(semihost.o)
+ .stab          0x00000000000079bc      0x3cc ../../../gcc4mbed/mri/mri.ar(semihost.o)
                                         0x5e8 (size before relaxing)
- .stab          0x0000000000007d04      0x798 ../../../gcc4mbed/mri/mri.ar(semihost_newlib.o)
+ .stab          0x0000000000007d88      0x798 ../../../gcc4mbed/mri/mri.ar(semihost_newlib.o)
                                         0xbc4 (size before relaxing)
- .stab          0x000000000000849c      0x990 ../../../gcc4mbed/mri/mri.ar(semihost_mbed.o)
+ .stab          0x0000000000008520      0x990 ../../../gcc4mbed/mri/mri.ar(semihost_mbed.o)
                                         0xe04 (size before relaxing)
- .stab          0x0000000000008e2c     0x162c ../../../gcc4mbed/mri/mri.ar(buffer.o)
+ .stab          0x0000000000008eb0     0x162c ../../../gcc4mbed/mri/mri.ar(buffer.o)
                                        0x1ab8 (size before relaxing)
- .stab          0x000000000000a458      0x9f0 ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
+ .stab          0x000000000000a4dc      0x9f0 ../../../gcc4mbed/mri/mri.ar(cmd_break_watch.o)
                                         0xbf4 (size before relaxing)
- .stab          0x000000000000ae48      0x558 ../../../gcc4mbed/mri/mri.ar(cmd_common.o)
+ .stab          0x000000000000aecc      0x558 ../../../gcc4mbed/mri/mri.ar(cmd_common.o)
                                         0x72c (size before relaxing)
- .stab          0x000000000000b3a0      0x3d8 ../../../gcc4mbed/mri/mri.ar(cmd_continue.o)
+ .stab          0x000000000000b424      0x3d8 ../../../gcc4mbed/mri/mri.ar(cmd_continue.o)
                                         0x60c (size before relaxing)
- .stab          0x000000000000b778     0x1104 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
+ .stab          0x000000000000b7fc     0x1104 ../../../gcc4mbed/mri/mri.ar(cmd_file.o)
                                        0x14c4 (size before relaxing)
- .stab          0x000000000000c87c      0x63c ../../../gcc4mbed/mri/mri.ar(cmd_memory.o)
+ .stab          0x000000000000c900      0x63c ../../../gcc4mbed/mri/mri.ar(cmd_memory.o)
                                         0x810 (size before relaxing)
- .stab          0x000000000000ceb8      0xac8 ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
+ .stab          0x000000000000cf3c      0xac8 ../../../gcc4mbed/mri/mri.ar(cmd_query.o)
                                         0xf0c (size before relaxing)
- .stab          0x000000000000d980      0x474 ../../../gcc4mbed/mri/mri.ar(cmd_registers.o)
+ .stab          0x000000000000da04      0x474 ../../../gcc4mbed/mri/mri.ar(cmd_registers.o)
                                         0x6a8 (size before relaxing)
- .stab          0x000000000000ddf4      0x330 ../../../gcc4mbed/mri/mri.ar(cmd_step.o)
+ .stab          0x000000000000de78      0x330 ../../../gcc4mbed/mri/mri.ar(cmd_step.o)
                                         0x564 (size before relaxing)
- .stab          0x000000000000e124      0x51c ../../../gcc4mbed/mri/mri.ar(gdb_console.o)
+ .stab          0x000000000000e1a8      0x51c ../../../gcc4mbed/mri/mri.ar(gdb_console.o)
                                         0x948 (size before relaxing)
- .stab          0x000000000000e640      0xa74 ../../../gcc4mbed/mri/mri.ar(memory.o)
+ .stab          0x000000000000e6c4      0xa74 ../../../gcc4mbed/mri/mri.ar(memory.o)
                                         0xc90 (size before relaxing)
- .stab          0x000000000000f0b4      0x4ec ../../../gcc4mbed/mri/mri.ar(native-mem.o)
+ .stab          0x000000000000f138      0x4ec ../../../gcc4mbed/mri/mri.ar(native-mem.o)
                                         0x708 (size before relaxing)
 
 .stabstr        0x0000000000000000    0x135c0
