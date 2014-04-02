@@ -20,11 +20,17 @@
 #include <unistd.h>
 
 
+/* Set SERIAL_LOG to 1 to have all serial I/O logged to serial.log file and set to 0 otherwise. */
+#define SERIAL_LOG 0
+
+
 typedef struct CommSerial
 {
-    int            file;
+    FILE*          pLogFile;
     struct termios origTerm;
+    int            file;
     int            origTermValid;
+    int            writeLast;
     uint32_t       secTimeout;
     uint32_t       usecTimeout;
 } CommSerial;
@@ -43,6 +49,12 @@ __throws void commSerialInit(const char* pDevicePath, uint32_t baudRate, uint32_
     
     memset(&g_serial, 0, sizeof(g_serial));
 
+    if (SERIAL_LOG)
+    {
+        g_serial.pLogFile = fopen("serial.log", "w");
+        g_serial.writeLast = 0;
+    }
+    
     if (pDevicePath)
         g_serial.file = open(pDevicePath, O_RDWR | O_NONBLOCK);
     else
@@ -140,6 +152,11 @@ void commSerialUninit()
         tcsetattr(g_serial.file, TCSAFLUSH, &g_serial.origTerm);
     if (g_serial.file != -1)
         close(g_serial.file);
+    if (SERIAL_LOG && g_serial.pLogFile)
+    {
+        fclose(g_serial.pLogFile);
+        g_serial.pLogFile = NULL;
+    }
 }
 
 
@@ -190,6 +207,15 @@ int commReceiveChar(void)
     if (bytesRead == -1)
         __throw(serialException);
 
+    if (SERIAL_LOG && g_serial.pLogFile)
+    {
+        if (g_serial.writeLast)
+            fwrite("\n[r]", 1, 4, g_serial.pLogFile);
+        g_serial.writeLast = 0;
+        fwrite(&byte, 1, 1, g_serial.pLogFile);
+        fflush(g_serial.pLogFile);
+    }
+
     return (int)byte;
 }
 
@@ -217,4 +243,12 @@ void commSendChar(int character)
     bytesWritten = write(g_serial.file, &byte, sizeof(byte));
     if (bytesWritten != sizeof(byte))
         __throw(serialException);
+    if (SERIAL_LOG && g_serial.pLogFile)
+    {
+        if (!g_serial.writeLast)
+            fwrite("\n[w]", 1, 4, g_serial.pLogFile);
+        g_serial.writeLast = 1;
+        fwrite(&byte, 1, 1, g_serial.pLogFile);
+        fflush(g_serial.pLogFile);
+    }
 }
