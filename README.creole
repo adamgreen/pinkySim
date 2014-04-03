@@ -1,6 +1,23 @@
 ==Work in Progress!
 
 
+==Overview
+pinkySim is an ARMv6-M instruction set simulator. It was developed to facilitate the use of Test Driven Development,
+TDD, on future projects where the code under test will be written in assembly language.  With this goal in mind it has
+//or will have// these features:
+* Supports the core ARMv6-M instruction set needed to run unit tests on the developer's host machine as part of the
+  automated cross-compile/build process.
+* pinkSim itself contains a healthy suite of unit tests:
+** Contains >450 unit tests that run as part of the automated build process.
+** Covers 100% of the code in pinkySim.c.
+** A good proportion of the unit tests have been deployed and validated on actual ARM hardware.
+* Will integrate with arm-none-eabi-gdb to allow debugging of ARM code running in the simulator.  //This feature is
+  currently in the process of being developed.//
+* Will include code coverage abilities.  This will allow for the determination of the level of code coverage obtained
+  on assembly language code by its corresponding unit tests.  //This feature will be started in the near future once the
+  GDB integration is completed.//
+
+
 ==How to Clone
 This project uses submodules (CppUTest for unit testing).  Cloning requires a few more steps to get all of the necessary
 code.
@@ -19,12 +36,34 @@ git clone --recursive git@github.com:adamgreen/pinkySim.git
 }}}
 
 
+==Unit Test Validation
+As pinkySim was developed, [[https://github.com/adamgreen/pinkySim/tree/master/libpinkysim/tests | corresponding unit tests]]
+were written as well.  However one major concern was that misinterpretations of the ARMv6-M instruction set description
+would find their way into both the unit tests and the actual simulator code.  To help reduce the chance of this
+occurring, the [[https://github.com/adamgreen/pinkySim/tree/master/libthunk2real | thunk2real]] subproject was created.
+This subproject uses a test mock in the place of pinkySim which redirects the process of single stepping to actual ARM
+hardware. This is accomplished by connecting the test mock to an an actual ARM Cortex-M3 device (mbed-LPC1768) via the
+GDB remote serial protocol.  To run this suite you must:
+* Be running the build process from a Macintosh computer running OS X with Xcode installed.
+* Built and deploy [[https://github.com/adamgreen/pinkySim/tree/master/libthunk2real/realarm | the realarm firmware]]
+  to an mbed-LPC1768 device.
+** This mbed device must first be running the [[http://mbed.org/media/uploads/simon/mbedmicrocontroller_21164.if | 21664 interface firmware]].
+** Clone the [[https://github.com/adamgreen/gcc4mbed#quick-start | GCC4MBED]] git repository as a sibling to your
+   pinkySim repository clone.
+** Build and deploy by running {{{make deploy}}} from the realarm directory.
+* Reboot the mbed device.
+* Make sure that the mbed device is connected to your Macintosh before running the next step.
+* Build the tests.  This can be done by going to the root pinkySim directory on your machine and running
+  {{{make tests}}}.  This will not only build the tests but it will also detect your connected mbed device and
+  automatically run the tests on it.
+
+
 ==Important Notes
-Due to the intended use of this simulator, there are several ARMV6-m architectural features which aren't implemented:
+Due to the intended use of this simulator, there are several ARMV6-M architectural features which aren't implemented:
 * **Not cycle accurate:** The simulator just executes instructions as it encounters them in the code stream and has no
   knowledge of clock cycles.
 * **No memory mapped peripherals:** The simulator just issues read/writes to memory.  It doesn't attempt to map special
-  memory regions to peripheral registers.  This includes the ARMV6-m specified peripherals such as the NVIC.
+  memory regions to peripheral registers.  This includes the ARMV6-M specified peripherals such as the NVIC.
 * **Doesn't support exception/interrupts:** If the simulator encounters an instruction which would throw an exception,
   it just returns a non-zero return value from the pinkySimStep() routine.  As the simulator doesn't attempt to provide
   any implementation of peripherals, it also doesn't implement support for interrupts that might occur from such
