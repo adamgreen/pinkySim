@@ -18,13 +18,7 @@
 #include "hexConvert.h"
 
 
-void packetInit(Packet* pPacket)
-{
-    memset(pPacket, 0, sizeof(*pPacket));
-}
-
-
-static void rememberBufferToUseForPacketData(Packet* pPacket, Buffer* pBuffer);
+static void initPacketStruct(Packet* pPacket, Buffer* pBuffer);
 static void getMostRecentPacket(Packet* pPacket);
 static void getPacketDataAndExpectedChecksum(Packet* pPacket);
 static void waitForStartOfNextPacket(Packet* pPacket);
@@ -39,7 +33,7 @@ static void sendNAKToGDB(void);
 static void resetBufferToEnableFutureReadingOfValidPacketData(Packet* pPacket);
 void packetGet(Packet* pPacket, Buffer* pBuffer)
 {
-    rememberBufferToUseForPacketData(pPacket, pBuffer);
+    initPacketStruct(pPacket, pBuffer);
     do
     {
         getMostRecentPacket(pPacket);
@@ -48,8 +42,9 @@ void packetGet(Packet* pPacket, Buffer* pBuffer)
     resetBufferToEnableFutureReadingOfValidPacketData(pPacket);
 }
 
-static void rememberBufferToUseForPacketData(Packet* pPacket, Buffer* pBuffer)
+static void initPacketStruct(Packet* pPacket, Buffer* pBuffer)
 {
+    memset(pPacket, 0, sizeof(*pPacket));
     pPacket->pBuffer = pBuffer;
 }
 
@@ -168,7 +163,7 @@ void packetSend(Packet* pPacket, Buffer* pBuffer)
     
     /* Keeps looping until GDB sends back the '+' packet acknowledge character.  If GDB sends a '$' then it is trying
        to send a packet so cancel this send attempt. */
-    rememberBufferToUseForPacketData(pPacket, pBuffer);
+    initPacketStruct(pPacket, pBuffer);
     do
     {
         sendPacket(pPacket);

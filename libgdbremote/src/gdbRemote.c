@@ -41,8 +41,6 @@ static void sendGetRegistersCommand(void)
     bufferInit(&buffer, data, sizeof(data));
     bufferWriteString(&buffer, "g");
     bufferSetEndOfBuffer(&buffer);
-
-    packetInit(&packet);
     packetSend(&packet, &buffer);
 }
 
@@ -55,7 +53,6 @@ static void receiveAndParseByteArrayResponse(uint8_t* pReadBuffer, uint8_t readS
     char     data[512];
 
     bufferInit(&buffer, data, sizeof(data));
-    packetInit(&packet);
     packetGet(&packet, &buffer);
 
     for (pCurr = pReadBuffer ; pCurr < pEnd ; pCurr++)
@@ -80,8 +77,6 @@ static void sendSetRegisterCommand(const PinkySimContext* pContext)
     bufferWriteChar(&buffer, 'G');
     sendByteArrayAsHex(&buffer, (uint8_t*)&pContext->R[0], 17 * sizeof(uint32_t));
     bufferSetEndOfBuffer(&buffer);
-
-    packetInit(&packet);
     packetSend(&packet, &buffer);
 }
 
@@ -102,7 +97,6 @@ static void verifyOkResponse(void)
     char              data[512];
 
     bufferInit(&buffer, data, sizeof(data));
-    packetInit(&packet);
     packetGet(&packet, &buffer);
     if (!bufferMatchesString(&buffer, expectedResponse, sizeof(expectedResponse)-1))
         __throw(badResponseException);
@@ -128,8 +122,6 @@ static void sendReadMemoryCommand(uint32_t address, uint32_t readSize)
     bufferWriteChar(&buffer, ',');
     bufferWriteUIntegerAsHex(&buffer, readSize);
     bufferSetEndOfBuffer(&buffer);
-
-    packetInit(&packet);
     packetSend(&packet, &buffer);
 }
 
@@ -155,8 +147,6 @@ static void sendWriteMemoryCommand(uint32_t address, const void* pWriteBuffer, u
     bufferWriteChar(&buffer, ':');
     sendByteArrayAsHex(&buffer, (uint8_t*)pWriteBuffer, writeSize);
     bufferSetEndOfBuffer(&buffer);
-
-    packetInit(&packet);
     packetSend(&packet, &buffer);
 }
 
@@ -177,8 +167,6 @@ static void sendSingleStepCommand(void)
     bufferInit(&buffer, data, sizeof(data));
     bufferWriteString(&buffer, "s");
     bufferSetEndOfBuffer(&buffer);
-
-    packetInit(&packet);
     packetSend(&packet, &buffer);
 }
 
@@ -190,13 +178,11 @@ static int parseSingleStepResponse(void)
     char    packetType;
 
     bufferInit(&buffer, data, sizeof(data));
-    packetInit(&packet);
     packetGet(&packet, &buffer);
     
     while ('O' == (packetType = bufferReadChar(&buffer)))
     {
         bufferInit(&buffer, data, sizeof(data));
-        packetInit(&packet);
         packetGet(&packet, &buffer);
     }
     

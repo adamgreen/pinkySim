@@ -35,7 +35,6 @@ TEST_GROUP(Packet)
         m_pCharacterArray = NULL;
         allocateBuffer(32);
         m_exceptionThrown = 0;
-        packetInit(&m_packet);
         mockCommInitTransmitDataBuffer(16);
     }
 

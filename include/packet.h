@@ -25,8 +25,6 @@ typedef struct
     unsigned char  expectedChecksum;
 } Packet;
 
-/* Real name of functions are in __mri namespace. */
-void    packetInit(Packet* pPacket);
 void    packetGet(Packet* pPacket, Buffer* pBuffer);
 void    packetSend(Packet* pPacket, Buffer* pBuffer);
 
