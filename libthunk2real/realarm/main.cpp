@@ -49,11 +49,6 @@ static void disallowUnalignedAccesses()
     SCB->CCR |= SCB_CCR_UNALIGN_TRP_Msk;
 }
 
-static void noForce8ByteAlignmentDuringExceptionStacking()
-{
-    SCB->CCR &= ~SCB_CCR_STKALIGN_Msk;
-}
-
 static void configureHighestMpuRegionToAccessAllMemoryWithNoCaching(void)
 {
     static const uint32_t regionToStartAtAddress0 = 0U;
@@ -78,7 +73,6 @@ static void disableWriteCaching()
 int main() 
 {
     disallowUnalignedAccesses();
-    noForce8ByteAlignmentDuringExceptionStacking();
     disableWriteCaching();
 
     attemptUnalignedAccess();
