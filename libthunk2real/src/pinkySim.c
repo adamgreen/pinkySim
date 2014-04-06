@@ -15,8 +15,9 @@
 
 
 static int determineHardFaultCause(PinkySimContext* pContext);
-static int wasSVC(PinkySimContext* pContext);
 static int wasUndefinedInstruction(PinkySimContext* pContext);
+static int determineDebugTrapCause(PinkySimContext* pContext);
+static int wasSVC(PinkySimContext* pContext);
 static int wasBKPT(PinkySimContext* pContext);
 
 
@@ -33,10 +34,7 @@ int pinkySimStep(PinkySimContext* pContext)
     case SIGSEGV:
         return determineHardFaultCause(pContext);
     case SIGTRAP:
-        if (wasBKPT(pContext))
-            return PINKYSIM_STEP_BKPT;
-        else
-            return PINKYSIM_STEP_OK;
+        return determineDebugTrapCause(pContext);
     default:
         return PINKYSIM_STEP_OK;
     }
@@ -44,27 +42,9 @@ int pinkySimStep(PinkySimContext* pContext)
 
 static int determineHardFaultCause(PinkySimContext* pContext)
 {
-    if (wasSVC(pContext))
-        return PINKYSIM_STEP_SVC;
     if (wasUndefinedInstruction(pContext))
         return PINKYSIM_STEP_UNDEFINED;
     return PINKYSIM_STEP_HARDFAULT;
-}
-
-static int wasSVC(PinkySimContext* pContext)
-{
-    uint32_t pc = pContext->pc - 2;
-    uint16_t instr;
-    
-    if (pc < 0x10000000 || pc >= 0x10008000)
-        return 0;
-        
-    instr = IMemory_Read16(pContext->pMemory, pc);
-    if ((instr & 0xFF00) == 0xDF00)
-        // SVC call
-        return 1;
-    else
-        return 0;
 }
 
 static int wasUndefinedInstruction(PinkySimContext* pContext)
@@ -76,6 +56,29 @@ static int wasUndefinedInstruction(PinkySimContext* pContext)
     if (usageFaultStatusRegister & undefinstrBit)
         return 1;
     return 0;
+}
+
+static int determineDebugTrapCause(PinkySimContext* pContext)
+{
+    if (wasSVC(pContext))
+        return PINKYSIM_STEP_SVC;
+    if (wasBKPT(pContext))
+        return PINKYSIM_STEP_BKPT;
+    return PINKYSIM_STEP_OK;
+}
+
+static int wasSVC(PinkySimContext* pContext)
+{
+    uint32_t pc = pContext->pc;
+    uint16_t svcHandlerAddress = IMemory_Read32(pContext->pMemory, 0x2c) & ~1;
+    
+    if (pc != svcHandlerAddress)
+        return 0;
+        
+    /* Is SVC so step out of handler. */
+    gdbRemoteSingleStep();
+    gdbRemoteGetRegisters(pContext);
+    return 1;
 }
 
 static int wasBKPT(PinkySimContext* pContext)

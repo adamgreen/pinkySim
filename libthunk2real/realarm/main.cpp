@@ -85,3 +85,7 @@ int main()
 
     return 0;
 }
+
+extern "C" void SVC_Handler()
+{
+}
