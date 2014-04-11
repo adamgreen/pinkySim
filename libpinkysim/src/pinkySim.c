@@ -54,7 +54,6 @@ typedef struct AddResults
 static int executeInstruction16(PinkySimContext* pContext, uint16_t instr);
 static int shiftAddSubtractMoveCompare(PinkySimContext* pContext, uint16_t instr);
 static int lslImmediate(PinkySimContext* pContext, uint16_t instr);
-static int conditionPassedForNonBranchInstr(const PinkySimContext* pContext);
 static int inITBlock(const PinkySimContext* pContext);
 static DecodedImmShift decodeImmshift(uint32_t typeBits, uint32_t imm5);
 static ShiftResults shift_C(uint32_t value, SRType type, uint32_t amount, uint32_t carryIn);
@@ -276,35 +275,26 @@ static int shiftAddSubtractMoveCompare(PinkySimContext* pContext, uint16_t instr
 
 static int lslImmediate(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        imm5 = (instr & (0x1F << 6)) >> 6;
-        uint32_t        d = instr & 0x7;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        DecodedImmShift decodedShift = decodeImmshift(0x0, imm5);
-        ShiftResults    shiftResults;
+    uint32_t        imm5 = (instr & (0x1F << 6)) >> 6;
+    uint32_t        d = instr & 0x7;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    DecodedImmShift decodedShift = decodeImmshift(0x0, imm5);
+    ShiftResults    shiftResults;
 
-        shiftResults = shift_C(getReg(pContext, m), SRType_LSL, decodedShift.n, pContext->xPSR & APSR_C);
-        setReg(pContext, d, shiftResults.result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZC;
-            if (shiftResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (shiftResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (shiftResults.carryOut)
-                pContext->xPSR |= APSR_C;
-        }
+    shiftResults = shift_C(getReg(pContext, m), SRType_LSL, decodedShift.n, pContext->xPSR & APSR_C);
+    setReg(pContext, d, shiftResults.result);
+    if (setFlags)
+    {
+        pContext->xPSR &= ~APSR_NZC;
+        if (shiftResults.result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (shiftResults.result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (shiftResults.carryOut)
+            pContext->xPSR |= APSR_C;
     }
     return PINKYSIM_STEP_OK;
-}
-
-static int conditionPassedForNonBranchInstr(const PinkySimContext* pContext)
-{
-    /* In ARMv6-M, only branches can be conditional so always pass. */
-    return TRUE;
 }
 
 static int inITBlock(const PinkySimContext* pContext)
@@ -482,93 +472,84 @@ static void setReg(PinkySimContext* pContext, uint32_t reg, uint32_t value)
 
 static int lsrImmediate(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        imm5 = (instr & (0x1F << 6)) >> 6;
-        uint32_t        d = instr & 0x7;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        DecodedImmShift decodedShift = decodeImmshift(0x1, imm5);
-        ShiftResults    shiftResults;
+    uint32_t        imm5 = (instr & (0x1F << 6)) >> 6;
+    uint32_t        d = instr & 0x7;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    DecodedImmShift decodedShift = decodeImmshift(0x1, imm5);
+    ShiftResults    shiftResults;
 
-        shiftResults = shift_C(getReg(pContext, m), SRType_LSR, decodedShift.n, pContext->xPSR & APSR_C);
-        setReg(pContext, d, shiftResults.result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZC;
-            // UNDONE: The N flag is always cleared from a logical right shift.  Improve coverage by removing code.
-            //if (shiftResults.result & (1 << 31))
-            //    pContext->xPSR |= APSR_N;
-            if (shiftResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (shiftResults.carryOut)
-                pContext->xPSR |= APSR_C;
-        }
+    shiftResults = shift_C(getReg(pContext, m), SRType_LSR, decodedShift.n, pContext->xPSR & APSR_C);
+    setReg(pContext, d, shiftResults.result);
+    if (setFlags)
+    {
+        pContext->xPSR &= ~APSR_NZC;
+        // UNDONE: The N flag is always cleared from a logical right shift.  Improve coverage by removing code.
+        //if (shiftResults.result & (1 << 31))
+        //    pContext->xPSR |= APSR_N;
+        if (shiftResults.result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (shiftResults.carryOut)
+            pContext->xPSR |= APSR_C;
     }
     return PINKYSIM_STEP_OK;
 }
 
 static int asrImmediate(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        imm5 = (instr & (0x1F << 6)) >> 6;
-        uint32_t        d = instr & 0x7;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        DecodedImmShift decodedShift = decodeImmshift(0x2, imm5);
-        ShiftResults    shiftResults;
+    uint32_t        imm5 = (instr & (0x1F << 6)) >> 6;
+    uint32_t        d = instr & 0x7;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    DecodedImmShift decodedShift = decodeImmshift(0x2, imm5);
+    ShiftResults    shiftResults;
 
-        shiftResults = shift_C(getReg(pContext, m), SRType_ASR, decodedShift.n, pContext->xPSR & APSR_C);
-        setReg(pContext, d, shiftResults.result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZC;
-            if (shiftResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (shiftResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (shiftResults.carryOut)
-                pContext->xPSR |= APSR_C;
-        }
+    shiftResults = shift_C(getReg(pContext, m), SRType_ASR, decodedShift.n, pContext->xPSR & APSR_C);
+    setReg(pContext, d, shiftResults.result);
+    if (setFlags)
+    {
+        pContext->xPSR &= ~APSR_NZC;
+        if (shiftResults.result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (shiftResults.result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (shiftResults.carryOut)
+            pContext->xPSR |= APSR_C;
     }
     return PINKYSIM_STEP_OK;
 }
 
 static int addRegisterT1(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        m = (instr & (0x7 << 6)) >> 6;
-        int             setFlags = !inITBlock(pContext);
-        AddResults      addResults;
-        
-        addResults = addWithCarry(getReg(pContext, n), getReg(pContext, m), 0);
-        // UNDONE: Only the T2 encoding can modify R15 (PC).
+    uint32_t        d = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        m = (instr & (0x7 << 6)) >> 6;
+    int             setFlags = !inITBlock(pContext);
+    AddResults      addResults;
+    
+    addResults = addWithCarry(getReg(pContext, n), getReg(pContext, m), 0);
+    // UNDONE: Only the T2 encoding can modify R15 (PC).
 #ifdef UNDONE
-        if (d == 15)
-        {
-            aluWritePC(pContext, addResults.result);
-        }
-        else
+    if (d == 15)
+    {
+        aluWritePC(pContext, addResults.result);
+    }
+    else
 #endif // UNDONE
-        {
-            setReg(pContext, d, addResults.result);
+    {
+        setReg(pContext, d, addResults.result);
 
-            if (setFlags)
-            {
-                pContext->xPSR &= ~APSR_NZCV;
-                if (addResults.result & (1 << 31))
-                    pContext->xPSR |= APSR_N;
-                if (addResults.result == 0)
-                    pContext->xPSR |= APSR_Z;
-                if (addResults.carryOut)
-                    pContext->xPSR |= APSR_C;
-                if (addResults.overflow)
-                    pContext->xPSR |= APSR_V;
-            }
+        if (setFlags)
+        {
+            pContext->xPSR &= ~APSR_NZCV;
+            if (addResults.result & (1 << 31))
+                pContext->xPSR |= APSR_N;
+            if (addResults.result == 0)
+                pContext->xPSR |= APSR_Z;
+            if (addResults.carryOut)
+                pContext->xPSR |= APSR_C;
+            if (addResults.overflow)
+                pContext->xPSR |= APSR_V;
         }
     }
     return PINKYSIM_STEP_OK;
@@ -590,124 +571,16 @@ static AddResults addWithCarry(uint32_t x, uint32_t y, uint32_t carryInAsBit)
 
 static int subRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
+    uint32_t        d = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        m = (instr & (0x7 << 6)) >> 6;
+    int             setFlags = !inITBlock(pContext);
+    AddResults      addResults;
+    
+    addResults = addWithCarry(getReg(pContext, n), ~getReg(pContext, m), 1);
+    setReg(pContext, d, addResults.result);
+    if (setFlags)
     {
-        uint32_t        d = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        m = (instr & (0x7 << 6)) >> 6;
-        int             setFlags = !inITBlock(pContext);
-        AddResults      addResults;
-        
-        addResults = addWithCarry(getReg(pContext, n), ~getReg(pContext, m), 1);
-        setReg(pContext, d, addResults.result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZCV;
-            if (addResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (addResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (addResults.carryOut)
-                pContext->xPSR |= APSR_C;
-            if (addResults.overflow)
-                pContext->xPSR |= APSR_V;
-        }
-    }
-    return PINKYSIM_STEP_OK;
-}
-
-static int addImmediateT1(PinkySimContext* pContext, uint16_t instr)
-{
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        imm32 = (instr & (0x7 << 6)) >> 6;
-        int             setFlags = !inITBlock(pContext);
-        AddResults      addResults;
-        
-        addResults = addWithCarry(getReg(pContext, n), imm32, 0);
-        setReg(pContext, d, addResults.result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZCV;
-            if (addResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (addResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (addResults.carryOut)
-                pContext->xPSR |= APSR_C;
-            if (addResults.overflow)
-                pContext->xPSR |= APSR_V;
-        }
-    }
-    return PINKYSIM_STEP_OK;
-}
-
-static int subImmediateT1(PinkySimContext* pContext, uint16_t instr)
-{
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        imm32 = (instr & (0x7 << 6)) >> 6;
-        int             setFlags = !inITBlock(pContext);
-        AddResults      addResults;
-        
-        addResults = addWithCarry(getReg(pContext, n), ~imm32, 1);
-        setReg(pContext, d, addResults.result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZCV;
-            if (addResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (addResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (addResults.carryOut)
-                pContext->xPSR |= APSR_C;
-            if (addResults.overflow)
-                pContext->xPSR |= APSR_V;
-        }
-    }
-    return PINKYSIM_STEP_OK;
-}
-
-static int movImmediate(PinkySimContext* pContext, uint16_t instr)
-{
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = (instr & (0x7 << 8)) >> 8;
-        int             setFlags = !inITBlock(pContext);
-        uint32_t        imm32 = instr & 0xFF;
-        uint32_t        carry = pContext->xPSR & APSR_C;
-        uint32_t        result = imm32;
-
-        setReg(pContext, d, result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZC;
-            
-            // UNDONE: Can't move negative values with MOV immedate (only immediates 0 - 255).
-            //if (result & (1 << 31))
-            //    pContext->xPSR |= APSR_N;
-            if (result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (carry)
-                pContext->xPSR |= APSR_C;
-        }
-    }
-    return PINKYSIM_STEP_OK;
-}
-
-static int cmpImmediate(PinkySimContext* pContext, uint16_t instr)
-{
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        n = (instr & (0x7 << 8)) >> 8;
-        uint32_t        imm32 = instr & 0xFF;
-        AddResults      addResults;
-        
-        addResults = addWithCarry(getReg(pContext, n), ~imm32, 1);
         pContext->xPSR &= ~APSR_NZCV;
         if (addResults.result & (1 << 31))
             pContext->xPSR |= APSR_N;
@@ -721,58 +594,145 @@ static int cmpImmediate(PinkySimContext* pContext, uint16_t instr)
     return PINKYSIM_STEP_OK;
 }
 
+static int addImmediateT1(PinkySimContext* pContext, uint16_t instr)
+{
+    uint32_t        d = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        imm32 = (instr & (0x7 << 6)) >> 6;
+    int             setFlags = !inITBlock(pContext);
+    AddResults      addResults;
+    
+    addResults = addWithCarry(getReg(pContext, n), imm32, 0);
+    setReg(pContext, d, addResults.result);
+    if (setFlags)
+    {
+        pContext->xPSR &= ~APSR_NZCV;
+        if (addResults.result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (addResults.result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (addResults.carryOut)
+            pContext->xPSR |= APSR_C;
+        if (addResults.overflow)
+            pContext->xPSR |= APSR_V;
+    }
+    return PINKYSIM_STEP_OK;
+}
+
+static int subImmediateT1(PinkySimContext* pContext, uint16_t instr)
+{
+    uint32_t        d = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        imm32 = (instr & (0x7 << 6)) >> 6;
+    int             setFlags = !inITBlock(pContext);
+    AddResults      addResults;
+    
+    addResults = addWithCarry(getReg(pContext, n), ~imm32, 1);
+    setReg(pContext, d, addResults.result);
+    if (setFlags)
+    {
+        pContext->xPSR &= ~APSR_NZCV;
+        if (addResults.result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (addResults.result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (addResults.carryOut)
+            pContext->xPSR |= APSR_C;
+        if (addResults.overflow)
+            pContext->xPSR |= APSR_V;
+    }
+    return PINKYSIM_STEP_OK;
+}
+
+static int movImmediate(PinkySimContext* pContext, uint16_t instr)
+{
+    uint32_t        d = (instr & (0x7 << 8)) >> 8;
+    int             setFlags = !inITBlock(pContext);
+    uint32_t        imm32 = instr & 0xFF;
+    uint32_t        carry = pContext->xPSR & APSR_C;
+    uint32_t        result = imm32;
+
+    setReg(pContext, d, result);
+    if (setFlags)
+    {
+        pContext->xPSR &= ~APSR_NZC;
+        
+        // UNDONE: Can't move negative values with MOV immedate (only immediates 0 - 255).
+        //if (result & (1 << 31))
+        //    pContext->xPSR |= APSR_N;
+        if (result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (carry)
+            pContext->xPSR |= APSR_C;
+    }
+    return PINKYSIM_STEP_OK;
+}
+
+static int cmpImmediate(PinkySimContext* pContext, uint16_t instr)
+{
+    uint32_t        n = (instr & (0x7 << 8)) >> 8;
+    uint32_t        imm32 = instr & 0xFF;
+    AddResults      addResults;
+    
+    addResults = addWithCarry(getReg(pContext, n), ~imm32, 1);
+    pContext->xPSR &= ~APSR_NZCV;
+    if (addResults.result & (1 << 31))
+        pContext->xPSR |= APSR_N;
+    if (addResults.result == 0)
+        pContext->xPSR |= APSR_Z;
+    if (addResults.carryOut)
+        pContext->xPSR |= APSR_C;
+    if (addResults.overflow)
+        pContext->xPSR |= APSR_V;
+    return PINKYSIM_STEP_OK;
+}
+
 static int addImmediateT2(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
+    uint32_t        d = (instr & (0x7 << 8)) >> 8;
+    uint32_t        n = d;
+    int             setFlags = !inITBlock(pContext);
+    uint32_t        imm32 = instr & 0xFF;
+    AddResults      addResults;
+    
+    addResults = addWithCarry(getReg(pContext, n), imm32, 0);
+    setReg(pContext, d, addResults.result);
+    if (setFlags)
     {
-        uint32_t        d = (instr & (0x7 << 8)) >> 8;
-        uint32_t        n = d;
-        int             setFlags = !inITBlock(pContext);
-        uint32_t        imm32 = instr & 0xFF;
-        AddResults      addResults;
-        
-        addResults = addWithCarry(getReg(pContext, n), imm32, 0);
-        setReg(pContext, d, addResults.result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZCV;
-            if (addResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (addResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (addResults.carryOut)
-                pContext->xPSR |= APSR_C;
-            if (addResults.overflow)
-                pContext->xPSR |= APSR_V;
-        }
+        pContext->xPSR &= ~APSR_NZCV;
+        if (addResults.result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (addResults.result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (addResults.carryOut)
+            pContext->xPSR |= APSR_C;
+        if (addResults.overflow)
+            pContext->xPSR |= APSR_V;
     }
     return PINKYSIM_STEP_OK;
 }
 
 static int subImmediateT2(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
+    uint32_t        d = (instr & (0x7 << 8)) >> 8;
+    uint32_t        n = d;
+    int             setFlags = !inITBlock(pContext);
+    uint32_t        imm32 = instr & 0xFF;
+    AddResults      addResults;
+    
+    addResults = addWithCarry(getReg(pContext, n), ~imm32, 1);
+    setReg(pContext, d, addResults.result);
+    if (setFlags)
     {
-        uint32_t        d = (instr & (0x7 << 8)) >> 8;
-        uint32_t        n = d;
-        int             setFlags = !inITBlock(pContext);
-        uint32_t        imm32 = instr & 0xFF;
-        AddResults      addResults;
-        
-        addResults = addWithCarry(getReg(pContext, n), ~imm32, 1);
-        setReg(pContext, d, addResults.result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZCV;
-            if (addResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (addResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (addResults.carryOut)
-                pContext->xPSR |= APSR_C;
-            if (addResults.overflow)
-                pContext->xPSR |= APSR_V;
-        }
+        pContext->xPSR &= ~APSR_NZCV;
+        if (addResults.result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (addResults.result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (addResults.carryOut)
+            pContext->xPSR |= APSR_C;
+        if (addResults.overflow)
+            pContext->xPSR |= APSR_V;
     }
     return PINKYSIM_STEP_OK;
 }
@@ -837,229 +797,16 @@ static int dataProcessing(PinkySimContext* pContext, uint16_t instr)
 
 static int andRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
+    uint32_t        d = instr & 0x7;
+    uint32_t        n = d;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    uint32_t        result;
+    
+    result = getReg(pContext, n) & getReg(pContext, m);
+    setReg(pContext, d, result);
+    if (setFlags)
     {
-        uint32_t        d = instr & 0x7;
-        uint32_t        n = d;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        uint32_t        result;
-        
-        result = getReg(pContext, n) & getReg(pContext, m);
-        setReg(pContext, d, result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZ;
-            if (result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (result == 0)
-                pContext->xPSR |= APSR_Z;
-        }
-    }
-    return PINKYSIM_STEP_OK;
-}
-
-static int eorRegister(PinkySimContext* pContext, uint16_t instr)
-{
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        n = d;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        uint32_t        result;
-        
-        result = getReg(pContext, n) ^ getReg(pContext, m);
-        setReg(pContext, d, result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZ;
-            if (result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (result == 0)
-                pContext->xPSR |= APSR_Z;
-        }
-    }
-    return PINKYSIM_STEP_OK;
-}
-
-static int lslRegister(PinkySimContext* pContext, uint16_t instr)
-{
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        n = d;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        uint32_t        shiftN;
-        ShiftResults    shiftResults;
-
-        shiftN = getReg(pContext, m) & 0xFF;
-        shiftResults = shift_C(getReg(pContext, n), SRType_LSL, shiftN, pContext->xPSR & APSR_C);
-        setReg(pContext, d, shiftResults.result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZC;
-            if (shiftResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (shiftResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (shiftResults.carryOut)
-                pContext->xPSR |= APSR_C;
-        }
-    }
-    return PINKYSIM_STEP_OK;
-}
-
-static int lsrRegister(PinkySimContext* pContext, uint16_t instr)
-{
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        n = d;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        uint32_t        shiftN;
-        ShiftResults    shiftResults;
-
-        shiftN = getReg(pContext, m) & 0xFF;
-        shiftResults = shift_C(getReg(pContext, n), SRType_LSR, shiftN, pContext->xPSR & APSR_C);
-        setReg(pContext, d, shiftResults.result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZC;
-            if (shiftResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (shiftResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (shiftResults.carryOut)
-                pContext->xPSR |= APSR_C;
-        }
-    }
-    return PINKYSIM_STEP_OK;
-}
-
-static int asrRegister(PinkySimContext* pContext, uint16_t instr)
-{
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        n = d;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        uint32_t        shiftN;
-        ShiftResults    shiftResults;
-
-        shiftN = getReg(pContext, m) & 0xFF;
-        shiftResults = shift_C(getReg(pContext, n), SRType_ASR, shiftN, pContext->xPSR & APSR_C);
-        setReg(pContext, d, shiftResults.result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZC;
-            if (shiftResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (shiftResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (shiftResults.carryOut)
-                pContext->xPSR |= APSR_C;
-        }
-    }
-    return PINKYSIM_STEP_OK;
-}
-
-static int adcRegister(PinkySimContext* pContext, uint16_t instr)
-{
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        n = d;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        AddResults      addResults;
-        
-        addResults = addWithCarry(getReg(pContext, n), getReg(pContext, m), pContext->xPSR & APSR_C);
-        setReg(pContext, d, addResults.result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZCV;
-            if (addResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (addResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (addResults.carryOut)
-                pContext->xPSR |= APSR_C;
-            if (addResults.overflow)
-                pContext->xPSR |= APSR_V;
-        }
-    }
-    return PINKYSIM_STEP_OK;
-}
-
-static int sbcRegister(PinkySimContext* pContext, uint16_t instr)
-{
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        n = d;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        AddResults      addResults;
-        
-        addResults = addWithCarry(getReg(pContext, n), ~getReg(pContext, m), pContext->xPSR & APSR_C);
-        setReg(pContext, d, addResults.result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZCV;
-            if (addResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (addResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (addResults.carryOut)
-                pContext->xPSR |= APSR_C;
-            if (addResults.overflow)
-                pContext->xPSR |= APSR_V;
-        }
-    }
-    return PINKYSIM_STEP_OK;
-}
-
-static int rorRegister(PinkySimContext* pContext, uint16_t instr)
-{
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        n = d;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        uint32_t        shiftN;
-        ShiftResults    shiftResults;
-
-        shiftN = getReg(pContext, m) & 0xFF;
-        shiftResults = shift_C(getReg(pContext, n), SRType_ROR, shiftN, pContext->xPSR & APSR_C);
-        setReg(pContext, d, shiftResults.result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZC;
-            if (shiftResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (shiftResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (shiftResults.carryOut)
-                pContext->xPSR |= APSR_C;
-        }
-    }
-    return PINKYSIM_STEP_OK;
-}
-
-static int tstRegister(PinkySimContext* pContext, uint16_t instr)
-{
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        n = instr & 0x7;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        uint32_t        result;
-        
-        result = getReg(pContext, n) & getReg(pContext, m);
         pContext->xPSR &= ~APSR_NZ;
         if (result & (1 << 31))
             pContext->xPSR |= APSR_N;
@@ -1069,170 +816,335 @@ static int tstRegister(PinkySimContext* pContext, uint16_t instr)
     return PINKYSIM_STEP_OK;
 }
 
+static int eorRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    uint32_t        d = instr & 0x7;
+    uint32_t        n = d;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    uint32_t        result;
+    
+    result = getReg(pContext, n) ^ getReg(pContext, m);
+    setReg(pContext, d, result);
+    if (setFlags)
+    {
+        pContext->xPSR &= ~APSR_NZ;
+        if (result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (result == 0)
+            pContext->xPSR |= APSR_Z;
+    }
+    return PINKYSIM_STEP_OK;
+}
+
+static int lslRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    uint32_t        d = instr & 0x7;
+    uint32_t        n = d;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    uint32_t        shiftN;
+    ShiftResults    shiftResults;
+
+    shiftN = getReg(pContext, m) & 0xFF;
+    shiftResults = shift_C(getReg(pContext, n), SRType_LSL, shiftN, pContext->xPSR & APSR_C);
+    setReg(pContext, d, shiftResults.result);
+    if (setFlags)
+    {
+        pContext->xPSR &= ~APSR_NZC;
+        if (shiftResults.result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (shiftResults.result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (shiftResults.carryOut)
+            pContext->xPSR |= APSR_C;
+    }
+    return PINKYSIM_STEP_OK;
+}
+
+static int lsrRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    uint32_t        d = instr & 0x7;
+    uint32_t        n = d;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    uint32_t        shiftN;
+    ShiftResults    shiftResults;
+
+    shiftN = getReg(pContext, m) & 0xFF;
+    shiftResults = shift_C(getReg(pContext, n), SRType_LSR, shiftN, pContext->xPSR & APSR_C);
+    setReg(pContext, d, shiftResults.result);
+    if (setFlags)
+    {
+        pContext->xPSR &= ~APSR_NZC;
+        if (shiftResults.result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (shiftResults.result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (shiftResults.carryOut)
+            pContext->xPSR |= APSR_C;
+    }
+    return PINKYSIM_STEP_OK;
+}
+
+static int asrRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    uint32_t        d = instr & 0x7;
+    uint32_t        n = d;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    uint32_t        shiftN;
+    ShiftResults    shiftResults;
+
+    shiftN = getReg(pContext, m) & 0xFF;
+    shiftResults = shift_C(getReg(pContext, n), SRType_ASR, shiftN, pContext->xPSR & APSR_C);
+    setReg(pContext, d, shiftResults.result);
+    if (setFlags)
+    {
+        pContext->xPSR &= ~APSR_NZC;
+        if (shiftResults.result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (shiftResults.result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (shiftResults.carryOut)
+            pContext->xPSR |= APSR_C;
+    }
+    return PINKYSIM_STEP_OK;
+}
+
+static int adcRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    uint32_t        d = instr & 0x7;
+    uint32_t        n = d;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    AddResults      addResults;
+    
+    addResults = addWithCarry(getReg(pContext, n), getReg(pContext, m), pContext->xPSR & APSR_C);
+    setReg(pContext, d, addResults.result);
+    if (setFlags)
+    {
+        pContext->xPSR &= ~APSR_NZCV;
+        if (addResults.result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (addResults.result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (addResults.carryOut)
+            pContext->xPSR |= APSR_C;
+        if (addResults.overflow)
+            pContext->xPSR |= APSR_V;
+    }
+    return PINKYSIM_STEP_OK;
+}
+
+static int sbcRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    uint32_t        d = instr & 0x7;
+    uint32_t        n = d;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    AddResults      addResults;
+    
+    addResults = addWithCarry(getReg(pContext, n), ~getReg(pContext, m), pContext->xPSR & APSR_C);
+    setReg(pContext, d, addResults.result);
+    if (setFlags)
+    {
+        pContext->xPSR &= ~APSR_NZCV;
+        if (addResults.result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (addResults.result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (addResults.carryOut)
+            pContext->xPSR |= APSR_C;
+        if (addResults.overflow)
+            pContext->xPSR |= APSR_V;
+    }
+    return PINKYSIM_STEP_OK;
+}
+
+static int rorRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    uint32_t        d = instr & 0x7;
+    uint32_t        n = d;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    uint32_t        shiftN;
+    ShiftResults    shiftResults;
+
+    shiftN = getReg(pContext, m) & 0xFF;
+    shiftResults = shift_C(getReg(pContext, n), SRType_ROR, shiftN, pContext->xPSR & APSR_C);
+    setReg(pContext, d, shiftResults.result);
+    if (setFlags)
+    {
+        pContext->xPSR &= ~APSR_NZC;
+        if (shiftResults.result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (shiftResults.result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (shiftResults.carryOut)
+            pContext->xPSR |= APSR_C;
+    }
+    return PINKYSIM_STEP_OK;
+}
+
+static int tstRegister(PinkySimContext* pContext, uint16_t instr)
+{
+    uint32_t        n = instr & 0x7;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    uint32_t        result;
+    
+    result = getReg(pContext, n) & getReg(pContext, m);
+    pContext->xPSR &= ~APSR_NZ;
+    if (result & (1 << 31))
+        pContext->xPSR |= APSR_N;
+    if (result == 0)
+        pContext->xPSR |= APSR_Z;
+    return PINKYSIM_STEP_OK;
+}
+
 static int rsbRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
+    uint32_t        d = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    uint32_t        imm32 = 0;
+    AddResults      addResults;
+    
+    addResults = addWithCarry(~getReg(pContext, n), imm32, 1);
+    setReg(pContext, d, addResults.result);
+    if (setFlags)
     {
-        uint32_t        d = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        uint32_t        imm32 = 0;
-        AddResults      addResults;
-        
-        addResults = addWithCarry(~getReg(pContext, n), imm32, 1);
-        setReg(pContext, d, addResults.result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZCV;
-            if (addResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (addResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (addResults.carryOut)
-                pContext->xPSR |= APSR_C;
-            if (addResults.overflow)
-                pContext->xPSR |= APSR_V;
-        }
+        pContext->xPSR &= ~APSR_NZCV;
+        if (addResults.result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (addResults.result == 0)
+            pContext->xPSR |= APSR_Z;
+        if (addResults.carryOut)
+            pContext->xPSR |= APSR_C;
+        if (addResults.overflow)
+            pContext->xPSR |= APSR_V;
     }
     return PINKYSIM_STEP_OK;
 }
 
 static int cmpRegisterT1(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        n = instr & 0x7;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        AddResults      addResults;
-        
-        addResults = addWithCarry(getReg(pContext, n), ~getReg(pContext, m), 1);
-        pContext->xPSR &= ~APSR_NZCV;
-        if (addResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (addResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (addResults.carryOut)
-            pContext->xPSR |= APSR_C;
-        if (addResults.overflow)
-            pContext->xPSR |= APSR_V;
-    }
+    uint32_t        n = instr & 0x7;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    AddResults      addResults;
+    
+    addResults = addWithCarry(getReg(pContext, n), ~getReg(pContext, m), 1);
+    pContext->xPSR &= ~APSR_NZCV;
+    if (addResults.result & (1 << 31))
+        pContext->xPSR |= APSR_N;
+    if (addResults.result == 0)
+        pContext->xPSR |= APSR_Z;
+    if (addResults.carryOut)
+        pContext->xPSR |= APSR_C;
+    if (addResults.overflow)
+        pContext->xPSR |= APSR_V;
     return PINKYSIM_STEP_OK;
 }
 
 static int cmnRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        n = instr & 0x7;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        AddResults      addResults;
-        
-        addResults = addWithCarry(getReg(pContext, n), getReg(pContext, m), 0);
-        pContext->xPSR &= ~APSR_NZCV;
-        if (addResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (addResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (addResults.carryOut)
-            pContext->xPSR |= APSR_C;
-        if (addResults.overflow)
-            pContext->xPSR |= APSR_V;
-    }
+    uint32_t        n = instr & 0x7;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    AddResults      addResults;
+    
+    addResults = addWithCarry(getReg(pContext, n), getReg(pContext, m), 0);
+    pContext->xPSR &= ~APSR_NZCV;
+    if (addResults.result & (1 << 31))
+        pContext->xPSR |= APSR_N;
+    if (addResults.result == 0)
+        pContext->xPSR |= APSR_Z;
+    if (addResults.carryOut)
+        pContext->xPSR |= APSR_C;
+    if (addResults.overflow)
+        pContext->xPSR |= APSR_V;
     return PINKYSIM_STEP_OK;
 }
 
 static int orrRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
+    uint32_t        d = instr & 0x7;
+    uint32_t        n = d;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    uint32_t        result;
+    
+    result = getReg(pContext, n) | getReg(pContext, m);
+    setReg(pContext, d, result);
+    if (setFlags)
     {
-        uint32_t        d = instr & 0x7;
-        uint32_t        n = d;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        uint32_t        result;
-        
-        result = getReg(pContext, n) | getReg(pContext, m);
-        setReg(pContext, d, result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZ;
-            if (result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (result == 0)
-                pContext->xPSR |= APSR_Z;
-        }
+        pContext->xPSR &= ~APSR_NZ;
+        if (result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (result == 0)
+            pContext->xPSR |= APSR_Z;
     }
     return PINKYSIM_STEP_OK;
 }
 
 static int mulRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
+    uint32_t        d = instr & 0x7;
+    uint32_t        m = d;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    uint32_t        operand1 = getReg(pContext, n);
+    uint32_t        operand2 = getReg(pContext, m);
+    uint32_t        result = operand1 * operand2;
+    
+    setReg(pContext, d, result);
+    if (setFlags)
     {
-        uint32_t        d = instr & 0x7;
-        uint32_t        m = d;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        uint32_t        operand1 = getReg(pContext, n);
-        uint32_t        operand2 = getReg(pContext, m);
-        uint32_t        result = operand1 * operand2;
-        
-        setReg(pContext, d, result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZ;
-            if (result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (result == 0)
-                pContext->xPSR |= APSR_Z;
-        }
+        pContext->xPSR &= ~APSR_NZ;
+        if (result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (result == 0)
+            pContext->xPSR |= APSR_Z;
     }
     return PINKYSIM_STEP_OK;
 }
 
 static int bicRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
+    uint32_t        d = instr & 0x7;
+    uint32_t        n = d;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    uint32_t        result;
+    
+    result = getReg(pContext, n) & ~getReg(pContext, m);
+    setReg(pContext, d, result);
+    if (setFlags)
     {
-        uint32_t        d = instr & 0x7;
-        uint32_t        n = d;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        uint32_t        result;
-        
-        result = getReg(pContext, n) & ~getReg(pContext, m);
-        setReg(pContext, d, result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZ;
-            if (result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (result == 0)
-                pContext->xPSR |= APSR_Z;
-        }
+        pContext->xPSR &= ~APSR_NZ;
+        if (result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (result == 0)
+            pContext->xPSR |= APSR_Z;
     }
     return PINKYSIM_STEP_OK;
 }
 
 static int mvnRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
+    uint32_t        d = instr & 0x7;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    int             setFlags = !inITBlock(pContext);
+    uint32_t        result;
+    
+    result = ~getReg(pContext, m);
+    setReg(pContext, d, result);
+    if (setFlags)
     {
-        uint32_t        d = instr & 0x7;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        int             setFlags = !inITBlock(pContext);
-        uint32_t        result;
-        
-        result = ~getReg(pContext, m);
-        setReg(pContext, d, result);
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZ;
-            if (result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (result == 0)
-                pContext->xPSR |= APSR_Z;
-        }
+        pContext->xPSR &= ~APSR_NZ;
+        if (result & (1 << 31))
+            pContext->xPSR |= APSR_N;
+        if (result == 0)
+            pContext->xPSR |= APSR_Z;
     }
     return PINKYSIM_STEP_OK;
 }
@@ -1258,42 +1170,39 @@ static int specialDataAndBranchExchange(PinkySimContext* pContext, uint16_t inst
 
 static int addRegisterT2(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = ((instr & (1 << 7)) >> 4) | (instr & 0x7);
-        uint32_t        n = d;
-        uint32_t        m = (instr & (0xF << 3)) >> 3;
-        // UNDONE: Not required for this encoding.
-        //int             setFlags = FALSE;
-        AddResults      addResults;
+    uint32_t        d = ((instr & (1 << 7)) >> 4) | (instr & 0x7);
+    uint32_t        n = d;
+    uint32_t        m = (instr & (0xF << 3)) >> 3;
+    // UNDONE: Not required for this encoding.
+    //int             setFlags = FALSE;
+    AddResults      addResults;
 
-        if (d == 15 && m == 15)
-            __throw(unpredictableException);
-        
-        addResults = addWithCarry(getReg(pContext, n), getReg(pContext, m), 0);
-        if (d == 15)
-        {
-            aluWritePC(pContext, addResults.result);
-        }
-        else
-        {
-            setReg(pContext, d, addResults.result);
-            // UNDONE: setFlags is forced to FALSE for this encoding.
+    if (d == 15 && m == 15)
+        __throw(unpredictableException);
+    
+    addResults = addWithCarry(getReg(pContext, n), getReg(pContext, m), 0);
+    if (d == 15)
+    {
+        aluWritePC(pContext, addResults.result);
+    }
+    else
+    {
+        setReg(pContext, d, addResults.result);
+        // UNDONE: setFlags is forced to FALSE for this encoding.
 #ifdef UNDONE
-            if (setFlags)
-            {
-                pContext->xPSR &= ~APSR_NZCV;
-                if (addResults.result & (1 << 31))
-                    pContext->xPSR |= APSR_N;
-                if (addResults.result == 0)
-                    pContext->xPSR |= APSR_Z;
-                if (addResults.carryOut)
-                    pContext->xPSR |= APSR_C;
-                if (addResults.overflow)
-                    pContext->xPSR |= APSR_V;
-            }
-#endif // UNDONE
+        if (setFlags)
+        {
+            pContext->xPSR &= ~APSR_NZCV;
+            if (addResults.result & (1 << 31))
+                pContext->xPSR |= APSR_N;
+            if (addResults.result == 0)
+                pContext->xPSR |= APSR_Z;
+            if (addResults.carryOut)
+                pContext->xPSR |= APSR_C;
+            if (addResults.overflow)
+                pContext->xPSR |= APSR_V;
         }
+#endif // UNDONE
     }
     return PINKYSIM_STEP_OK;
 }
@@ -1315,80 +1224,71 @@ static void branchTo(PinkySimContext* pContext, uint32_t address)
 
 static int cmpRegisterT2(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        n = ((instr & (1 << 7)) >> 4) | (instr & 0x7);
-        uint32_t        m = (instr & (0xF << 3)) >> 3;
-        AddResults      addResults;
-        
-        if (n == 15 || m == 15)
-            __throw(unpredictableException);
-        
-        addResults = addWithCarry(getReg(pContext, n), ~getReg(pContext, m), 1);
-        pContext->xPSR &= ~APSR_NZCV;
-        if (addResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (addResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (addResults.carryOut)
-            pContext->xPSR |= APSR_C;
-        if (addResults.overflow)
-            pContext->xPSR |= APSR_V;
-    }
+    uint32_t        n = ((instr & (1 << 7)) >> 4) | (instr & 0x7);
+    uint32_t        m = (instr & (0xF << 3)) >> 3;
+    AddResults      addResults;
+    
+    if (n == 15 || m == 15)
+        __throw(unpredictableException);
+    
+    addResults = addWithCarry(getReg(pContext, n), ~getReg(pContext, m), 1);
+    pContext->xPSR &= ~APSR_NZCV;
+    if (addResults.result & (1 << 31))
+        pContext->xPSR |= APSR_N;
+    if (addResults.result == 0)
+        pContext->xPSR |= APSR_Z;
+    if (addResults.carryOut)
+        pContext->xPSR |= APSR_C;
+    if (addResults.overflow)
+        pContext->xPSR |= APSR_V;
     return PINKYSIM_STEP_OK;
 }
 
 static int movRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = ((instr & (1 << 7)) >> 4) | (instr & 0x7);
-        uint32_t        m = (instr & (0xF << 3)) >> 3;
-        // UNDONE: Not required for this encoding.
-        //int             setFlags = FALSE;
-        uint32_t        result;
+    uint32_t        d = ((instr & (1 << 7)) >> 4) | (instr & 0x7);
+    uint32_t        m = (instr & (0xF << 3)) >> 3;
+    // UNDONE: Not required for this encoding.
+    //int             setFlags = FALSE;
+    uint32_t        result;
 
-        result = getReg(pContext, m);
-        if (d == 15)
-        {
-            aluWritePC(pContext, result);
-        }
-        else
-        {
-            setReg(pContext, d, result);
-            // UNDONE: setFlags is forced to FALSE for this encoding.
+    result = getReg(pContext, m);
+    if (d == 15)
+    {
+        aluWritePC(pContext, result);
+    }
+    else
+    {
+        setReg(pContext, d, result);
+        // UNDONE: setFlags is forced to FALSE for this encoding.
 #ifdef UNDONE
-            if (setFlags)
-            {
-                pContext->xPSR &= ~APSR_NZCV;
-                if (addResults.result & (1 << 31))
-                    pContext->xPSR |= APSR_N;
-                if (addResults.result == 0)
-                    pContext->xPSR |= APSR_Z;
-                if (addResults.carryOut)
-                    pContext->xPSR |= APSR_C;
-                if (addResults.overflow)
-                    pContext->xPSR |= APSR_V;
-            }
-#endif // UNDONE
+        if (setFlags)
+        {
+            pContext->xPSR &= ~APSR_NZCV;
+            if (addResults.result & (1 << 31))
+                pContext->xPSR |= APSR_N;
+            if (addResults.result == 0)
+                pContext->xPSR |= APSR_Z;
+            if (addResults.carryOut)
+                pContext->xPSR |= APSR_C;
+            if (addResults.overflow)
+                pContext->xPSR |= APSR_V;
         }
+#endif // UNDONE
     }
     return PINKYSIM_STEP_OK;
 }
 
 static int bx(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        m = (instr & (0xF << 3)) >> 3;
-        
-        if ((instr & 0x7) != 0x0)
-            __throw(unpredictableException);
-        if (m == 15)
-            __throw(unpredictableException);
-        
-        bxWritePC(pContext, getReg(pContext, m));
-    }
+    uint32_t        m = (instr & (0xF << 3)) >> 3;
+    
+    if ((instr & 0x7) != 0x0)
+        __throw(unpredictableException);
+    if (m == 15)
+        __throw(unpredictableException);
+    
+    bxWritePC(pContext, getReg(pContext, m));
     return PINKYSIM_STEP_OK;
 }
 
@@ -1406,22 +1306,19 @@ static void bxWritePC(PinkySimContext* pContext, uint32_t address)
 
 static int blx(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t m = (instr & (0xF << 3)) >> 3;
-        uint32_t target;
-        uint32_t nextInstrAddr;
-        
-        if ((instr & 0x7) != 0x0)
-            __throw(unpredictableException);
-        if (m == 15)
-            __throw(unpredictableException);
-        
-        target = getReg(pContext, m);
-        nextInstrAddr = getReg(pContext, PC) - 2;
-        setReg(pContext, LR, nextInstrAddr | 1);
-        blxWritePC(pContext, target);
-    }
+    uint32_t m = (instr & (0xF << 3)) >> 3;
+    uint32_t target;
+    uint32_t nextInstrAddr;
+    
+    if ((instr & 0x7) != 0x0)
+        __throw(unpredictableException);
+    if (m == 15)
+        __throw(unpredictableException);
+    
+    target = getReg(pContext, m);
+    nextInstrAddr = getReg(pContext, PC) - 2;
+    setReg(pContext, LR, nextInstrAddr | 1);
+    blxWritePC(pContext, target);
     return PINKYSIM_STEP_OK;
 }
 
@@ -1435,17 +1332,14 @@ static void blxWritePC(PinkySimContext* pContext, uint32_t address)
 
 static int ldrLiteral(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t t = (instr & (0x7 << 8)) >> 8;
-        uint32_t imm32 = (instr & 0xFF) << 2;
-        uint32_t base;
-        uint32_t address;
+    uint32_t t = (instr & (0x7 << 8)) >> 8;
+    uint32_t imm32 = (instr & 0xFF) << 2;
+    uint32_t base;
+    uint32_t address;
 
-        base = align(getReg(pContext, PC), 4);
-        address = base + imm32;
-        setReg(pContext, t, unalignedMemRead(pContext, address, 4));
-    }
+    base = align(getReg(pContext, PC), 4);
+    address = base + imm32;
+    setReg(pContext, t, unalignedMemRead(pContext, address, 4));
     return PINKYSIM_STEP_OK;
 }
 
@@ -1533,16 +1427,13 @@ static int loadStoreSingleDataItem(PinkySimContext* pContext, uint16_t instr)
 
 static int strRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        m = (instr & (0x7 << 6)) >> 6;
-        uint32_t        address;
-        
-        address = getReg(pContext, n) + getReg(pContext, m);
-        unalignedMemWrite(pContext, address, 4, getReg(pContext, t));
-    }
+    uint32_t        t = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        m = (instr & (0x7 << 6)) >> 6;
+    uint32_t        address;
+    
+    address = getReg(pContext, n) + getReg(pContext, m);
+    unalignedMemWrite(pContext, address, 4, getReg(pContext, t));
     return PINKYSIM_STEP_OK;
 }
 
@@ -1575,48 +1466,39 @@ static void alignedMemWrite(PinkySimContext* pContext, uint32_t address, uint32_
 
 static int strhRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        m = (instr & (0x7 << 6)) >> 6;
-        uint32_t        address;
-        
-        address = getReg(pContext, n) + getReg(pContext, m);
-        unalignedMemWrite(pContext, address, 2, getReg(pContext, t));
-    }
+    uint32_t        t = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        m = (instr & (0x7 << 6)) >> 6;
+    uint32_t        address;
+    
+    address = getReg(pContext, n) + getReg(pContext, m);
+    unalignedMemWrite(pContext, address, 2, getReg(pContext, t));
     return PINKYSIM_STEP_OK;
 }
 
 static int strbRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        m = (instr & (0x7 << 6)) >> 6;
-        uint32_t        address;
-        
-        address = getReg(pContext, n) + getReg(pContext, m);
-        unalignedMemWrite(pContext, address, 1, getReg(pContext, t));
-    }
+    uint32_t        t = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        m = (instr & (0x7 << 6)) >> 6;
+    uint32_t        address;
+    
+    address = getReg(pContext, n) + getReg(pContext, m);
+    unalignedMemWrite(pContext, address, 1, getReg(pContext, t));
     return PINKYSIM_STEP_OK;
 }
 
 static int ldrsbRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        m = (instr & (0x7 << 6)) >> 6;
-        uint32_t        offsetAddress;
-        uint32_t        address;
-        
-        offsetAddress = getReg(pContext, n) + getReg(pContext, m);
-        address = offsetAddress;
-        setReg(pContext, t, signExtend8(unalignedMemRead(pContext, address, 1)));
-    }
+    uint32_t        t = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        m = (instr & (0x7 << 6)) >> 6;
+    uint32_t        offsetAddress;
+    uint32_t        address;
+    
+    offsetAddress = getReg(pContext, n) + getReg(pContext, m);
+    address = offsetAddress;
+    setReg(pContext, t, signExtend8(unalignedMemRead(pContext, address, 1)));
     return PINKYSIM_STEP_OK;
 }
 
@@ -1627,37 +1509,31 @@ static uint32_t signExtend8(uint32_t valueToExtend)
 
 static int ldrRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        m = (instr & (0x7 << 6)) >> 6;
-        uint32_t        offsetAddress;
-        uint32_t        address;
-        
-        offsetAddress = getReg(pContext, n) + getReg(pContext, m);
-        address = offsetAddress;
-        setReg(pContext, t, unalignedMemRead(pContext, address, 4));
-    }
+    uint32_t        t = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        m = (instr & (0x7 << 6)) >> 6;
+    uint32_t        offsetAddress;
+    uint32_t        address;
+    
+    offsetAddress = getReg(pContext, n) + getReg(pContext, m);
+    address = offsetAddress;
+    setReg(pContext, t, unalignedMemRead(pContext, address, 4));
     return PINKYSIM_STEP_OK;
 }
 
 static int ldrhRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        m = (instr & (0x7 << 6)) >> 6;
-        uint32_t        offsetAddress;
-        uint32_t        address;
-        uint32_t        data;
-        
-        offsetAddress = getReg(pContext, n) + getReg(pContext, m);
-        address = offsetAddress;
-        data = unalignedMemRead(pContext, address, 2);
-        setReg(pContext, t, zeroExtend16(data));
-    }
+    uint32_t        t = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        m = (instr & (0x7 << 6)) >> 6;
+    uint32_t        offsetAddress;
+    uint32_t        address;
+    uint32_t        data;
+    
+    offsetAddress = getReg(pContext, n) + getReg(pContext, m);
+    address = offsetAddress;
+    data = unalignedMemRead(pContext, address, 2);
+    setReg(pContext, t, zeroExtend16(data));
     return PINKYSIM_STEP_OK;
 }
 
@@ -1668,18 +1544,15 @@ static uint32_t zeroExtend16(uint32_t value)
 
 static int ldrbRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        m = (instr & (0x7 << 6)) >> 6;
-        uint32_t        offsetAddress;
-        uint32_t        address;
-        
-        offsetAddress = getReg(pContext, n) + getReg(pContext, m);
-        address = offsetAddress;
-        setReg(pContext, t, zeroExtend8(unalignedMemRead(pContext, address, 1)));
-    }
+    uint32_t        t = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        m = (instr & (0x7 << 6)) >> 6;
+    uint32_t        offsetAddress;
+    uint32_t        address;
+    
+    offsetAddress = getReg(pContext, n) + getReg(pContext, m);
+    address = offsetAddress;
+    setReg(pContext, t, zeroExtend8(unalignedMemRead(pContext, address, 1)));
     return PINKYSIM_STEP_OK;
 }
 
@@ -1690,20 +1563,17 @@ static uint32_t zeroExtend8(uint32_t value)
 
 static int ldrshRegister(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        m = (instr & (0x7 << 6)) >> 6;
-        uint32_t        offsetAddress;
-        uint32_t        address;
-        uint32_t        data;
-        
-        offsetAddress = getReg(pContext, n) + getReg(pContext, m);
-        address = offsetAddress;
-        data = unalignedMemRead(pContext, address, 2);
-        setReg(pContext, t, signExtend16(data));
-    }
+    uint32_t        t = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        m = (instr & (0x7 << 6)) >> 6;
+    uint32_t        offsetAddress;
+    uint32_t        address;
+    uint32_t        data;
+    
+    offsetAddress = getReg(pContext, n) + getReg(pContext, m);
+    address = offsetAddress;
+    data = unalignedMemRead(pContext, address, 2);
+    setReg(pContext, t, signExtend16(data));
     return PINKYSIM_STEP_OK;
 }
 
@@ -1714,165 +1584,135 @@ static uint32_t signExtend16(uint32_t valueToExtend)
 
 static int strImmediateT1(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        imm32 = (instr & (0x1F << 6)) >> 4;
-        uint32_t        offsetAddress;
-        uint32_t        address;
+    uint32_t        t = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        imm32 = (instr & (0x1F << 6)) >> 4;
+    uint32_t        offsetAddress;
+    uint32_t        address;
 
-        offsetAddress = getReg(pContext, n) + imm32;
-        address = offsetAddress;
-        unalignedMemWrite(pContext, address, 4, getReg(pContext, t));
-    }
+    offsetAddress = getReg(pContext, n) + imm32;
+    address = offsetAddress;
+    unalignedMemWrite(pContext, address, 4, getReg(pContext, t));
     return PINKYSIM_STEP_OK;
 }
 
 static int ldrImmediateT1(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        imm32 = (instr & (0x1F << 6)) >> 4;
-        uint32_t        offsetAddress;
-        uint32_t        address;
+    uint32_t        t = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        imm32 = (instr & (0x1F << 6)) >> 4;
+    uint32_t        offsetAddress;
+    uint32_t        address;
 
-        offsetAddress = getReg(pContext, n) + imm32;
-        address = offsetAddress;
-        setReg(pContext, t, unalignedMemRead(pContext, address, 4));
-    }
+    offsetAddress = getReg(pContext, n) + imm32;
+    address = offsetAddress;
+    setReg(pContext, t, unalignedMemRead(pContext, address, 4));
     return PINKYSIM_STEP_OK;
 }
 
 static int strbImmediate(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        imm32 = (instr & (0x1F << 6)) >> 6;
-        uint32_t        offsetAddress;
-        uint32_t        address;
+    uint32_t        t = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        imm32 = (instr & (0x1F << 6)) >> 6;
+    uint32_t        offsetAddress;
+    uint32_t        address;
 
-        offsetAddress = getReg(pContext, n) + imm32;
-        address = offsetAddress;
-        unalignedMemWrite(pContext, address, 1, getReg(pContext, t));
-    }
+    offsetAddress = getReg(pContext, n) + imm32;
+    address = offsetAddress;
+    unalignedMemWrite(pContext, address, 1, getReg(pContext, t));
     return PINKYSIM_STEP_OK;
 }
 
 static int ldrbImmediate(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        imm32 = (instr & (0x1F << 6)) >> 6;
-        uint32_t        offsetAddress;
-        uint32_t        address;
+    uint32_t        t = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        imm32 = (instr & (0x1F << 6)) >> 6;
+    uint32_t        offsetAddress;
+    uint32_t        address;
 
-        offsetAddress = getReg(pContext, n) + imm32;
-        address = offsetAddress;
-        setReg(pContext, t, unalignedMemRead(pContext, address, 1));
-    }
+    offsetAddress = getReg(pContext, n) + imm32;
+    address = offsetAddress;
+    setReg(pContext, t, unalignedMemRead(pContext, address, 1));
     return PINKYSIM_STEP_OK;
 }
 
 static int strhImmediate(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        imm32 = (instr & (0x1F << 6)) >> 5;
-        uint32_t        offsetAddress;
-        uint32_t        address;
+    uint32_t        t = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        imm32 = (instr & (0x1F << 6)) >> 5;
+    uint32_t        offsetAddress;
+    uint32_t        address;
 
-        offsetAddress = getReg(pContext, n) + imm32;
-        address = offsetAddress;
-        unalignedMemWrite(pContext, address, 2, getReg(pContext, t));
-    }
+    offsetAddress = getReg(pContext, n) + imm32;
+    address = offsetAddress;
+    unalignedMemWrite(pContext, address, 2, getReg(pContext, t));
     return PINKYSIM_STEP_OK;
 }
 
 static int ldrhImmediate(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = instr & 0x7;
-        uint32_t        n = (instr & (0x7 << 3)) >> 3;
-        uint32_t        imm32 = (instr & (0x1F << 6)) >> 5;
-        uint32_t        offsetAddress;
-        uint32_t        address;
+    uint32_t        t = instr & 0x7;
+    uint32_t        n = (instr & (0x7 << 3)) >> 3;
+    uint32_t        imm32 = (instr & (0x1F << 6)) >> 5;
+    uint32_t        offsetAddress;
+    uint32_t        address;
 
-        offsetAddress = getReg(pContext, n) + imm32;
-        address = offsetAddress;
-        setReg(pContext, t, unalignedMemRead(pContext, address, 2));
-    }
+    offsetAddress = getReg(pContext, n) + imm32;
+    address = offsetAddress;
+    setReg(pContext, t, unalignedMemRead(pContext, address, 2));
     return PINKYSIM_STEP_OK;
 }
 
 static int strImmediateT2(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = (instr & (0x7 << 8)) >> 8;
-        uint32_t        n = SP;
-        uint32_t        imm32 = (instr & 0xFF) << 2;
-        uint32_t        offsetAddress;
-        uint32_t        address;
+    uint32_t        t = (instr & (0x7 << 8)) >> 8;
+    uint32_t        n = SP;
+    uint32_t        imm32 = (instr & 0xFF) << 2;
+    uint32_t        offsetAddress;
+    uint32_t        address;
 
-        offsetAddress = getReg(pContext, n) + imm32;
-        address = offsetAddress;
-        unalignedMemWrite(pContext, address, 4, getReg(pContext, t));
-    }
+    offsetAddress = getReg(pContext, n) + imm32;
+    address = offsetAddress;
+    unalignedMemWrite(pContext, address, 4, getReg(pContext, t));
     return PINKYSIM_STEP_OK;
 }
 
 static int ldrImmediateT2(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        t = (instr & (0x7 << 8)) >> 8;
-        uint32_t        n = SP;
-        uint32_t        imm32 = (instr & 0xFF) << 2;
-        uint32_t        offsetAddress;
-        uint32_t        address;
+    uint32_t        t = (instr & (0x7 << 8)) >> 8;
+    uint32_t        n = SP;
+    uint32_t        imm32 = (instr & 0xFF) << 2;
+    uint32_t        offsetAddress;
+    uint32_t        address;
 
-        offsetAddress = getReg(pContext, n) + imm32;
-        address = offsetAddress;
-        setReg(pContext, t, unalignedMemRead(pContext, address, 4));
-    }
+    offsetAddress = getReg(pContext, n) + imm32;
+    address = offsetAddress;
+    setReg(pContext, t, unalignedMemRead(pContext, address, 4));
     return PINKYSIM_STEP_OK;
 }
 
 static int adr(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t d = (instr & (0x7 << 8)) >> 8;
-        uint32_t imm32 = (instr & 0xFF) << 2;
-        uint32_t result;
+    uint32_t d = (instr & (0x7 << 8)) >> 8;
+    uint32_t imm32 = (instr & 0xFF) << 2;
+    uint32_t result;
 
-        result = align(getReg(pContext, PC), 4) + imm32;
-        setReg(pContext, d, result);
-    }
+    result = align(getReg(pContext, PC), 4) + imm32;
+    setReg(pContext, d, result);
     return PINKYSIM_STEP_OK;
 }
 
 static int addSPT1(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = (instr & (0x7 << 8)) >> 8;
-        uint32_t        imm32 = (instr & 0xFF) << 2;
-        AddResults      addResults;
-        
-        addResults = addWithCarry(getReg(pContext, SP), imm32, 0);
-        setReg(pContext, d, addResults.result);
-    }
+    uint32_t        d = (instr & (0x7 << 8)) >> 8;
+    uint32_t        imm32 = (instr & 0xFF) << 2;
+    AddResults      addResults;
+    
+    addResults = addWithCarry(getReg(pContext, SP), imm32, 0);
+    setReg(pContext, d, addResults.result);
     return PINKYSIM_STEP_OK;
 }
 
@@ -1913,102 +1753,81 @@ static int misc16BitInstructions(PinkySimContext* pContext, uint16_t instr)
 
 static int addSPT2(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = 13;
-        uint32_t        imm32 = (instr & 0x7F) << 2;
-        AddResults      addResults;
-        
-        addResults = addWithCarry(getReg(pContext, SP), imm32, 0);
-        setReg(pContext, d, addResults.result);
-    }
+    uint32_t        d = 13;
+    uint32_t        imm32 = (instr & 0x7F) << 2;
+    AddResults      addResults;
+    
+    addResults = addWithCarry(getReg(pContext, SP), imm32, 0);
+    setReg(pContext, d, addResults.result);
     return PINKYSIM_STEP_OK;
 }
 
 static int subSP(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = 13;
-        uint32_t        imm32 = (instr & 0x7F) << 2;
-        AddResults      addResults;
-        
-        addResults = addWithCarry(getReg(pContext, SP), ~imm32, 1);
-        setReg(pContext, d, addResults.result);
-    }
+    uint32_t        d = 13;
+    uint32_t        imm32 = (instr & 0x7F) << 2;
+    AddResults      addResults;
+    
+    addResults = addWithCarry(getReg(pContext, SP), ~imm32, 1);
+    setReg(pContext, d, addResults.result);
     return PINKYSIM_STEP_OK;
 }
 
 static int sxth(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    uint32_t        d = instr & 0x7;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
 
-        setReg(pContext, d, signExtend16(getReg(pContext, m)));
-    }
+    setReg(pContext, d, signExtend16(getReg(pContext, m)));
     return PINKYSIM_STEP_OK;
 }
 
 static int sxtb(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    uint32_t        d = instr & 0x7;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
 
-        setReg(pContext, d, signExtend8(getReg(pContext, m)));
-    }
+    setReg(pContext, d, signExtend8(getReg(pContext, m)));
     return PINKYSIM_STEP_OK;
 }
 
 static int uxth(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    uint32_t        d = instr & 0x7;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
 
-        setReg(pContext, d, zeroExtend16(getReg(pContext, m)));
-    }
+    setReg(pContext, d, zeroExtend16(getReg(pContext, m)));
     return PINKYSIM_STEP_OK;
 }
 
 static int uxtb(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    uint32_t        d = instr & 0x7;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
 
-        setReg(pContext, d, zeroExtend8(getReg(pContext, m)));
-    }
+    setReg(pContext, d, zeroExtend8(getReg(pContext, m)));
     return PINKYSIM_STEP_OK;
 }
 
 static int push(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
+    uint32_t    registers = ((instr & (1 << 8)) << 6) | (instr & 0xFF);
+    uint32_t    address;
+    int         i;
+    
+    if (bitCount(registers) < 1)
+        __throw(unpredictableException);
+    
+    address = getReg(pContext, SP) - 4 * bitCount(registers);
+    for (i = 0 ; i <= 14 ; i++)
     {
-        uint32_t    registers = ((instr & (1 << 8)) << 6) | (instr & 0xFF);
-        uint32_t    address;
-        int         i;
-        
-        if (bitCount(registers) < 1)
-            __throw(unpredictableException);
-        
-        address = getReg(pContext, SP) - 4 * bitCount(registers);
-        for (i = 0 ; i <= 14 ; i++)
+        if (registers & (1 << i))
         {
-            if (registers & (1 << i))
-            {
-                alignedMemWrite(pContext, address, 4, getReg(pContext, i));
-                address += 4;
-            }
+            alignedMemWrite(pContext, address, 4, getReg(pContext, i));
+            address += 4;
         }
-        setReg(pContext, SP, getReg(pContext, SP) - 4 * bitCount(registers));
     }
+    setReg(pContext, SP, getReg(pContext, SP) - 4 * bitCount(registers));
     return PINKYSIM_STEP_OK;
 }
 
@@ -2026,20 +1845,17 @@ static uint32_t bitCount(uint32_t value)
 
 static int cps(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
+    uint32_t im = instr & (1 << 4);
+    
+    if ((instr & 0xF) != 0x2)
+        __throw(unpredictableException);
+    
+    if (currentModeIsPrivileged(pContext))
     {
-        uint32_t im = instr & (1 << 4);
-        
-        if ((instr & 0xF) != 0x2)
-            __throw(unpredictableException);
-        
-        if (currentModeIsPrivileged(pContext))
-        {
-            if (im)
-                pContext->PRIMASK |= PRIMASK_PM;
-            else
-                pContext->PRIMASK &= ~PRIMASK_PM;
-        }
+        if (im)
+            pContext->PRIMASK |= PRIMASK_PM;
+        else
+            pContext->PRIMASK &= ~PRIMASK_PM;
     }
     return PINKYSIM_STEP_OK;
 }
@@ -2052,76 +1868,64 @@ static int currentModeIsPrivileged(PinkySimContext* pContext)
 
 static int rev(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        uint32_t        value;
-        uint32_t        result;
-        
-        value = getReg(pContext, m);
-        result = (value << 24) | (value >> 24) | ((value & 0xFF00) << 8) | ((value & 0xFF0000) >> 8);
-        setReg(pContext, d, result);
-    }
+    uint32_t        d = instr & 0x7;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    uint32_t        value;
+    uint32_t        result;
+    
+    value = getReg(pContext, m);
+    result = (value << 24) | (value >> 24) | ((value & 0xFF00) << 8) | ((value & 0xFF0000) >> 8);
+    setReg(pContext, d, result);
     return PINKYSIM_STEP_OK;
 }
 
 static int rev16(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        uint32_t        value;
-        uint32_t        result;
-        
-        value = getReg(pContext, m);
-        result = ((value & 0xFF00FF00) >> 8) | ((value & 0x00FF00FF) << 8);
-        setReg(pContext, d, result);
-    }
+    uint32_t        d = instr & 0x7;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    uint32_t        value;
+    uint32_t        result;
+    
+    value = getReg(pContext, m);
+    result = ((value & 0xFF00FF00) >> 8) | ((value & 0x00FF00FF) << 8);
+    setReg(pContext, d, result);
     return PINKYSIM_STEP_OK;
 }
 
 static int revsh(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t        d = instr & 0x7;
-        uint32_t        m = (instr & (0x7 << 3)) >> 3;
-        uint32_t        value;
-        uint32_t        result;
-        
-        value = getReg(pContext, m);
-        result = ((value & 0xFF00FF00) >> 8) | ((value & 0x00FF00FF) << 8);
-        setReg(pContext, d, signExtend16(result));
-    }
+    uint32_t        d = instr & 0x7;
+    uint32_t        m = (instr & (0x7 << 3)) >> 3;
+    uint32_t        value;
+    uint32_t        result;
+    
+    value = getReg(pContext, m);
+    result = ((value & 0xFF00FF00) >> 8) | ((value & 0x00FF00FF) << 8);
+    setReg(pContext, d, signExtend16(result));
     return PINKYSIM_STEP_OK;
 }
 
 static int pop(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
+    uint32_t    registers = ((instr & (1 << 8)) << 7) | (instr & 0xFF);
+    uint32_t    address;
+    int         i;
+    
+    if (bitCount(registers) < 1)
+        __throw(unpredictableException);
+    
+    address = getReg(pContext, SP);
+    for (i = 0 ; i <= 7 ; i++)
     {
-        uint32_t    registers = ((instr & (1 << 8)) << 7) | (instr & 0xFF);
-        uint32_t    address;
-        int         i;
-        
-        if (bitCount(registers) < 1)
-            __throw(unpredictableException);
-        
-        address = getReg(pContext, SP);
-        for (i = 0 ; i <= 7 ; i++)
+        if (registers & (1 << i))
         {
-            if (registers & (1 << i))
-            {
-                setReg(pContext, i, alignedMemRead(pContext, address, 4));
-                address += 4;
-            }
+            setReg(pContext, i, alignedMemRead(pContext, address, 4));
+            address += 4;
         }
-        if (registers & (1 << 15))
-            loadWritePC(pContext, alignedMemRead(pContext, address, 4));
-        setReg(pContext, SP, getReg(pContext, SP) + 4 * bitCount(registers));
     }
+    if (registers & (1 << 15))
+        loadWritePC(pContext, alignedMemRead(pContext, address, 4));
+    setReg(pContext, SP, getReg(pContext, SP) + 4 * bitCount(registers));
     return PINKYSIM_STEP_OK;
 }
 
@@ -2194,29 +1998,26 @@ static int treatAsNop(PinkySimContext* pContext, uint16_t instr)
 
 static int stm(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
+    uint32_t    n = (instr & (7 << 8)) >> 8;
+    uint32_t    registers = instr & 0xFF;
+    uint32_t    address;
+    int         i;
+    
+    if (bitCount(registers) < 1)
+        __throw(unpredictableException);
+    if ((registers & (1 << n)) && isNotLowestBitSet(registers, n))
+        __throw(unpredictableException);
+    
+    address = getReg(pContext, n);
+    for (i = 0 ; i <= 14 ; i++)
     {
-        uint32_t    n = (instr & (7 << 8)) >> 8;
-        uint32_t    registers = instr & 0xFF;
-        uint32_t    address;
-        int         i;
-        
-        if (bitCount(registers) < 1)
-            __throw(unpredictableException);
-        if ((registers & (1 << n)) && isNotLowestBitSet(registers, n))
-            __throw(unpredictableException);
-        
-        address = getReg(pContext, n);
-        for (i = 0 ; i <= 14 ; i++)
+        if (registers & (1 << i))
         {
-            if (registers & (1 << i))
-            {
-                alignedMemWrite(pContext, address, 4, getReg(pContext, i));
-                address += 4;
-            }
+            alignedMemWrite(pContext, address, 4, getReg(pContext, i));
+            address += 4;
         }
-        setReg(pContext, n, getReg(pContext, n) + 4 * bitCount(registers));
     }
+    setReg(pContext, n, getReg(pContext, n) + 4 * bitCount(registers));
     return PINKYSIM_STEP_OK;
 }
 
@@ -2227,30 +2028,26 @@ static int isNotLowestBitSet(uint32_t bits, uint32_t i)
 
 static int ldm(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
+    uint32_t    n = (instr & (7 << 8)) >> 8;
+    uint32_t    registers = instr & 0xFF;
+    int         wback = (0 == (registers & (1 << n)));
+    uint32_t    address;
+    int         i;
+    
+    if (bitCount(registers) < 1)
+        __throw(unpredictableException);
+    
+    address = getReg(pContext, n);
+    for (i = 0 ; i <= 7 ; i++)
     {
-        uint32_t    n = (instr & (7 << 8)) >> 8;
-        uint32_t    registers = instr & 0xFF;
-        int         wback = (0 == (registers & (1 << n)));
-        uint32_t    address;
-        int         i;
-        
-        if (bitCount(registers) < 1)
-            __throw(unpredictableException);
-        
-        address = getReg(pContext, n);
-        for (i = 0 ; i <= 7 ; i++)
+        if (registers & (1 << i))
         {
-            if (registers & (1 << i))
-            {
-                setReg(pContext, i, alignedMemRead(pContext, address, 4));
-                address += 4;
-            }
+            setReg(pContext, i, alignedMemRead(pContext, address, 4));
+            address += 4;
         }
-        if (wback)
-            setReg(pContext, n, getReg(pContext, n) + 4 * bitCount(registers));
     }
-
+    if (wback)
+        setReg(pContext, n, getReg(pContext, n) + 4 * bitCount(registers));
     return PINKYSIM_STEP_OK;
 }
 
@@ -2266,11 +2063,7 @@ static int conditionalBranchAndSupervisor(PinkySimContext* pContext, uint16_t in
 
 static int svc(PinkySimContext* pContext, uint16_t instr)
 {
-    uint32_t result = PINKYSIM_STEP_OK;
-    
-    if (conditionPassedForNonBranchInstr(pContext))
-        result = PINKYSIM_STEP_SVC;
-    return result;
+    return PINKYSIM_STEP_SVC;
 }
 
 static int conditionalBranch(PinkySimContext* pContext, uint16_t instr)
@@ -2324,12 +2117,9 @@ static int conditionPassedForBranchInstr(PinkySimContext* pContext, uint16_t ins
 
 static int unconditionalBranch(PinkySimContext* pContext, uint16_t instr)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        int32_t imm32 = (((int32_t)(instr & 0x7FF)) << 21) >> 20;
-        
-        branchWritePC(pContext, getReg(pContext, PC) + imm32);
-    }
+    int32_t imm32 = (((int32_t)(instr & 0x7FF)) << 21) >> 20;
+    
+    branchWritePC(pContext, getReg(pContext, PC) + imm32);
     return PINKYSIM_STEP_OK;
 }
 
@@ -2362,55 +2152,52 @@ static int branchAndMiscellaneousControl(PinkySimContext* pContext, uint16_t ins
 
 static int msr(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t n = instr1 & 0xF;
-        uint32_t SYSm = instr2 & 0xFF;
-        uint32_t value;
+    uint32_t n = instr1 & 0xF;
+    uint32_t SYSm = instr2 & 0xFF;
+    uint32_t value;
+    
+    if (n == 13 || n == 15)
+        __throw(unpredictableException);
+    if (SYSm == 4 || (SYSm > 9 && SYSm < 16) || (SYSm > 16 && SYSm < 20) || (SYSm > 20))
+        __throw(unpredictableException);
+    if ((instr1 & 0x0010) != 0x0000 || (instr2 & 0x3F00) != 0x0800)
+        __throw(unpredictableException);
         
-        if (n == 13 || n == 15)
-            __throw(unpredictableException);
-        if (SYSm == 4 || (SYSm > 9 && SYSm < 16) || (SYSm > 16 && SYSm < 20) || (SYSm > 20))
-            __throw(unpredictableException);
-        if ((instr1 & 0x0010) != 0x0000 || (instr2 & 0x3F00) != 0x0800)
-            __throw(unpredictableException);
-            
-        value = getReg(pContext, n);
-        switch (SYSm >> 3)
+    value = getReg(pContext, n);
+    switch (SYSm >> 3)
+    {
+    case 0:
+        if ((SYSm & (1 << 2)) == 0)
+            pContext->xPSR = (pContext->xPSR & ~APSR_NZCV) | (value & APSR_NZCV);
+        break;
+    case 1:
+        if (currentModeIsPrivileged(pContext))
         {
-        case 0:
-            if ((SYSm & (1 << 2)) == 0)
-                pContext->xPSR = (pContext->xPSR & ~APSR_NZCV) | (value & APSR_NZCV);
-            break;
-        case 1:
-            if (currentModeIsPrivileged(pContext))
+            switch (SYSm & 0x7)
             {
-                switch (SYSm & 0x7)
-                {
-                case 0:
-                    pContext->spMain = value & 0xFFFFFFFC;
-                    break;
-                case 1:
-                    // NOTE: This simulator doesn't support process stack usage.
-                    break;
-                }
+            case 0:
+                pContext->spMain = value & 0xFFFFFFFC;
+                break;
+            case 1:
+                // NOTE: This simulator doesn't support process stack usage.
+                break;
             }
-            break;
-        case 2:
-            if (currentModeIsPrivileged(pContext))
-            {
-                switch (SYSm & 0x7)
-                {
-                case 0:
-                    pContext->PRIMASK = (pContext->PRIMASK & ~PRIMASK_PM) | (value & PRIMASK_PM);
-                    break;
-                case 4:
-                    // NOTE: This simulator doesn't support thread mode.
-                    break;
-                }
-            }
-            break;
         }
+        break;
+    case 2:
+        if (currentModeIsPrivileged(pContext))
+        {
+            switch (SYSm & 0x7)
+            {
+            case 0:
+                pContext->PRIMASK = (pContext->PRIMASK & ~PRIMASK_PM) | (value & PRIMASK_PM);
+                break;
+            case 4:
+                // NOTE: This simulator doesn't support thread mode.
+                break;
+            }
+        }
+        break;
     }
     return PINKYSIM_STEP_OK;
 }
@@ -2430,110 +2217,92 @@ static int miscellaneousControl(PinkySimContext* pContext, uint16_t instr1, uint
 
 static int dsb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        if ((instr1 & 0x000F) != 0x000F || (instr2 & 0x2F00) != 0x0F00)
-            __throw(unpredictableException);
-            
-    }
+    if ((instr1 & 0x000F) != 0x000F || (instr2 & 0x2F00) != 0x0F00)
+        __throw(unpredictableException);
     return PINKYSIM_STEP_OK;
 }
 
 static int dmb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        if ((instr1 & 0x000F) != 0x000F || (instr2 & 0x2F00) != 0x0F00)
-            __throw(unpredictableException);
-            
-    }
+    if ((instr1 & 0x000F) != 0x000F || (instr2 & 0x2F00) != 0x0F00)
+        __throw(unpredictableException);
     return PINKYSIM_STEP_OK;
 }
 
 static int isb(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        if ((instr1 & 0x000F) != 0x000F || (instr2 & 0x2F00) != 0x0F00)
-            __throw(unpredictableException);
-            
-    }
+    if ((instr1 & 0x000F) != 0x000F || (instr2 & 0x2F00) != 0x0F00)
+        __throw(unpredictableException);
     return PINKYSIM_STEP_OK;
 }
 
 static int mrs(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t d = (instr2 & (0xF << 8)) >> 8;
-        uint32_t SYSm = instr2 & 0xFF;
-        uint32_t value = 0;
+    uint32_t d = (instr2 & (0xF << 8)) >> 8;
+    uint32_t SYSm = instr2 & 0xFF;
+    uint32_t value = 0;
+    
+    if (d == 13 || d == 15)
+        __throw(unpredictableException);
+    if (SYSm == 4 || (SYSm > 9 && SYSm < 16) || (SYSm > 16 && SYSm < 20) || (SYSm > 20))
+        __throw(unpredictableException);
+    if ((instr1 & 0x001F) != 0x000F || (instr2 & 0x2000) != 0x0000)
+        __throw(unpredictableException);
         
-        if (d == 13 || d == 15)
-            __throw(unpredictableException);
-        if (SYSm == 4 || (SYSm > 9 && SYSm < 16) || (SYSm > 16 && SYSm < 20) || (SYSm > 20))
-            __throw(unpredictableException);
-        if ((instr1 & 0x001F) != 0x000F || (instr2 & 0x2000) != 0x0000)
-            __throw(unpredictableException);
-            
-        switch (SYSm >> 3)
+    switch (SYSm >> 3)
+    {
+    case 0:
+        if ((SYSm & (1 << 0)) && currentModeIsPrivileged(pContext))
+            value |= pContext->xPSR & IPSR_MASK;
+        if ((SYSm & (1 << 1)))
+            value |= 0; /* T-bit reads as zero on ARMv-6m */
+        if ((SYSm & (1 << 2)) == 0)
+            value |= pContext->xPSR & APSR_NZCV;
+        break;
+    case 1:
+        if (currentModeIsPrivileged(pContext))
         {
-        case 0:
-            if ((SYSm & (1 << 0)) && currentModeIsPrivileged(pContext))
-                value |= pContext->xPSR & IPSR_MASK;
-            if ((SYSm & (1 << 1)))
-                value |= 0; /* T-bit reads as zero on ARMv-6m */
-            if ((SYSm & (1 << 2)) == 0)
-                value |= pContext->xPSR & APSR_NZCV;
-            break;
-        case 1:
-            if (currentModeIsPrivileged(pContext))
-            {
-                switch (SYSm & 0x7)
-                {
-                case 0:
-                    value = pContext->spMain;
-                    break;
-                case 1:
-                    // NOTE: This simulator doesn't support process stack usage.
-                    break;
-                }
-            }
-            break;
-        case 2:
             switch (SYSm & 0x7)
             {
             case 0:
-                value = pContext->PRIMASK & PRIMASK_PM;
+                value = pContext->spMain;
                 break;
-            case 4:
-                value = pContext->CONTROL;
+            case 1:
+                // NOTE: This simulator doesn't support process stack usage.
                 break;
             }
+        }
+        break;
+    case 2:
+        switch (SYSm & 0x7)
+        {
+        case 0:
+            value = pContext->PRIMASK & PRIMASK_PM;
+            break;
+        case 4:
+            value = pContext->CONTROL;
             break;
         }
-        setReg(pContext, d, value);
+        break;
     }
+    setReg(pContext, d, value);
     return PINKYSIM_STEP_OK;
 }
 
 static int bl(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2)
 {
-    if (conditionPassedForNonBranchInstr(pContext))
-    {
-        uint32_t s = (instr1 & (1 << 10)) >> 10;
-        uint32_t immHi = instr1 & 0x3FF;
-        uint32_t j1 = (instr2 & (1 << 13)) >> 13;
-        uint32_t j2 = (instr2 & (1 << 11)) >> 11;
-        uint32_t immLo = (instr2 & 0x7FF);
-        uint32_t i1 = (s ^ j1) ^ 1;
-        uint32_t i2 = (s ^ j2) ^ 1;
-        uint32_t imm32 = ((int32_t)((s << 24) | (i1 << 23) | (i2 << 22) | (immHi << 12) | (immLo << 1)) << 7) >> 7;
-        uint32_t nextInstrAddr;
-        
-        nextInstrAddr = getReg(pContext, PC);
-        setReg(pContext, LR, nextInstrAddr | 1);
-        branchWritePC(pContext, getReg(pContext, PC) + imm32);
-    }
+    uint32_t s = (instr1 & (1 << 10)) >> 10;
+    uint32_t immHi = instr1 & 0x3FF;
+    uint32_t j1 = (instr2 & (1 << 13)) >> 13;
+    uint32_t j2 = (instr2 & (1 << 11)) >> 11;
+    uint32_t immLo = (instr2 & 0x7FF);
+    uint32_t i1 = (s ^ j1) ^ 1;
+    uint32_t i2 = (s ^ j2) ^ 1;
+    uint32_t imm32 = ((int32_t)((s << 24) | (i1 << 23) | (i2 << 22) | (immHi << 12) | (immLo << 1)) << 7) >> 7;
+    uint32_t nextInstrAddr;
+    
+    nextInstrAddr = getReg(pContext, PC);
+    setReg(pContext, LR, nextInstrAddr | 1);
+    branchWritePC(pContext, getReg(pContext, PC) + imm32);
     return PINKYSIM_STEP_OK;
 }
