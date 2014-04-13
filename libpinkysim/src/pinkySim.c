@@ -66,7 +66,6 @@ static int executeInstruction16(PinkySimContext* pContext, uint16_t instr);
 static int shiftAddSubtractMoveCompare(PinkySimContext* pContext, uint16_t instr);
 static int lslImmediate(PinkySimContext* pContext, uint16_t instr);
 static Fields decodeImm10to6_Rm5to3_Rd2to0(uint32_t instr);
-static int inITBlock(const PinkySimContext* pContext);
 static DecodedImmShift decodeImmshift(uint32_t typeBits, uint32_t imm5);
 static ShiftResults shift_C(uint32_t value, SRType type, uint32_t amount, uint32_t carryIn);
 static ShiftResults LSL_C(uint32_t x, uint32_t shift);
@@ -77,16 +76,21 @@ static uint32_t LSR(uint32_t x, uint32_t shift);
 static uint32_t LSL(uint32_t x, uint32_t shift);
 static uint32_t getReg(const PinkySimContext* pContext, uint32_t reg);
 static void setReg(PinkySimContext* pContext, uint32_t reg, uint32_t value);
+static void updateRdAndNZC(PinkySimContext* pContext, Fields* pFields, const ShiftResults* pShiftResults);
 static int lsrImmediate(PinkySimContext* pContext, uint16_t instr);
 static int asrImmediate(PinkySimContext* pContext, uint16_t instr);
 static int addRegisterT1(PinkySimContext* pContext, uint16_t instr);
 static Fields decodeRm8to6_Rn5to3_Rd2to0(uint32_t instr);
 static AddResults addWithCarry(uint32_t x, uint32_t y, uint32_t carryInAsBit);
+static void updateRdAndNZCV(PinkySimContext* pContext, Fields* pFields, const AddResults* pAddResults);
+static void updateNZCV(PinkySimContext* pContext, Fields* pFields, const AddResults* pAddResults);
 static int subRegister(PinkySimContext* pContext, uint16_t instr);
 static int addImmediateT1(PinkySimContext* pContext, uint16_t instr);
 static Fields decodeImm8to6_Rn5to3_Rd2to0(uint32_t instr);
 static int subImmediateT1(PinkySimContext* pContext, uint16_t instr);
 static int movImmediate(PinkySimContext* pContext, uint16_t instr);
+static void updateRdAndNZ(PinkySimContext* pContext, Fields* pFields, uint32_t results);
+static void updateNZ(PinkySimContext* pContext, Fields* pFields, uint32_t results);
 static Fields decodeRd10to8_Imm7to0(uint32_t instr);
 static int cmpImmediate(PinkySimContext* pContext, uint16_t instr);
 static Fields decodeRn10to8_Imm7to0(uint32_t instr);
@@ -302,22 +306,11 @@ static int shiftAddSubtractMoveCompare(PinkySimContext* pContext, uint16_t instr
 static int lslImmediate(PinkySimContext* pContext, uint16_t instr)
 {
     Fields          fields = decodeImm10to6_Rm5to3_Rd2to0(instr);
-    int             setFlags = !inITBlock(pContext);
     DecodedImmShift decodedShift = decodeImmshift(0x0, fields.imm);
     ShiftResults    shiftResults;
 
     shiftResults = shift_C(getReg(pContext, fields.m), SRType_LSL, decodedShift.n, pContext->xPSR & APSR_C);
-    setReg(pContext, fields.d, shiftResults.result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZC;
-        if (shiftResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (shiftResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (shiftResults.carryOut)
-            pContext->xPSR |= APSR_C;
-    }
+    updateRdAndNZC(pContext, &fields, &shiftResults);
     return PINKYSIM_STEP_OK;
 }
 
@@ -329,12 +322,6 @@ static Fields decodeImm10to6_Rm5to3_Rd2to0(uint32_t instr)
     fields.d = instr & 0x7;
     fields.m = (instr & (0x7 << 3)) >> 3;
     return fields;
-}
-
-static int inITBlock(const PinkySimContext* pContext)
-{
-    /* In ARMv6-M, the processor is never in an IT, If-Then, block. */
-    return FALSE;
 }
 
 static DecodedImmShift decodeImmshift(uint32_t typeBits, uint32_t imm5)
@@ -504,82 +491,47 @@ static void setReg(PinkySimContext* pContext, uint32_t reg, uint32_t value)
         pContext->R[reg] = value;
 }
 
+static void updateRdAndNZC(PinkySimContext* pContext, Fields* pFields, const ShiftResults* pShiftResults)
+{
+    setReg(pContext, pFields->d, pShiftResults->result);
+    pContext->xPSR &= ~APSR_NZC;
+    if (pShiftResults->result & (1 << 31))
+        pContext->xPSR |= APSR_N;
+    if (pShiftResults->result == 0)
+        pContext->xPSR |= APSR_Z;
+    if (pShiftResults->carryOut)
+        pContext->xPSR |= APSR_C;
+}
+
 static int lsrImmediate(PinkySimContext* pContext, uint16_t instr)
 {
     Fields          fields = decodeImm10to6_Rm5to3_Rd2to0(instr);
-    int             setFlags = !inITBlock(pContext);
     DecodedImmShift decodedShift = decodeImmshift(0x1, fields.imm);
     ShiftResults    shiftResults;
 
     shiftResults = shift_C(getReg(pContext, fields.m), SRType_LSR, decodedShift.n, pContext->xPSR & APSR_C);
-    setReg(pContext, fields.d, shiftResults.result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZC;
-        // UNDONE: The N flag is always cleared from a logical right shift.  Improve coverage by removing code.
-        //if (shiftResults.result & (1 << 31))
-        //    pContext->xPSR |= APSR_N;
-        if (shiftResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (shiftResults.carryOut)
-            pContext->xPSR |= APSR_C;
-    }
+    updateRdAndNZC(pContext, &fields, &shiftResults);
     return PINKYSIM_STEP_OK;
 }
 
 static int asrImmediate(PinkySimContext* pContext, uint16_t instr)
 {
     Fields          fields = decodeImm10to6_Rm5to3_Rd2to0(instr);
-    int             setFlags = !inITBlock(pContext);
     DecodedImmShift decodedShift = decodeImmshift(0x2, fields.imm);
     ShiftResults    shiftResults;
 
     shiftResults = shift_C(getReg(pContext, fields.m), SRType_ASR, decodedShift.n, pContext->xPSR & APSR_C);
-    setReg(pContext, fields.d, shiftResults.result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZC;
-        if (shiftResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (shiftResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (shiftResults.carryOut)
-            pContext->xPSR |= APSR_C;
-    }
+    updateRdAndNZC(pContext, &fields, &shiftResults);
     return PINKYSIM_STEP_OK;
 }
 
 static int addRegisterT1(PinkySimContext* pContext, uint16_t instr)
 {
     Fields fields = decodeRm8to6_Rn5to3_Rd2to0(instr);
-    int             setFlags = !inITBlock(pContext);
     AddResults      addResults;
     
     addResults = addWithCarry(getReg(pContext, fields.n), getReg(pContext, fields.m), 0);
-    // UNDONE: Only the T2 encoding can modify R15 (PC).
-#ifdef UNDONE
-    if (fields.d == 15)
-    {
-        aluWritePC(pContext, addResults.result);
-    }
-    else
-#endif // UNDONE
-    {
-        setReg(pContext, fields.d, addResults.result);
-
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZCV;
-            if (addResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (addResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (addResults.carryOut)
-                pContext->xPSR |= APSR_C;
-            if (addResults.overflow)
-                pContext->xPSR |= APSR_V;
-        }
-    }
+    updateRdAndNZCV(pContext, &fields, &addResults);
     return PINKYSIM_STEP_OK;
 }
 
@@ -607,49 +559,42 @@ static AddResults addWithCarry(uint32_t x, uint32_t y, uint32_t carryInAsBit)
     return results;
 }
 
+static void updateRdAndNZCV(PinkySimContext* pContext, Fields* pFields, const AddResults* pAddResults)
+{
+    setReg(pContext, pFields->d, pAddResults->result);
+    updateNZCV(pContext, pFields, pAddResults);
+}
+
+static void updateNZCV(PinkySimContext* pContext, Fields* pFields, const AddResults* pAddResults)
+{
+    pContext->xPSR &= ~APSR_NZCV;
+    if (pAddResults->result & (1 << 31))
+        pContext->xPSR |= APSR_N;
+    if (pAddResults->result == 0)
+        pContext->xPSR |= APSR_Z;
+    if (pAddResults->carryOut)
+        pContext->xPSR |= APSR_C;
+    if (pAddResults->overflow)
+        pContext->xPSR |= APSR_V;
+}
+
 static int subRegister(PinkySimContext* pContext, uint16_t instr)
 {
     Fields fields = decodeRm8to6_Rn5to3_Rd2to0(instr);
-    int             setFlags = !inITBlock(pContext);
     AddResults      addResults;
     
     addResults = addWithCarry(getReg(pContext, fields.n), ~getReg(pContext, fields.m), 1);
-    setReg(pContext, fields.d, addResults.result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZCV;
-        if (addResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (addResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (addResults.carryOut)
-            pContext->xPSR |= APSR_C;
-        if (addResults.overflow)
-            pContext->xPSR |= APSR_V;
-    }
+    updateRdAndNZCV(pContext, &fields, &addResults);
     return PINKYSIM_STEP_OK;
 }
 
 static int addImmediateT1(PinkySimContext* pContext, uint16_t instr)
 {
     Fields     fields = decodeImm8to6_Rn5to3_Rd2to0(instr);
-    int        setFlags = !inITBlock(pContext);
     AddResults addResults;
     
     addResults = addWithCarry(getReg(pContext, fields.n), fields.imm, 0);
-    setReg(pContext, fields.d, addResults.result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZCV;
-        if (addResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (addResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (addResults.carryOut)
-            pContext->xPSR |= APSR_C;
-        if (addResults.overflow)
-            pContext->xPSR |= APSR_V;
-    }
+    updateRdAndNZCV(pContext, &fields, &addResults);
     return PINKYSIM_STEP_OK;
 }
 
@@ -666,40 +611,35 @@ static Fields decodeImm8to6_Rn5to3_Rd2to0(uint32_t instr)
 static int subImmediateT1(PinkySimContext* pContext, uint16_t instr)
 {
     Fields     fields = decodeImm8to6_Rn5to3_Rd2to0(instr);
-    int        setFlags = !inITBlock(pContext);
     AddResults addResults;
     
     addResults = addWithCarry(getReg(pContext, fields.n), ~fields.imm, 1);
-    setReg(pContext, fields.d, addResults.result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZCV;
-        if (addResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (addResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (addResults.carryOut)
-            pContext->xPSR |= APSR_C;
-        if (addResults.overflow)
-            pContext->xPSR |= APSR_V;
-    }
+    updateRdAndNZCV(pContext, &fields, &addResults);
     return PINKYSIM_STEP_OK;
 }
 
 static int movImmediate(PinkySimContext* pContext, uint16_t instr)
 {
     Fields   fields = decodeRd10to8_Imm7to0(instr);
-    int      setFlags = !inITBlock(pContext);
     uint32_t result = fields.imm;
 
-    setReg(pContext, fields.d, result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZ;
-        if (result == 0)
-            pContext->xPSR |= APSR_Z;
-    }
+    updateRdAndNZ(pContext, &fields, result);
     return PINKYSIM_STEP_OK;
+}
+
+static void updateRdAndNZ(PinkySimContext* pContext, Fields* pFields, uint32_t results)
+{
+    setReg(pContext, pFields->d, results);
+    updateNZ(pContext, pFields, results);
+}
+
+static void updateNZ(PinkySimContext* pContext, Fields* pFields, uint32_t results)
+{
+    pContext->xPSR &= ~APSR_NZ;
+    if (results & (1 << 31))
+        pContext->xPSR |= APSR_N;
+    if (results == 0)
+        pContext->xPSR |= APSR_Z;
 }
 
 static Fields decodeRd10to8_Imm7to0(uint32_t instr)
@@ -717,15 +657,7 @@ static int cmpImmediate(PinkySimContext* pContext, uint16_t instr)
     AddResults addResults;
     
     addResults = addWithCarry(getReg(pContext, fields.n), ~fields.imm, 1);
-    pContext->xPSR &= ~APSR_NZCV;
-    if (addResults.result & (1 << 31))
-        pContext->xPSR |= APSR_N;
-    if (addResults.result == 0)
-        pContext->xPSR |= APSR_Z;
-    if (addResults.carryOut)
-        pContext->xPSR |= APSR_C;
-    if (addResults.overflow)
-        pContext->xPSR |= APSR_V;
+    updateNZCV(pContext, &fields, &addResults);
     return PINKYSIM_STEP_OK;
 }
 
@@ -741,23 +673,10 @@ static Fields decodeRn10to8_Imm7to0(uint32_t instr)
 static int addImmediateT2(PinkySimContext* pContext, uint16_t instr)
 {
     Fields     fields = decodeRdn10to8_Imm7to0(instr);
-    int        setFlags = !inITBlock(pContext);
     AddResults addResults;
     
     addResults = addWithCarry(getReg(pContext, fields.n), fields.imm, 0);
-    setReg(pContext, fields.d, addResults.result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZCV;
-        if (addResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (addResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (addResults.carryOut)
-            pContext->xPSR |= APSR_C;
-        if (addResults.overflow)
-            pContext->xPSR |= APSR_V;
-    }
+    updateRdAndNZCV(pContext, &fields, &addResults);
     return PINKYSIM_STEP_OK;
 }
 
@@ -774,23 +693,10 @@ static Fields decodeRdn10to8_Imm7to0(uint32_t instr)
 static int subImmediateT2(PinkySimContext* pContext, uint16_t instr)
 {
     Fields     fields = decodeRdn10to8_Imm7to0(instr);
-    int        setFlags = !inITBlock(pContext);
     AddResults addResults;
     
     addResults = addWithCarry(getReg(pContext, fields.n), ~fields.imm, 1);
-    setReg(pContext, fields.d, addResults.result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZCV;
-        if (addResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (addResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (addResults.carryOut)
-            pContext->xPSR |= APSR_C;
-        if (addResults.overflow)
-            pContext->xPSR |= APSR_V;
-    }
+    updateRdAndNZCV(pContext, &fields, &addResults);
     return PINKYSIM_STEP_OK;
 }
 
@@ -855,19 +761,10 @@ static int dataProcessing(PinkySimContext* pContext, uint16_t instr)
 static int andRegister(PinkySimContext* pContext, uint16_t instr)
 {
     Fields   fields = decodeRm5to3_Rdn2to0(instr);
-    int      setFlags = !inITBlock(pContext);
     uint32_t result;
     
     result = getReg(pContext, fields.n) & getReg(pContext, fields.m);
-    setReg(pContext, fields.d, result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZ;
-        if (result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (result == 0)
-            pContext->xPSR |= APSR_Z;
-    }
+    updateRdAndNZ(pContext, &fields, result);
     return PINKYSIM_STEP_OK;
 }
 
@@ -884,157 +781,78 @@ static Fields decodeRm5to3_Rdn2to0(uint32_t instr)
 static int eorRegister(PinkySimContext* pContext, uint16_t instr)
 {
     Fields   fields = decodeRm5to3_Rdn2to0(instr);
-    int      setFlags = !inITBlock(pContext);
     uint32_t result;
     
     result = getReg(pContext, fields.n) ^ getReg(pContext, fields.m);
-    setReg(pContext, fields.d, result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZ;
-        if (result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (result == 0)
-            pContext->xPSR |= APSR_Z;
-    }
+    updateRdAndNZ(pContext, &fields, result);
     return PINKYSIM_STEP_OK;
 }
 
 static int lslRegister(PinkySimContext* pContext, uint16_t instr)
 {
     Fields       fields = decodeRm5to3_Rdn2to0(instr);
-    int          setFlags = !inITBlock(pContext);
     uint32_t     shiftN;
     ShiftResults shiftResults;
 
     shiftN = getReg(pContext, fields.m) & 0xFF;
     shiftResults = shift_C(getReg(pContext, fields.n), SRType_LSL, shiftN, pContext->xPSR & APSR_C);
-    setReg(pContext, fields.d, shiftResults.result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZC;
-        if (shiftResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (shiftResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (shiftResults.carryOut)
-            pContext->xPSR |= APSR_C;
-    }
+    updateRdAndNZC(pContext, &fields, &shiftResults);
     return PINKYSIM_STEP_OK;
 }
 
 static int lsrRegister(PinkySimContext* pContext, uint16_t instr)
 {
     Fields       fields = decodeRm5to3_Rdn2to0(instr);
-    int          setFlags = !inITBlock(pContext);
     uint32_t     shiftN;
     ShiftResults shiftResults;
 
     shiftN = getReg(pContext, fields.m) & 0xFF;
     shiftResults = shift_C(getReg(pContext, fields.n), SRType_LSR, shiftN, pContext->xPSR & APSR_C);
-    setReg(pContext, fields.d, shiftResults.result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZC;
-        if (shiftResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (shiftResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (shiftResults.carryOut)
-            pContext->xPSR |= APSR_C;
-    }
+    updateRdAndNZC(pContext, &fields, &shiftResults);
     return PINKYSIM_STEP_OK;
 }
 
 static int asrRegister(PinkySimContext* pContext, uint16_t instr)
 {
     Fields       fields = decodeRm5to3_Rdn2to0(instr);
-    int          setFlags = !inITBlock(pContext);
     uint32_t     shiftN;
     ShiftResults shiftResults;
 
     shiftN = getReg(pContext, fields.m) & 0xFF;
     shiftResults = shift_C(getReg(pContext, fields.n), SRType_ASR, shiftN, pContext->xPSR & APSR_C);
-    setReg(pContext, fields.d, shiftResults.result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZC;
-        if (shiftResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (shiftResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (shiftResults.carryOut)
-            pContext->xPSR |= APSR_C;
-    }
+    updateRdAndNZC(pContext, &fields, &shiftResults);
     return PINKYSIM_STEP_OK;
 }
 
 static int adcRegister(PinkySimContext* pContext, uint16_t instr)
 {
     Fields     fields = decodeRm5to3_Rdn2to0(instr);
-    int        setFlags = !inITBlock(pContext);
     AddResults addResults;
     
     addResults = addWithCarry(getReg(pContext, fields.n), getReg(pContext, fields.m), pContext->xPSR & APSR_C);
-    setReg(pContext, fields.d, addResults.result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZCV;
-        if (addResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (addResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (addResults.carryOut)
-            pContext->xPSR |= APSR_C;
-        if (addResults.overflow)
-            pContext->xPSR |= APSR_V;
-    }
+    updateRdAndNZCV(pContext, &fields, &addResults);
     return PINKYSIM_STEP_OK;
 }
 
 static int sbcRegister(PinkySimContext* pContext, uint16_t instr)
 {
     Fields      fields = decodeRm5to3_Rdn2to0(instr);
-    int         setFlags = !inITBlock(pContext);
     AddResults  addResults;
     
     addResults = addWithCarry(getReg(pContext, fields.n), ~getReg(pContext, fields.m), pContext->xPSR & APSR_C);
-    setReg(pContext, fields.d, addResults.result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZCV;
-        if (addResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (addResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (addResults.carryOut)
-            pContext->xPSR |= APSR_C;
-        if (addResults.overflow)
-            pContext->xPSR |= APSR_V;
-    }
+    updateRdAndNZCV(pContext, &fields, &addResults);
     return PINKYSIM_STEP_OK;
 }
 
 static int rorRegister(PinkySimContext* pContext, uint16_t instr)
 {
     Fields       fields = decodeRm5to3_Rdn2to0(instr);
-    int          setFlags = !inITBlock(pContext);
     uint32_t     shiftN;
     ShiftResults shiftResults;
 
     shiftN = getReg(pContext, fields.m) & 0xFF;
     shiftResults = shift_C(getReg(pContext, fields.n), SRType_ROR, shiftN, pContext->xPSR & APSR_C);
-    setReg(pContext, fields.d, shiftResults.result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZC;
-        if (shiftResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (shiftResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (shiftResults.carryOut)
-            pContext->xPSR |= APSR_C;
-    }
+    updateRdAndNZC(pContext, &fields, &shiftResults);
     return PINKYSIM_STEP_OK;
 }
 
@@ -1044,35 +862,18 @@ static int tstRegister(PinkySimContext* pContext, uint16_t instr)
     uint32_t result;
     
     result = getReg(pContext, fields.n) & getReg(pContext, fields.m);
-    pContext->xPSR &= ~APSR_NZ;
-    if (result & (1 << 31))
-        pContext->xPSR |= APSR_N;
-    if (result == 0)
-        pContext->xPSR |= APSR_Z;
+    updateNZ(pContext, &fields, result);
     return PINKYSIM_STEP_OK;
 }
 
 static int rsbRegister(PinkySimContext* pContext, uint16_t instr)
 {
     Fields      fields = decodeRn5to3_Rd2to0(instr);
-    int         setFlags = !inITBlock(pContext);
     uint32_t    imm32 = 0;
     AddResults  addResults;
     
     addResults = addWithCarry(~getReg(pContext, fields.n), imm32, 1);
-    setReg(pContext, fields.d, addResults.result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZCV;
-        if (addResults.result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (addResults.result == 0)
-            pContext->xPSR |= APSR_Z;
-        if (addResults.carryOut)
-            pContext->xPSR |= APSR_C;
-        if (addResults.overflow)
-            pContext->xPSR |= APSR_V;
-    }
+    updateRdAndNZCV(pContext, &fields, &addResults);
     return PINKYSIM_STEP_OK;
 }
 
@@ -1091,15 +892,7 @@ static int cmpRegisterT1(PinkySimContext* pContext, uint16_t instr)
     AddResults addResults;
     
     addResults = addWithCarry(getReg(pContext, fields.n), ~getReg(pContext, fields.m), 1);
-    pContext->xPSR &= ~APSR_NZCV;
-    if (addResults.result & (1 << 31))
-        pContext->xPSR |= APSR_N;
-    if (addResults.result == 0)
-        pContext->xPSR |= APSR_Z;
-    if (addResults.carryOut)
-        pContext->xPSR |= APSR_C;
-    if (addResults.overflow)
-        pContext->xPSR |= APSR_V;
+    updateNZCV(pContext, &fields, &addResults);
     return PINKYSIM_STEP_OK;
 }
 
@@ -1109,54 +902,28 @@ static int cmnRegister(PinkySimContext* pContext, uint16_t instr)
     AddResults addResults;
     
     addResults = addWithCarry(getReg(pContext, fields.n), getReg(pContext, fields.m), 0);
-    pContext->xPSR &= ~APSR_NZCV;
-    if (addResults.result & (1 << 31))
-        pContext->xPSR |= APSR_N;
-    if (addResults.result == 0)
-        pContext->xPSR |= APSR_Z;
-    if (addResults.carryOut)
-        pContext->xPSR |= APSR_C;
-    if (addResults.overflow)
-        pContext->xPSR |= APSR_V;
+    updateNZCV(pContext, &fields, &addResults);
     return PINKYSIM_STEP_OK;
 }
 
 static int orrRegister(PinkySimContext* pContext, uint16_t instr)
 {
     Fields     fields = decodeRm5to3_Rdn2to0(instr);
-    int        setFlags = !inITBlock(pContext);
     uint32_t   result;
     
     result = getReg(pContext, fields.n) | getReg(pContext, fields.m);
-    setReg(pContext, fields.d, result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZ;
-        if (result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (result == 0)
-            pContext->xPSR |= APSR_Z;
-    }
+    updateRdAndNZ(pContext, &fields, result);
     return PINKYSIM_STEP_OK;
 }
 
 static int mulRegister(PinkySimContext* pContext, uint16_t instr)
 {
     Fields    fields = decodeRn5to3_Rdm2to0(instr);
-    int       setFlags = !inITBlock(pContext);
     uint32_t  operand1 = getReg(pContext, fields.n);
     uint32_t  operand2 = getReg(pContext, fields.m);
     uint32_t  result = operand1 * operand2;
     
-    setReg(pContext, fields.d, result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZ;
-        if (result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (result == 0)
-            pContext->xPSR |= APSR_Z;
-    }
+    updateRdAndNZ(pContext, &fields, result);
     return PINKYSIM_STEP_OK;
 }
 
@@ -1173,38 +940,20 @@ static Fields decodeRn5to3_Rdm2to0(uint32_t instr)
 static int bicRegister(PinkySimContext* pContext, uint16_t instr)
 {
     Fields   fields = decodeRm5to3_Rdn2to0(instr);
-    int      setFlags = !inITBlock(pContext);
     uint32_t result;
     
     result = getReg(pContext, fields.n) & ~getReg(pContext, fields.m);
-    setReg(pContext, fields.d, result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZ;
-        if (result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (result == 0)
-            pContext->xPSR |= APSR_Z;
-    }
+    updateRdAndNZ(pContext, &fields, result);
     return PINKYSIM_STEP_OK;
 }
 
 static int mvnRegister(PinkySimContext* pContext, uint16_t instr)
 {
     Fields   fields = decodeRm5to3_Rdn2to0(instr);
-    int      setFlags = !inITBlock(pContext);
     uint32_t result;
     
     result = ~getReg(pContext, fields.m);
-    setReg(pContext, fields.d, result);
-    if (setFlags)
-    {
-        pContext->xPSR &= ~APSR_NZ;
-        if (result & (1 << 31))
-            pContext->xPSR |= APSR_N;
-        if (result == 0)
-            pContext->xPSR |= APSR_Z;
-    }
+    updateRdAndNZ(pContext, &fields, result);
     return PINKYSIM_STEP_OK;
 }
 
@@ -1230,8 +979,6 @@ static int specialDataAndBranchExchange(PinkySimContext* pContext, uint16_t inst
 static int addRegisterT2(PinkySimContext* pContext, uint16_t instr)
 {
     Fields fields = decodeRdn7and2to0_Rm6to3(instr);
-    // UNDONE: Not required for this encoding.
-    //int             setFlags = FALSE;
     AddResults      addResults;
 
     if (fields.d == 15 && fields.m == 15)
@@ -1239,28 +986,9 @@ static int addRegisterT2(PinkySimContext* pContext, uint16_t instr)
     
     addResults = addWithCarry(getReg(pContext, fields.n), getReg(pContext, fields.m), 0);
     if (fields.d == 15)
-    {
         aluWritePC(pContext, addResults.result);
-    }
     else
-    {
         setReg(pContext, fields.d, addResults.result);
-        // UNDONE: setFlags is forced to FALSE for this encoding.
-#ifdef UNDONE
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZCV;
-            if (addResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (addResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (addResults.carryOut)
-                pContext->xPSR |= APSR_C;
-            if (addResults.overflow)
-                pContext->xPSR |= APSR_V;
-        }
-#endif // UNDONE
-    }
     return PINKYSIM_STEP_OK;
 }
 
@@ -1298,49 +1026,20 @@ static int cmpRegisterT2(PinkySimContext* pContext, uint16_t instr)
         __throw(unpredictableException);
     
     addResults = addWithCarry(getReg(pContext, fields.n), ~getReg(pContext, fields.m), 1);
-    pContext->xPSR &= ~APSR_NZCV;
-    if (addResults.result & (1 << 31))
-        pContext->xPSR |= APSR_N;
-    if (addResults.result == 0)
-        pContext->xPSR |= APSR_Z;
-    if (addResults.carryOut)
-        pContext->xPSR |= APSR_C;
-    if (addResults.overflow)
-        pContext->xPSR |= APSR_V;
+    updateNZCV(pContext, &fields, &addResults);
     return PINKYSIM_STEP_OK;
 }
 
 static int movRegister(PinkySimContext* pContext, uint16_t instr)
 {
     Fields   fields = decodeRdn7and2to0_Rm6to3(instr);
-    // UNDONE: Not required for this encoding.
-    //int             setFlags = FALSE;
     uint32_t        result;
 
     result = getReg(pContext, fields.m);
     if (fields.d == 15)
-    {
         aluWritePC(pContext, result);
-    }
     else
-    {
         setReg(pContext, fields.d, result);
-        // UNDONE: setFlags is forced to FALSE for this encoding.
-#ifdef UNDONE
-        if (setFlags)
-        {
-            pContext->xPSR &= ~APSR_NZCV;
-            if (addResults.result & (1 << 31))
-                pContext->xPSR |= APSR_N;
-            if (addResults.result == 0)
-                pContext->xPSR |= APSR_Z;
-            if (addResults.carryOut)
-                pContext->xPSR |= APSR_C;
-            if (addResults.overflow)
-                pContext->xPSR |= APSR_V;
-        }
-#endif // UNDONE
-    }
     return PINKYSIM_STEP_OK;
 }
 
