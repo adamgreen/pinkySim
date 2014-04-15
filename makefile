@@ -27,7 +27,7 @@ endif
 
 all : RUN_CPPUTEST_TESTS RUN_LIBMRICORE_TESTS RUN_LIBCOMMON_TESTS RUN_LIBPINKYSIM_TESTS
 
-test : all RUN_LIBGDBREMOTE_TESTS LIBCOMMSERIAL_LIB RUN_LIBTHUNK2REAL_TESTS
+test : all RUN_LIBGDBREMOTE_TESTS RUN_LIBTHUNK2REAL_TESTS
 
 gcov : RUN_CPPUTEST_TESTS GCOV_LIBMRICORE GCOV_LIBCOMMON GCOV_LIBPINKYSIM GCOV_LIBGDBREMOTE
 
@@ -136,145 +136,77 @@ define run_gcov
 	$Q mri/CppUTest/scripts/filterGcov.sh gcov/$1_tests/$1_output.txt /dev/null gcov/$1_tests/$1.txt
 	$Q cat gcov/$1_tests/$1.txt
 endef
-
+define make_library # ,LIBRARY,src_dirs,libname.a,includes
+    HOST_$1_OBJ := $(foreach i,$2,$(call host_objs,$i))
+    HOST_$1_LIB := $(HOST_LIBDIR)/$3
+    DEPS += $(call add_deps,$1)
+    $$(HOST_$1_LIB) : INCLUDES := $4
+    $$(HOST_$1_LIB) : $$(HOST_$1_OBJ)
+		$$(call build_lib,HOST)
+endef
+define make_tests # ,LIB2TEST,test_src_dirs,includes,other_libs
+    HOST_$1_TESTS_OBJ := $(foreach i,$2,$(call host_objs,$i))
+    HOST_$1_TESTS_EXE := $1_tests$(GCOV)
+    DEPS += $(call add_deps,$1_TESTS)
+    $$(HOST_$1_TESTS_EXE) : INCLUDES := mri/CppUTest/include $3
+    $$(HOST_$1_TESTS_EXE) : $$(HOST_$1_TESTS_OBJ) $(HOST_$1_LIB) $(HOST_CPPUTEST_LIB) $4
+		$$(call link_exe,HOST)
+    RUN_$1_TESTS : $$(HOST_$1_TESTS_EXE)
+		$Q $$(HOST_$1_TESTS_EXE)
+endef
 
 #######################################
 # libCppUtest.a
-HOST_CPPUTEST_OBJ := $(call host_objs,mri/CppUTest/src/CppUTest) $(call host_objs,mri/CppUTest/src/Platforms/Gcc)
-HOST_CPPUTEST_LIB := $(HOST_LIBDIR)/libCppUTest.a
-$(HOST_CPPUTEST_LIB) : INCLUDES := $(INCLUDES) mri/CppUTest/include
-$(HOST_CPPUTEST_LIB) : $(HOST_CPPUTEST_OBJ)
-	$(call build_lib,HOST)
-DEPS += $(call add_deps,CPPUTEST)
-
-# Unit tests
-HOST_CPPUTEST_TESTS_OBJ := $(call host_objs,mri/CppUTest/tests)
-HOST_CPPUTEST_TESTS_EXE := CppUTest_tests$(GCOV)
-$(HOST_CPPUTEST_TESTS_EXE) : INCLUDES := $(INCLUDES) mri/CppUTest/include
-$(HOST_CPPUTEST_TESTS_EXE) : $(HOST_CPPUTEST_TESTS_OBJ) $(HOST_CPPUTEST_LIB)
-	$(call link_exe,HOST)
-RUN_CPPUTEST_TESTS : $(HOST_CPPUTEST_TESTS_EXE)
-	$Q $(HOST_CPPUTEST_TESTS_EXE)
-DEPS += $(call add_deps,CPPUTEST_TESTS)
-
+$(eval $(call make_library,CPPUTEST,mri/CppUTest/src/CppUTest mri/CppUTest/src/Platforms/Gcc,libCppUTest.a,$(INCLUDES) mri/CppUTest/include))
+$(eval $(call make_tests,CPPUTEST,mri/CppUTest/tests,,))
 
 #######################################
 # Native memory access objects
 HOST_NATIVE_MEM_OBJ   := $(call host_objs,mri/memory/native)
 DEPS += $(call add_deps,NATIVE_MEM)
 
-
 #######################################
 # libmricore.a
-HOST_LIBMRICORE_OBJ   := $(call host_objs,mri/core)
-HOST_LIBMRICORE_LIB   := $(HOST_LIBDIR)/libmricore.a
-$(HOST_LIBMRICORE_LIB) : INCLUDES := mri/include
-$(HOST_LIBMRICORE_LIB) : $(HOST_LIBMRICORE_OBJ)
-	$(call build_lib,HOST)
-DEPS += $(call add_deps,LIBMRI)
-
-# Unit tests
-HOST_LIBMRICORE_TESTS_OBJ := $(call host_objs,mri/tests/tests) $(call host_objs,mri/tests/mocks)
-HOST_LIBMRICORE_TESTS_EXE := mri_tests$(GCOV)
-$(HOST_LIBMRICORE_TESTS_EXE) : INCLUDES := mri/include mri/CppUTest/include tests/tests mri/tests/mocks
-$(HOST_LIBMRICORE_TESTS_EXE) : $(HOST_LIBMRICORE_TESTS_OBJ) \
-                               $(HOST_NATIVE_MEM_OBJ) \
-                               $(HOST_LIBMRICORE_LIB) \
-                               $(HOST_CPPUTEST_LIB)
-	$(call link_exe,HOST)
-RUN_LIBMRICORE_TESTS : $(HOST_LIBMRICORE_TESTS_EXE)
-	$Q $(HOST_LIBMRICORE_TESTS_EXE)
-DEPS += $(call add_deps,LIBMRICORE_TESTS)
+$(eval $(call make_library,LIBMRICORE,mri/core,libmricore.a,mri/include))
+$(eval $(call make_tests,LIBMRICORE,\
+                         mri/tests/tests mri/tests/mocks,\
+                         mri/include mri/tests/mocks,\
+                         $(HOST_NATIVE_MEM_OBJ)))
 GCOV_LIBMRICORE : RUN_LIBMRICORE_TESTS
 	$(call run_gcov,LIBMRICORE)
 
-
 #######################################
 # libcommon.a
-HOST_LIBCOMMON_OBJ := $(call host_objs,libcommon/src)
-HOST_LIBCOMMON_LIB := $(HOST_LIBDIR)/libcommon.a
-$(HOST_LIBCOMMON_LIB) : $(HOST_LIBCOMMON_OBJ)
-	$(call build_lib,HOST)
-DEPS += $(call add_deps,LIBCOMMON)
-
-# Unit tests
-HOST_LIBCOMMON_TESTS_OBJ := $(call host_objs,libcommon/tests)
-HOST_LIBCOMMON_TESTS_EXE := libcommon_tests$(GCOV)
-$(HOST_LIBCOMMON_TESTS_EXE) : INCLUDES := $(INCLUDES) mri/CppUTest/include
-$(HOST_LIBCOMMON_TESTS_EXE) : $(HOST_LIBCOMMON_TESTS_OBJ) $(HOST_LIBCOMMON_LIB) $(HOST_CPPUTEST_LIB)
-	$(call link_exe,HOST)
-RUN_LIBCOMMON_TESTS : $(HOST_LIBCOMMON_TESTS_EXE)
-	$Q $(HOST_LIBCOMMON_TESTS_EXE)
+$(eval $(call make_library,LIBCOMMON,libcommon/src,libcommon.a,include))
+$(eval $(call make_tests,LIBCOMMON,libcommon/tests,include,))
 GCOV_LIBCOMMON : RUN_LIBCOMMON_TESTS
 	$(call run_gcov,LIBCOMMON)
-DEPS += $(call add_deps,LIBCOMMON_TESTS)
-
 
 #######################################
 # libpinkysim.a
-HOST_LIBPINKYSIM_OBJ := $(call host_objs,libpinkysim/src)
-HOST_LIBPINKYSIM_LIB := $(HOST_LIBDIR)/libpinkysim.a
-$(HOST_LIBPINKYSIM_LIB) : $(HOST_LIBPINKYSIM_OBJ)
-	$(call build_lib,HOST)
-DEPS += $(call add_deps,LIBPINKYSIM)
-
-# Unit tests
-HOST_LIBPINKYSIM_TESTS_OBJ := $(call host_objs,libpinkysim/tests)
-HOST_LIBPINKYSIM_TESTS_EXE := libpinkysim_tests$(GCOV)
-$(HOST_LIBPINKYSIM_TESTS_EXE) : INCLUDES := $(INCLUDES) mri/CppUTest/include
-$(HOST_LIBPINKYSIM_TESTS_EXE) : $(HOST_LIBPINKYSIM_TESTS_OBJ) \
-                                $(HOST_LIBPINKYSIM_LIB) \
-                                $(HOST_LIBCOMMON_LIB) \
-                                $(HOST_CPPUTEST_LIB)
-	$(call link_exe,HOST)
-RUN_LIBPINKYSIM_TESTS : $(HOST_LIBPINKYSIM_TESTS_EXE)
-	$Q $(HOST_LIBPINKYSIM_TESTS_EXE)
+$(eval $(call make_library,LIBPINKYSIM,libpinkysim/src,lipinkysim.a,include))
+$(eval $(call make_tests,LIBPINKYSIM,libpinkysim/tests,include,$(HOST_LIBCOMMON_LIB)))
 GCOV_LIBPINKYSIM : RUN_LIBPINKYSIM_TESTS
 	$(call run_gcov,LIBPINKYSIM)
-DEPS += $(call add_deps,LIBPINKYSIM_TESTS)
-
 
 #######################################
 # libgdbremote.a
-HOST_LIBGDBREMOTE_OBJ := $(call host_objs,libgdbremote/src)
-HOST_LIBGDBREMOTE_LIB := $(HOST_LIBDIR)/libgdbremote.a
-$(HOST_LIBGDBREMOTE_LIB) : $(HOST_LIBGDBREMOTE_OBJ)
-	$(call build_lib,HOST)
-DEPS += $(call add_deps,LIBGDBREMOTE)
-
-# Unit tests
-HOST_LIBGDBREMOTE_TESTS_OBJ := $(call host_objs,libgdbremote/tests) $(call host_objs,libgdbremote/mocks)
-HOST_LIBGDBREMOTE_TESTS_EXE := libgdbremote_tests$(GCOV)
-$(HOST_LIBGDBREMOTE_TESTS_EXE) : INCLUDES := $(INCLUDES) libgdbremote/mocks mri/CppUTest/include
-$(HOST_LIBGDBREMOTE_TESTS_EXE) : $(HOST_LIBGDBREMOTE_TESTS_OBJ) \
-                                 $(HOST_LIBGDBREMOTE_LIB) \
-                                 $(HOST_LIBCOMMON_LIB) \
-                                 $(HOST_CPPUTEST_LIB)
-	$(call link_exe,HOST)
-RUN_LIBGDBREMOTE_TESTS : $(HOST_LIBGDBREMOTE_TESTS_EXE)
-	$Q $(HOST_LIBGDBREMOTE_TESTS_EXE)
+$(eval $(call make_library,LIBGDBREMOTE,libgdbremote/src,libgdbremote.a,include))
+$(eval $(call make_tests,LIBGDBREMOTE,\
+                        libgdbremote/tests libgdbremote/mocks,\
+                        include libgdbremote/mocks,\
+                        $(HOST_LIBCOMMON_LIB)))
 GCOV_LIBGDBREMOTE : RUN_LIBGDBREMOTE_TESTS
 	$(call run_gcov,LIBGDBREMOTE)
-DEPS += $(call add_deps,LIBGDBREMOTE_TESTS)
-
 
 #######################################
 # libcommserial.a
-HOST_LIBCOMMSERIAL_OBJ := $(call host_objs,libcommserial/src)
-HOST_LIBCOMMSERIAL_LIB := $(HOST_LIBDIR)/libcommserial.a
-$(HOST_LIBCOMMSERIAL_LIB) : $(HOST_LIBCOMMSERIAL_OBJ)
-	$(call build_lib,HOST)
-LIBCOMMSERIAL_LIB : $(HOST_LIBCOMMSERIAL_LIB)
-DEPS += $(call add_deps,LIBCOMMSERIAL)
+$(eval $(call make_library,LIBCOMMSERIAL,libcommserial/src,libcommserial.a,include))
 
 
 #######################################
 # libthunk2real.a
-HOST_LIBTHUNK2REAL_OBJ := $(call host_objs,libthunk2real/src) $(call host_objs,libthunk2real/mocks)
-HOST_LIBTHUNK2REAL_LIB := $(HOST_LIBDIR)/libthunk2real.a
-$(HOST_LIBTHUNK2REAL_LIB) : $(HOST_LIBTHUNK2REAL_OBJ)
-	$(call build_lib,HOST)
-DEPS += $(call add_deps,LIBTHUNK2REAL)
+$(eval $(call make_library,LIBTHUNK2REAL,libthunk2real/src libthunk2real/mocks,libthunk2real.a,include))
 
 # Unit tests
 # Note: The actual tests here come from libpinkysim/tests
