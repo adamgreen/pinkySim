@@ -74,7 +74,7 @@ TEST_GROUP(gdbRemote)
     
     void fillContextRegistersWithAscendingValues()
     {
-        for (int i = 0 ; i < sizeof(m_context.R)/sizeof(m_context.R[0]) ; i++)
+        for (size_t i = 0 ; i < sizeof(m_context.R)/sizeof(m_context.R[0]) ; i++)
             m_context.R[i] = 0x11111111 * i;
         m_context.spMain = 0xDDDDDDDD;
         m_context.lr = 0xEEEEEEEE;

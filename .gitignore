@@ -1,6 +1,8 @@
 .DS_Store
 *_tests
+*_tests_gcov
 *_tests.exe
+*_tests_gcov.exe
 *_tests.txt
 *.o
 *.d

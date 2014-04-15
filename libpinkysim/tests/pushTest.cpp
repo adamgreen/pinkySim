@@ -64,7 +64,7 @@ TEST(push, PushAll)
         SimpleMemory_SetMemory(m_context.pMemory, INITIAL_SP - 4 * i, 0xFFFFFFFF, READ_WRITE);
     pinkySimStep(&m_context);
     for (int i = 0 ; i < 8 ; i++)
-        CHECK_EQUAL(0x11111111 * i, IMemory_Read32(m_context.pMemory, INITIAL_SP - 4 * (9 - i)));
+        CHECK_EQUAL(0x11111111U * i, IMemory_Read32(m_context.pMemory, INITIAL_SP - 4 * (9 - i)));
     CHECK_EQUAL(INITIAL_LR, IMemory_Read32(m_context.pMemory, INITIAL_SP - 4));
 }
 

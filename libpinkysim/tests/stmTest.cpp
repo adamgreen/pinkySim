@@ -59,7 +59,7 @@ TEST(stm, PushAllWithR0AsAddress)
     pinkySimStep(&m_context);
     CHECK_EQUAL(INITIAL_PC + 16, IMemory_Read32(m_context.pMemory, INITIAL_PC + 16 + 4 * 0));
     for (int i = 1 ; i < 8 ; i++)
-        CHECK_EQUAL(0x11111111 * i, IMemory_Read32(m_context.pMemory, INITIAL_PC + 16 + 4 * i));
+        CHECK_EQUAL(0x11111111U * i, IMemory_Read32(m_context.pMemory, INITIAL_PC + 16 + 4 * i));
 }
 
 TEST(stm, PushAllButR7WithR7AsAddress)
@@ -71,7 +71,7 @@ TEST(stm, PushAllButR7WithR7AsAddress)
         SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 16 + 4 * i, 0xFFFFFFFF, READ_WRITE);
     pinkySimStep(&m_context);
     for (int i = 0 ; i < 7 ; i++)
-        CHECK_EQUAL(0x11111111 * i, IMemory_Read32(m_context.pMemory, INITIAL_PC + 16 + 4 * i));
+        CHECK_EQUAL(0x11111111U * i, IMemory_Read32(m_context.pMemory, INITIAL_PC + 16 + 4 * i));
 }
 
 TEST(stm, HardFaultFromInvalidMemoryWrite)

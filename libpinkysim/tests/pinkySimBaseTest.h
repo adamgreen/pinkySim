@@ -39,7 +39,7 @@ class pinkySimBase : public Utest
 {
 protected:
     int             m_expectedStepReturn;
-    int             m_expectedXPSRflags;
+    uint32_t        m_expectedXPSRflags;
     uint32_t        m_expectedRegisterValues[13];
     uint32_t        m_expectedSPmain;
     uint32_t        m_expectedLR;
