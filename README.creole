@@ -19,20 +19,23 @@ TDD, on future projects where the code under test will be written in assembly la
 
 
 ==How to Clone
-This project uses submodules (CppUTest for unit testing).  Cloning requires a few more steps to get all of the necessary
+This project uses submodules (ie. MRI and CppUTest).  Cloning requires a few more steps to get all of the necessary
 code.
+
+{{{
+git clone --recursive git@github.com:adamgreen/pinkySim.git
+}}}
+
+**- or -**
 
 {{{
 git clone git@github.com:adamgreen/pinkySim.git
 cd pinkSim
 git submodule init
 git submodule update
-}}}
-
-**- or -**
-
-{{{
-git clone --recursive git@github.com:adamgreen/pinkySim.git
+cd mri
+git submodule init
+git submodule update
 }}}
 
 
@@ -45,16 +48,16 @@ This subproject uses a test mock in the place of pinkySim which redirects the pr
 hardware. This is accomplished by connecting the test mock to an an actual ARM Cortex-M3 device (mbed-LPC1768) via the
 GDB remote serial protocol.  To run this suite you must:
 * Be running the build process from a Macintosh computer running OS X with Xcode installed.
-* Built and deploy [[https://github.com/adamgreen/pinkySim/tree/master/libthunk2real/realarm | the realarm firmware]]
+* Build and deploy [[https://github.com/adamgreen/pinkySim/tree/master/libthunk2real/realarm | the realarm firmware]]
   to an mbed-LPC1768 device.
 ** This mbed device must first be running the [[http://mbed.org/media/uploads/simon/mbedmicrocontroller_21164.if | 21664 interface firmware]].
-** Clone the [[https://github.com/adamgreen/gcc4mbed#quick-start | GCC4MBED]] git repository as a sibling to your
-   pinkySim repository clone.
+** Setup the [[https://github.com/adamgreen/gcc4mbed#quick-start | GCC4MBED]] project as a sibling to your pinkySim
+   repository clone.
 ** Build and deploy by running {{{make deploy}}} from the realarm directory.
 * Reboot the mbed device.
 * Make sure that the mbed device is connected to your Macintosh before running the next step.
 * Build the tests.  This can be done by going to the root pinkySim directory on your machine and running
-  {{{make tests}}}.  This will not only build the tests but it will also detect your connected mbed device and
+  {{{make test}}}.  This will not only build the tests but it will also detect your connected mbed device and
   automatically run the tests on it.
 
 
