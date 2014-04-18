@@ -23,15 +23,20 @@
 typedef struct MemorySim MemorySim;
 typedef struct MemoryRegion MemoryRegion;
 
+static void freeRegion(MemoryRegion* pRegion);
+static void* throwingZeroedMalloc(size_t size);
+static void addRegionToTail(MemorySim* pThis, MemoryRegion* pRegion);
+static MemoryRegion* findMatchingRegion(MemorySim* pThis, uint32_t address, uint32_t size);
+static void copyImageToRegion(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize);
+static void freeLastRegion(MemorySim* pThis);
+static void* getDataPointer(MemorySim* pThis, uint32_t address, uint32_t size, int writeMode);
+
 static uint32_t read32(IMemory* pMemory, uint32_t address);
 static uint16_t read16(IMemory* pMemory, uint32_t address);
 static uint8_t read8(IMemory* pMemory, uint32_t address);
 static void write32(IMemory* pMemory, uint32_t address, uint32_t value);
 static void write16(IMemory* pMemory, uint32_t address, uint16_t value);
 static void write8(IMemory* pMemory, uint32_t address, uint8_t value);
-
-static void* getDataPointer(MemorySim* pThis, uint32_t address, uint32_t size, int writeMode);
-static MemoryRegion* findMatchingRegion(MemorySim* pThis, uint32_t address, uint32_t size);
 
 static IMemoryVTable g_vTable = {read32, read16, read8, write32, write16, write8};
 
@@ -61,6 +66,7 @@ IMemory* MemorySim_Init(void)
     return (IMemory*)&g_object;
 }
 
+
 void MemorySim_Uninit(IMemory* pMemory)
 {
     MemorySim*    pThis = (MemorySim*)pMemory;
@@ -73,12 +79,21 @@ void MemorySim_Uninit(IMemory* pMemory)
     while (pCurr)
     {
         MemoryRegion* pNext = pCurr->pNext;
-        free(pCurr->pData);
-        free(pCurr);
+        freeRegion(pCurr);
         pCurr = pNext;
     }
     pThis->pHeadRegion = pThis->pTailRegion = NULL;
 }
+
+static void freeRegion(MemoryRegion* pRegion)
+{
+    if (!pRegion)
+        return;
+        
+    free(pRegion->pData);
+    free(pRegion);
+}
+
 
 void MemorySim_CreateRegion(IMemory* pMemory, uint32_t baseAddress, uint32_t size)
 {
@@ -87,44 +102,117 @@ void MemorySim_CreateRegion(IMemory* pMemory, uint32_t baseAddress, uint32_t siz
 
     __try
     {
-        pRegion = malloc(sizeof(*pRegion));
-        if (!pRegion)
-            __throw(outOfMemoryException);
-        pRegion->pNext = NULL;
-        pRegion->readOnly = 0;
+        pRegion = throwingZeroedMalloc(sizeof(*pRegion));
         pRegion->baseAddress = baseAddress;
         pRegion->size = size;
-        pRegion->pData = malloc(size);
-        if (!pRegion->pData)
-            __throw(outOfMemoryException);
-        memset(pRegion->pData, 0, size);
-
-        if (!pThis->pTailRegion)
-        {
-            assert(!pThis->pHeadRegion);
-            pThis->pHeadRegion = pRegion;
-            pThis->pTailRegion = pRegion;
-        }
-        else
-        {
-            pThis->pTailRegion->pNext = pRegion;
-        }
+        pRegion->pData = throwingZeroedMalloc(size);
+        addRegionToTail(pThis, pRegion);
     }
     __catch
     {
-        if (pRegion)
-        {
-            free(pRegion->pData);
-            free(pRegion);
-        }
+        freeRegion(pRegion);
+        __rethrow;
     }
 }
+
+static void* throwingZeroedMalloc(size_t size)
+{
+    void* pvAlloc = malloc(size);
+    if (!pvAlloc)
+        __throw(outOfMemoryException);
+    memset(pvAlloc, 0, size);
+    return pvAlloc;
+}
+
+static void addRegionToTail(MemorySim* pThis, MemoryRegion* pRegion)
+{
+    if (!pThis->pTailRegion)
+        pThis->pHeadRegion = pThis->pTailRegion = pRegion;
+    else
+        pThis->pTailRegion->pNext = pRegion;
+}
+
 
 void MemorySim_MakeRegionReadOnly(IMemory* pMemory, uint32_t baseAddress)
 {
     MemorySim* pThis = (MemorySim*)pMemory;
     MemoryRegion* pRegion = findMatchingRegion(pThis, baseAddress, 1);
     pRegion->readOnly = 1;
+}
+
+static MemoryRegion* findMatchingRegion(MemorySim* pThis, uint32_t address, uint32_t size)
+{
+    MemoryRegion* pCurr = pThis->pHeadRegion;
+    
+    while (pCurr)
+    {
+        MemoryRegion* pNext = pCurr->pNext;
+        if (address >= pCurr->baseAddress && address + size <= pCurr->baseAddress + pCurr->size)
+            return pCurr;
+        pCurr = pNext;
+    }
+    __throw(busErrorException);
+}
+
+
+__throws void MemorySim_CreateRegionsFromFlashImage(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize)
+{
+    MemorySim*      pThis = (MemorySim*)pMemory;
+    
+    if (flashImageSize < sizeof(uint32_t))
+        __throw(bufferOverrunException);
+
+    MemorySim_CreateRegion(pMemory, FLASH_BASE_ADDRESS, flashImageSize);
+    copyImageToRegion(pMemory, pFlashImage, flashImageSize);
+    MemorySim_MakeRegionReadOnly(pMemory, FLASH_BASE_ADDRESS);
+
+    __try
+    {
+        uint32_t endRAMAddress = *(uint32_t*)pFlashImage;
+        uint32_t baseRAMAddress =  endRAMAddress & RAM_ADDRESS_MASK;
+        MemorySim_CreateRegion(pMemory, baseRAMAddress, endRAMAddress - baseRAMAddress);
+    }
+    __catch
+    {
+        freeLastRegion(pThis);
+        __rethrow;
+    }
+}
+
+static void copyImageToRegion(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize)
+{
+    const uint32_t* pSrcWord = (uint32_t*)pFlashImage;
+    uint32_t        address = FLASH_BASE_ADDRESS;
+    const uint8_t*  pSrcByte;
+
+    while (flashImageSize > sizeof(uint32_t))
+    {
+        write32(pMemory, address, *pSrcWord++);
+        address += sizeof(uint32_t);
+        flashImageSize -= sizeof(uint32_t);
+    }
+    
+    pSrcByte = (const uint8_t*)pSrcWord;
+    while (flashImageSize--)
+        write8(pMemory, address++, *pSrcByte++);
+}
+
+static void freeLastRegion(MemorySim* pThis)
+{
+    MemoryRegion* pPrev = NULL;
+    MemoryRegion* pCurr = pThis->pHeadRegion;
+    
+    while (pCurr && pCurr->pNext)
+    {
+        pPrev = pCurr;
+        pCurr = pCurr->pNext;
+    }
+    if (!pPrev)
+        pThis->pHeadRegion = pThis->pTailRegion = NULL;
+    else
+        pPrev->pNext = NULL;
+    free(pCurr->pData);
+    free(pCurr);
 }
 
 
@@ -167,18 +255,4 @@ static void* getDataPointer(MemorySim* pThis, uint32_t address, uint32_t size, i
     if (writeMode && pRegion->readOnly)
         __throw(busErrorException);
     return pRegion->pData + regionOffset;
-}
-
-static MemoryRegion* findMatchingRegion(MemorySim* pThis, uint32_t address, uint32_t size)
-{
-    MemoryRegion* pCurr = pThis->pHeadRegion;
-    
-    while (pCurr)
-    {
-        MemoryRegion* pNext = pCurr->pNext;
-        if (address >= pCurr->baseAddress && address + size <= pCurr->baseAddress + pCurr->size)
-            return pCurr;
-        pCurr = pNext;
-    }
-    __throw(busErrorException);
 }

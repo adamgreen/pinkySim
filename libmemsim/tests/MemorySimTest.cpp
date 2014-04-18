@@ -50,6 +50,11 @@ TEST(MemorySim, BasicInitTakenCareOfInSetup)
     CHECK(m_pMemory != NULL);
 }
 
+TEST(MemorySim, Uninit_ShouldHandleNULLPointer)
+{
+    MemorySim_Uninit(NULL);
+}
+
 TEST(MemorySim, NoMemoryRegionsSetupShouldResultInAllReadsAndWritesThrowing)
 {
     __try_and_catch( IMemory_Read32(m_pMemory, 0x00000000) );
@@ -68,7 +73,7 @@ TEST(MemorySim, NoMemoryRegionsSetupShouldResultInAllReadsAndWritesThrowing)
 
 TEST(MemorySim, ShouldThrowIfOutOfMemory)
 {
-    // Each region is two allocations.
+    // Each region has two allocations.
     // 1. The MemoryRegion structure which describes the region.
     // 2. The array of bytes used to simulate the memory.
     static const size_t allocationsToFail = 2;
@@ -226,4 +231,90 @@ TEST(MemorySim, SimulateTwoMemoryRegions)
     CHECK_EQUAL(0x11111111, IMemory_Read32(m_pMemory, region1));
     IMemory_Write32(m_pMemory, region2, 0x22222222);
     CHECK_EQUAL(0x22222222, IMemory_Read32(m_pMemory, region2));
+}
+
+TEST(MemorySim, CreateRegionsBasedOnFlashImage_TwoWordsOfFLASH_OneWordOfRAM_CheckRanges)
+{
+    uint32_t flashBinary[2] = { 0x10000004, 0x00000200 };
+    MemorySim_CreateRegionsFromFlashImage(m_pMemory, flashBinary, sizeof(flashBinary));
+
+    // FLASH is read-only from 0x00000000 - 0x00000007
+    CHECK_EQUAL(flashBinary[0], IMemory_Read32(m_pMemory, FLASH_BASE_ADDRESS));
+    CHECK_EQUAL(flashBinary[1], IMemory_Read32(m_pMemory, FLASH_BASE_ADDRESS + 4));
+    __try_and_catch( IMemory_Read32(m_pMemory, FLASH_BASE_ADDRESS + 8) );
+    validateExceptionThrown(busErrorException);
+
+    __try_and_catch( IMemory_Write32(m_pMemory, FLASH_BASE_ADDRESS, 0x12345678) );
+    validateExceptionThrown(busErrorException);
+    __try_and_catch( IMemory_Write32(m_pMemory, FLASH_BASE_ADDRESS + 4, 0x12345678) );
+    validateExceptionThrown(busErrorException);
+    
+    // RAM is read-write from 0x10000000 - 0x10000003
+    IMemory_Write32(m_pMemory, 0x10000000, 0x12345678);
+    CHECK_EQUAL(0x12345678, IMemory_Read32(m_pMemory, 0x10000000));
+    __try_and_catch( IMemory_Read32(m_pMemory, 0x10000004) );
+    validateExceptionThrown(busErrorException);
+}
+
+TEST(MemorySim, CreateRegionsBasedOnFlashImage_NonWordSizedFlash)
+{
+    uint32_t flashBinary[2] = { 0x10000004, 0x00000200 };
+    MemorySim_CreateRegionsFromFlashImage(m_pMemory, flashBinary, sizeof(flashBinary) - 1);
+
+    for (uint32_t i = 0 ; i < sizeof(flashBinary) - 1; i++)
+        CHECK_EQUAL(((uint8_t*)flashBinary)[i], IMemory_Read8(m_pMemory, FLASH_BASE_ADDRESS + i));
+
+    __try_and_catch( IMemory_Read8(m_pMemory, FLASH_BASE_ADDRESS + 7) );
+    validateExceptionThrown(busErrorException);
+}
+
+TEST(MemorySim, CreateRegionsFromFlashImage_ShouldThrowIfOutOfMemory)
+{
+    // Each region has two allocations:
+    // 1. The MemoryRegion structure which describes the region.
+    // 2. The array of bytes used to simulate the memory.
+    // This API creates two regions (FLASH and RAM) so there are a total of 4 allocations.
+    static const size_t allocationsToFail = 4;
+    uint32_t            flashBinary[2] = { 0x10000004, 0x00000200 };
+    size_t              i;
+    
+    for (i = 1 ; i <= allocationsToFail ; i++)
+    {
+        MallocFailureInject_FailAllocation(i);
+        __try_and_catch( MemorySim_CreateRegionsFromFlashImage(m_pMemory, flashBinary, sizeof(flashBinary)) );
+        validateExceptionThrown(outOfMemoryException);
+    }
+    MallocFailureInject_FailAllocation(i);
+    MemorySim_CreateRegionsFromFlashImage(m_pMemory, flashBinary, sizeof(flashBinary));
+}
+
+TEST(MemorySim, CreateRegionsFromFlashImage_MakeSureItHandlesOutOfMemoryWhenThereIsAnExistingRegion)
+{
+    MemorySim_CreateRegion(m_pMemory, 0xF0000000, 4);
+    IMemory_Write32(m_pMemory, 0xF0000000, 0x12345678);
+    
+    // Each region has two allocations:
+    // 1. The MemoryRegion structure which describes the region.
+    // 2. The array of bytes used to simulate the memory.
+    // This API creates two regions (FLASH and RAM) so there are a total of 4 allocations.
+    static const size_t allocationsToFail = 4;
+    uint32_t            flashBinary[2] = { 0x10000004, 0x00000200 };
+    size_t              i;
+    
+    for (i = 1 ; i <= allocationsToFail ; i++)
+    {
+        MallocFailureInject_FailAllocation(i);
+        __try_and_catch( MemorySim_CreateRegionsFromFlashImage(m_pMemory, flashBinary, sizeof(flashBinary)) );
+        validateExceptionThrown(outOfMemoryException);
+    }
+    
+    // The manually created region should still be valid.
+    CHECK_EQUAL(0x12345678, IMemory_Read32(m_pMemory, 0xF0000000));
+}
+
+TEST(MemorySim, CreateRegionsBasedOnFlashImage_ShouldThrowIfNotBigEnoughForInitialStackPointer)
+{
+    uint32_t flashBinary = 0x10000004;
+    __try_and_catch( MemorySim_CreateRegionsFromFlashImage(m_pMemory, &flashBinary, sizeof(flashBinary) - 1) );
+    validateExceptionThrown(bufferOverrunException);
 }
