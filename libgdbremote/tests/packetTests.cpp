@@ -109,9 +109,25 @@ TEST(Packet, PacketGetFromGDB_Short)
     CHECK_TRUE( mockCommDoesTransmittedDataEqual("+") );
 }
 
+TEST(Packet, PacketGetFromGDB_ShortWithUpperCaseHexDigits)
+{
+    mockCommInitReceiveData("$?#3F");
+    tryPacketGet();
+    validateBufferMatches("?");
+    CHECK_TRUE( mockCommDoesTransmittedDataEqual("+") );
+}
+
 TEST(Packet, PacketGetFromGDB_BadChecksum)
 {
     mockCommInitReceiveData("$?#f3");
+    tryPacketGet();
+    validateThatEmptyGdbPacketWasRead();
+    CHECK_TRUE( mockCommDoesTransmittedDataEqual("-+") ); 
+}
+
+TEST(Packet, PacketGetFromGDB_BadHexDigitInChecksum)
+{
+    mockCommInitReceiveData("$?#g3");
     tryPacketGet();
     validateThatEmptyGdbPacketWasRead();
     CHECK_TRUE( mockCommDoesTransmittedDataEqual("-+") ); 
