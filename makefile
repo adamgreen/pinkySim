@@ -21,23 +21,14 @@ endif
 
 
 #######################################
-#  High Level Make Rules
+#  Forwards Declaration of Main Rules
 #######################################
 .PHONY : all test clean gcov
 
-all : RUN_CPPUTEST_TESTS RUN_LIBMRICORE_TESTS RUN_LIBCOMMON_TESTS RUN_LIBPINKYSIM_TESTS
-
-test : all RUN_LIBGDBREMOTE_TESTS RUN_LIBTHUNK2REAL_TESTS
-
-gcov : RUN_CPPUTEST_TESTS GCOV_LIBMRICORE GCOV_LIBCOMMON GCOV_LIBPINKYSIM GCOV_LIBGDBREMOTE
-
-clean : 
-	@echo Cleaning pinkysim
-	$Q $(REMOVE_DIR) $(OBJDIR) $(QUIET)
-	$Q $(REMOVE_DIR) $(LIBDIR) $(QUIET)
-	$Q $(REMOVE_DIR) $(GCOVDIR) $(QUIET)
-	$Q $(REMOVE) *_tests$(EXE) $(QUIET)
-	$Q $(REMOVE) *_tests_gcov$(EXE) $(QUIET)
+all:
+test:
+gcov:
+clean: 
 
 
 # Make sure that gcov goal isn't used with incompatible rules.
@@ -96,18 +87,22 @@ HOST_LIBDIR   := $(LIBDIR)
 
 # Modify some things if we want to run code coverage as part of this build.
 ifeq "$(findstring gcov,$(MAKECMDGOALS))" "gcov"
-    HOST_OBJDIR   := $(GCOVDIR)/$(HOST_OBJDIR)
-    HOST_LIBDIR   := $(GCOVDIR)/$(HOST_LIBDIR)
-    HOST_GCCFLAGS += -fprofile-arcs -ftest-coverage
-    HOST_GPPFLAGS += -fprofile-arcs -ftest-coverage
-    HOST_LDFLAGS  += -fprofile-arcs -ftest-coverage
-    GCOV          := _gcov
+    HOST_OBJDIR        := $(GCOVDIR)/$(HOST_OBJDIR)
+    HOST_LIBDIR        := $(GCOVDIR)/$(HOST_LIBDIR)
+    HOST_GCCFLAGS      += -fprofile-arcs -ftest-coverage
+    HOST_GPPFLAGS      += -fprofile-arcs -ftest-coverage
+    HOST_LDFLAGS       += -fprofile-arcs -ftest-coverage
+    GCOV               := _gcov
+    EXTRA_COMPILE_STEP = $(REMOVE) $(call obj_to_gcda,$@) $(QUIET)
 else
     GCOV :=
+    EXTRA_COMPILE_STEP =
 endif
 
-# Most of the needed headers are located here.
-INCLUDES := include
+# Start out with empty pre-req lists.  Add modules as we go.
+ALL_TARGETS  :=
+TEST_TARGETS :=
+GCOV_TARGETS :=
 
 # Start out with an empty header file dependency list.  Add module files as we go.
 DEPS :=
@@ -116,6 +111,7 @@ DEPS :=
 objs = $(addprefix $2/,$(addsuffix .o,$(basename $(wildcard $1/*.c $1/*.cpp $1/*.S))))
 host_objs = $(call objs,$1,$(HOST_OBJDIR))
 add_deps = $(patsubst %.o,%.d,$(HOST_$1_OBJ))
+obj_to_gcda = $(patsubst %.o,%.gcda,$1)
 includes = $(patsubst %,-I%,$1)
 define build_lib
 	@echo Building $@
@@ -128,18 +124,21 @@ define link_exe
 	$Q $($1_LD) $($1_LDFLAGS) $^ -o $@
 endef
 define run_gcov
-	$Q $(REMOVE) $1_output.txt $(QUIET)
-	$Q mkdir -p gcov/$1_tests $(QUIET)
-	$Q $(foreach i,$(HOST_$1_OBJ),gcov -object-directory=$(dir $i) $(notdir $i) >> $1_output.txt ;)
-	$Q mv $1_output.txt gcov/$1_tests/ $(QUIET)
-	$Q mv *.gcov gcov/$1_tests/ $(QUIET)
-	$Q mri/CppUTest/scripts/filterGcov.sh gcov/$1_tests/$1_output.txt /dev/null gcov/$1_tests/$1.txt
-	$Q cat gcov/$1_tests/$1.txt
+    GCOV_TARGETS += GCOV_$1
+    GCOV_$1 : RUN_$1_TESTS
+		$Q $(REMOVE) $1_output.txt $(QUIET)
+		$Q mkdir -p gcov/$1_tests $(QUIET)
+		$Q $(foreach i,$(HOST_$1_OBJ),gcov -object-directory=$(dir $i) $(notdir $i) >> $1_output.txt ;)
+		$Q mv $1_output.txt gcov/$1_tests/ $(QUIET)
+		$Q mv *.gcov gcov/$1_tests/ $(QUIET)
+		$Q mri/CppUTest/scripts/filterGcov.sh gcov/$1_tests/$1_output.txt /dev/null gcov/$1_tests/$1.txt
+		$Q cat gcov/$1_tests/$1.txt
 endef
 define make_library # ,LIBRARY,src_dirs,libname.a,includes
     HOST_$1_OBJ := $(foreach i,$2,$(call host_objs,$i))
     HOST_$1_LIB := $(HOST_LIBDIR)/$3
     DEPS += $(call add_deps,$1)
+    ALL_TARGETS += $$(HOST_$1_LIB)
     $$(HOST_$1_LIB) : INCLUDES := $4
     $$(HOST_$1_LIB) : $$(HOST_$1_OBJ)
 		$$(call build_lib,HOST)
@@ -148,16 +147,18 @@ define make_tests # ,LIB2TEST,test_src_dirs,includes,other_libs
     HOST_$1_TESTS_OBJ := $(foreach i,$2,$(call host_objs,$i))
     HOST_$1_TESTS_EXE := $1_tests$(GCOV)
     DEPS += $(call add_deps,$1_TESTS)
+    ALL_TARGETS += RUN_$1_TESTS
     $$(HOST_$1_TESTS_EXE) : INCLUDES := mri/CppUTest/include $3
     $$(HOST_$1_TESTS_EXE) : $$(HOST_$1_TESTS_OBJ) $(HOST_$1_LIB) $(HOST_CPPUTEST_LIB) $4
 		$$(call link_exe,HOST)
     RUN_$1_TESTS : $$(HOST_$1_TESTS_EXE)
+		@echo Runnning $$^
 		$Q $$(HOST_$1_TESTS_EXE)
 endef
 
 #######################################
 # libCppUtest.a
-$(eval $(call make_library,CPPUTEST,mri/CppUTest/src/CppUTest mri/CppUTest/src/Platforms/Gcc,libCppUTest.a,$(INCLUDES) mri/CppUTest/include))
+$(eval $(call make_library,CPPUTEST,mri/CppUTest/src/CppUTest mri/CppUTest/src/Platforms/Gcc,libCppUTest.a,mri/CppUTest/include))
 $(eval $(call make_tests,CPPUTEST,mri/CppUTest/tests,,))
 
 #######################################
@@ -172,22 +173,31 @@ $(eval $(call make_tests,LIBMRICORE,\
                          mri/tests/tests mri/tests/mocks,\
                          mri/include mri/tests/mocks,\
                          $(HOST_NATIVE_MEM_OBJ)))
-GCOV_LIBMRICORE : RUN_LIBMRICORE_TESTS
-	$(call run_gcov,LIBMRICORE)
+$(eval $(call run_gcov,LIBMRICORE))
 
 #######################################
 # libcommon.a
 $(eval $(call make_library,LIBCOMMON,libcommon/src,libcommon.a,include))
 $(eval $(call make_tests,LIBCOMMON,libcommon/tests,include,))
-GCOV_LIBCOMMON : RUN_LIBCOMMON_TESTS
-	$(call run_gcov,LIBCOMMON)
+$(eval $(call run_gcov,LIBCOMMON))
+
+#######################################
+# libmocks.a
+$(eval $(call make_library,LIBMOCKS,libmocks/src,libmocks.a,include))
+$(eval $(call make_tests,LIBMOCKS,libmocks/tests,include,))
+$(eval $(call run_gcov,LIBMOCKS))
 
 #######################################
 # libpinkysim.a
-$(eval $(call make_library,LIBPINKYSIM,libpinkysim/src,lipinkysim.a,include))
+$(eval $(call make_library,LIBPINKYSIM,libpinkysim/src,libpinkysim.a,include))
 $(eval $(call make_tests,LIBPINKYSIM,libpinkysim/tests,include,$(HOST_LIBCOMMON_LIB)))
-GCOV_LIBPINKYSIM : RUN_LIBPINKYSIM_TESTS
-	$(call run_gcov,LIBPINKYSIM)
+$(eval $(call run_gcov,LIBPINKYSIM))
+
+#######################################
+# libmemsim.a
+$(eval $(call make_library,LIBMEMSIM,libmemsim/src,libmemsim.a,include))
+$(eval $(call make_tests,LIBMEMSIM,libmemsim/tests,include,$(HOST_LIBCOMMON_LIB) $(HOST_LIBMOCKS_LIB)))
+$(eval $(call run_gcov,LIBMEMSIM))
 
 #######################################
 # libgdbremote.a
@@ -196,8 +206,7 @@ $(eval $(call make_tests,LIBGDBREMOTE,\
                         libgdbremote/tests libgdbremote/mocks,\
                         include libgdbremote/mocks,\
                         $(HOST_LIBCOMMON_LIB)))
-GCOV_LIBGDBREMOTE : RUN_LIBGDBREMOTE_TESTS
-	$(call run_gcov,LIBGDBREMOTE)
+$(eval $(call run_gcov,LIBGDBREMOTE))
 
 #######################################
 # libcommserial.a
@@ -212,7 +221,7 @@ $(eval $(call make_library,LIBTHUNK2REAL,libthunk2real/src libthunk2real/mocks,l
 # Note: The actual tests here come from libpinkysim/tests
 HOST_LIBTHUNK2REAL_TESTS_OBJ := $(addprefix $(HOST_OBJDIR)/libthunk2real/,$(addsuffix .o,$(basename $(wildcard libpinkysim/tests/*.cpp))))
 HOST_LIBTHUNK2REAL_TESTS_EXE := libthunk2real_tests$(GCOV)
-$(HOST_LIBTHUNK2REAL_TESTS_EXE) : INCLUDES := $(INCLUDES) mri/CppUTest/include
+$(HOST_LIBTHUNK2REAL_TESTS_EXE) : INCLUDES := include mri/CppUTest/include
 $(HOST_LIBTHUNK2REAL_TESTS_EXE) : $(HOST_LIBTHUNK2REAL_TESTS_OBJ) \
                                   $(HOST_LIBTHUNK2REAL_LIB) \
                                   $(HOST_LIBCOMMON_LIB) \
@@ -223,22 +232,44 @@ $(HOST_LIBTHUNK2REAL_TESTS_EXE) : $(HOST_LIBTHUNK2REAL_TESTS_OBJ) \
 RUN_LIBTHUNK2REAL_TESTS : $(HOST_LIBTHUNK2REAL_TESTS_EXE)
 	$Q $(HOST_LIBTHUNK2REAL_TESTS_EXE)
 DEPS += $(call add_deps,LIBTHUNK2REAL_TESTS)
+TEST_TARGETS += RUN_LIBTHUNK2REAL_TESTS
 $(HOST_OBJDIR)/libthunk2real/%.o : %.cpp
 	@echo Compiling $<
 	$Q $(MAKEDIR)
+	$Q $(EXTRA_COMPILE_STEP)
 	$Q $(HOST_GPP) $(HOST_GPPFLAGS) -DTHUNK2REAL $(call includes,$(INCLUDES)) -c $< -o $@
 
+
+
+#######################################
+#  Actual Definition of Main Rules
+#######################################
+all : $(ALL_TARGETS)
+
+test : all $(TEST_TARGETS)
+
+gcov : RUN_CPPUTEST_TESTS $(GCOV_TARGETS)
+
+clean : 
+	@echo Cleaning pinkysim
+	$Q $(REMOVE_DIR) $(OBJDIR) $(QUIET)
+	$Q $(REMOVE_DIR) $(LIBDIR) $(QUIET)
+	$Q $(REMOVE_DIR) $(GCOVDIR) $(QUIET)
+	$Q $(REMOVE) *_tests$(EXE) $(QUIET)
+	$Q $(REMOVE) *_tests_gcov$(EXE) $(QUIET)
 
 
 # *** Pattern Rules ***
 $(HOST_OBJDIR)/%.o : %.c
 	@echo Compiling $<
 	$Q $(MAKEDIR)
+	$Q $(EXTRA_COMPILE_STEP)
 	$Q $(HOST_GCC) $(HOST_GCCFLAGS) $(call includes,$(INCLUDES)) -c $< -o $@
 
 $(HOST_OBJDIR)/%.o : %.cpp
 	@echo Compiling $<
 	$Q $(MAKEDIR)
+	$Q $(EXTRA_COMPILE_STEP)
 	$Q $(HOST_GPP) $(HOST_GPPFLAGS) $(call includes,$(INCLUDES)) -c $< -o $@
 
 
