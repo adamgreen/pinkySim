@@ -367,19 +367,27 @@ TEST(MemorySim, SetAndClear2ByteHardwareBreakpoint_IssueReadsWhichHitAndMissBrea
     CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)));
 }
 
-TEST(MemorySim, SetAndClear4ByteHardwareBreakpoint_IssueReadsWhichHitAndMissBreakpoint)
+TEST(MemorySim, SetWordSizedHardwareBreakpoint_HitOnHalfWordAccessWithinRange)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 3 * sizeof(uint32_t));
+    
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint32_t), sizeof(uint32_t));
+    __try_and_catch( IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint32_t)) );
+    validateExceptionThrown(hardwareBreakpointException);
+    __try_and_catch( IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint32_t) + sizeof(uint16_t)) );
+    validateExceptionThrown(hardwareBreakpointException);
+}
+
+TEST(MemorySim, SetWordSizedHardwareBreakpoint_ShouldIgnoreWordAccesses)
 {
     uint32_t testBase = 0x00000000;
     MemorySim_CreateRegion(m_pMemory, testBase, 3 * sizeof(uint32_t));
     
     MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint32_t), sizeof(uint32_t));
     CHECK_EQUAL(0x0000, IMemory_Read32(m_pMemory, testBase + 0 * sizeof(uint32_t)));
-        __try_and_catch( IMemory_Read32(m_pMemory, testBase + 1 * sizeof(uint32_t)) );
-        validateExceptionThrown(hardwareBreakpointException);
-    CHECK_EQUAL(0x0000, IMemory_Read32(m_pMemory, testBase + 2 * sizeof(uint32_t)));
-
-    MemorySim_ClearHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint32_t), sizeof(uint32_t));
     CHECK_EQUAL(0x0000, IMemory_Read32(m_pMemory, testBase + 1 * sizeof(uint32_t)));
+    CHECK_EQUAL(0x0000, IMemory_Read32(m_pMemory, testBase + 2 * sizeof(uint32_t)));
 }
 
 TEST(MemorySim, HardwareBreakpoint_NoHitOnWrites)
@@ -522,7 +530,7 @@ TEST(MemorySim, TryClearingBreakpointWhichNoExist_ShouldBeIgnored)
 TEST(MemorySim, SetAndVerifySeveralBreakpoints)
 {
     uint32_t startAddress = 0x00000000;
-    uint32_t size = 16 * 1024;
+    uint32_t size = 4 * 1024;
     uint32_t endAddress = startAddress + size;
     uint32_t address;
     
@@ -538,5 +546,213 @@ TEST(MemorySim, SetAndVerifySeveralBreakpoints)
     {
         __try_and_catch( IMemory_Read16(m_pMemory, address) );
         validateExceptionThrown(hardwareBreakpointException);
+    }
+}
+
+TEST(MemorySim, AttemptToSetWatchpointAtInvalidAddress_ShouldThrow)
+{
+    uint32_t testBase = 0x00000000;
+    __try_and_catch( MemorySim_SetHardwareWatchpoint(m_pMemory, testBase, sizeof(uint16_t), WATCHPOINT_READ) );
+    validateExceptionThrown(busErrorException);
+}
+
+TEST(MemorySim, AttemptToClearWatchpointAtInvalidAddress_ShouldThrow)
+{
+    uint32_t testBase = 0x00000000;
+    __try_and_catch( MemorySim_ClearHardwareWatchpoint(m_pMemory, testBase, sizeof(uint16_t), WATCHPOINT_READ) );
+    validateExceptionThrown(busErrorException);
+}
+
+TEST(MemorySim, SetWatchpointShouldThrowIfOutOfMemory)
+{
+    static const size_t allocationsToFail = 1;
+    uint32_t            testBase = 0x00000000;
+    size_t              i;
+    
+    MemorySim_CreateRegion(m_pMemory, testBase, 3 * sizeof(uint16_t));
+    for (i = 1 ; i <= allocationsToFail ; i++)
+    {
+        MallocFailureInject_FailAllocation(i);
+        __try_and_catch( MemorySim_SetHardwareWatchpoint(m_pMemory, testBase, sizeof(uint16_t), WATCHPOINT_READ) );
+        validateExceptionThrown(outOfMemoryException);
+    }
+    MallocFailureInject_FailAllocation(i);
+    MemorySim_SetHardwareWatchpoint(m_pMemory, testBase, sizeof(uint16_t), WATCHPOINT_READ);
+}
+
+TEST(MemorySim, SetAndClear2ByteHardwareWatchpoint_IssueReadsWhichHitAndMissWatchpoint)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 3 * sizeof(uint16_t));
+    
+    MemorySim_SetHardwareWatchpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t), WATCHPOINT_READ);
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 0 * sizeof(uint16_t)));
+        CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+        CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)));
+        CHECK_TRUE(MemorySim_WasWatchpointEncountered(m_pMemory));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 2 * sizeof(uint16_t)));
+
+    MemorySim_ClearHardwareWatchpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t), WATCHPOINT_READ);
+    CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)));
+    CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+}
+
+TEST(MemorySim, SetAndClear4ByteHardwareWatchpoint_IssueReadsWhichHitAndMissBreakpoint)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 3 * sizeof(uint32_t));
+    
+    MemorySim_SetHardwareWatchpoint(m_pMemory, testBase + 1 * sizeof(uint32_t), sizeof(uint32_t), WATCHPOINT_READ);
+    CHECK_EQUAL(0x00000000, IMemory_Read32(m_pMemory, testBase + 0 * sizeof(uint32_t)));
+        CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+        CHECK_EQUAL(0x0000000, IMemory_Read32(m_pMemory, testBase + 1 * sizeof(uint32_t)));
+        CHECK_TRUE(MemorySim_WasWatchpointEncountered(m_pMemory));
+    CHECK_EQUAL(0x00000000, IMemory_Read32(m_pMemory, testBase + 2 * sizeof(uint32_t)));
+
+    MemorySim_ClearHardwareWatchpoint(m_pMemory, testBase + 1 * sizeof(uint32_t), sizeof(uint32_t), WATCHPOINT_READ);
+    CHECK_EQUAL(0x00000000, IMemory_Read32(m_pMemory, testBase + 1 * sizeof(uint32_t)));
+}
+
+TEST(MemorySim, Set4ByteHardwareWatchpoint_HitOnSmallerSize)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 3 * sizeof(uint32_t));
+    
+    MemorySim_SetHardwareWatchpoint(m_pMemory, testBase + 1 * sizeof(uint32_t), sizeof(uint32_t), WATCHPOINT_READ);
+    CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint32_t)));
+    CHECK_TRUE(MemorySim_WasWatchpointEncountered(m_pMemory));
+
+    CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint32_t) + sizeof(uint16_t)));
+    CHECK_TRUE(MemorySim_WasWatchpointEncountered(m_pMemory));
+}
+
+TEST(MemorySim, HardwareReadWatchpoint_NoHitOnWrites)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 3 * sizeof(uint16_t));
+    
+    MemorySim_SetHardwareWatchpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t), WATCHPOINT_READ);
+    IMemory_Write16(m_pMemory, testBase + 0 * sizeof(uint16_t), 0x1234);
+    IMemory_Write16(m_pMemory, testBase + 1 * sizeof(uint16_t), 0x1234);
+    IMemory_Write16(m_pMemory, testBase + 2 * sizeof(uint16_t), 0x1234);
+    CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+}
+
+TEST(MemorySim, HardwareWriteWatchpoint_NoHitOnReads)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 3 * sizeof(uint16_t));
+    
+    MemorySim_SetHardwareWatchpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t), WATCHPOINT_WRITE);
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 0 * sizeof(uint16_t)));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 2 * sizeof(uint16_t)));
+    CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+}
+
+TEST(MemorySim, HardwareWriteWatchpoint_HitOnWrites)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 3 * sizeof(uint16_t));
+    
+    MemorySim_SetHardwareWatchpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t), WATCHPOINT_WRITE);
+    IMemory_Write16(m_pMemory, testBase + 0 * sizeof(uint16_t), 0x1234);
+    CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+        IMemory_Write16(m_pMemory, testBase + 1 * sizeof(uint16_t), 0x1234);
+        CHECK_TRUE(MemorySim_WasWatchpointEncountered(m_pMemory));
+    IMemory_Write16(m_pMemory, testBase + 2 * sizeof(uint16_t), 0x1234);
+    CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+}
+
+TEST(MemorySim, HardwareReadWriteWatchpoint_HitsOnReadsAndWrites)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 3 * sizeof(uint16_t));
+    
+    MemorySim_SetHardwareWatchpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t), WATCHPOINT_READ_WRITE);
+    IMemory_Write16(m_pMemory, testBase + 0 * sizeof(uint16_t), 0x1234);
+    CHECK_EQUAL(0x1234, IMemory_Read16(m_pMemory, testBase + 0 * sizeof(uint16_t)));
+    CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+        IMemory_Write16(m_pMemory, testBase + 1 * sizeof(uint16_t), 0x1234);
+        CHECK_TRUE(MemorySim_WasWatchpointEncountered(m_pMemory));
+        CHECK_EQUAL(0x1234, IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)));
+        CHECK_TRUE(MemorySim_WasWatchpointEncountered(m_pMemory));
+    IMemory_Write16(m_pMemory, testBase + 2 * sizeof(uint16_t), 0x1234);
+    CHECK_EQUAL(0x1234, IMemory_Read16(m_pMemory, testBase + 2 * sizeof(uint16_t)));
+    CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+}
+
+TEST(MemorySim, SetSameWatchpointTwice_SecondShouldBeIgnored)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 1 * sizeof(uint16_t));
+    
+    MemorySim_SetHardwareWatchpoint(m_pMemory, testBase, sizeof(uint16_t), WATCHPOINT_READ);
+    MemorySim_SetHardwareWatchpoint(m_pMemory, testBase, sizeof(uint16_t), WATCHPOINT_READ);
+
+    CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+    IMemory_Read16(m_pMemory, testBase);
+    CHECK_TRUE(MemorySim_WasWatchpointEncountered(m_pMemory));
+
+    // Clear breakpoint once and it should now be completely cleared.
+    MemorySim_ClearHardwareWatchpoint(m_pMemory, testBase, sizeof(uint16_t), WATCHPOINT_READ);
+    IMemory_Read16(m_pMemory, testBase);
+    CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+}
+
+TEST(MemorySim, SetTwoDifferentWatchpointTypesAtSameAddress_BothShouldBeObserved)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 1 * sizeof(uint16_t));
+    
+    MemorySim_SetHardwareWatchpoint(m_pMemory, testBase, sizeof(uint16_t), WATCHPOINT_READ);
+    MemorySim_SetHardwareWatchpoint(m_pMemory, testBase, sizeof(uint16_t), WATCHPOINT_WRITE);
+
+    CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+    IMemory_Write16(m_pMemory, testBase, 0x1234);
+    CHECK_TRUE(MemorySim_WasWatchpointEncountered(m_pMemory));
+    IMemory_Read16(m_pMemory, testBase);
+    CHECK_TRUE(MemorySim_WasWatchpointEncountered(m_pMemory));
+}
+
+TEST(MemorySim, TryClearingWatchpointWhichNoExist_ShouldBeIgnored)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 2 * sizeof(uint16_t));
+    MemorySim_SetHardwareWatchpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t), WATCHPOINT_READ);
+
+    MemorySim_ClearHardwareWatchpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t), WATCHPOINT_WRITE);
+    CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+    IMemory_Write16(m_pMemory, testBase + 1 * sizeof(uint16_t), 0x1234);
+    CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+    IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t));
+    CHECK_TRUE(MemorySim_WasWatchpointEncountered(m_pMemory));
+}
+
+TEST(MemorySim, SetAndVerifySeveralWatchpoints)
+{
+    uint32_t startAddress = 0x00000000;
+    uint32_t size = 4 * 1024;
+    uint32_t endAddress = startAddress + size;
+    uint32_t address;
+    
+    MemorySim_CreateRegion(m_pMemory, startAddress, size);
+    
+    for (address = startAddress ; address < endAddress ; address += 2 * sizeof(uint16_t))
+        MemorySim_SetHardwareWatchpoint(m_pMemory, address, sizeof(uint16_t), WATCHPOINT_READ);
+    
+    for (address = startAddress + sizeof(uint16_t) ; address < endAddress ; address += 2 * sizeof(uint16_t))
+    {
+        CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, address));
+        CHECK_FALSE(MemorySim_WasWatchpointEncountered(m_pMemory));
+    }
+
+    for (address = startAddress ; address < endAddress ; address += 2 * sizeof(uint16_t))
+    {
+        CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, address));
+        CHECK_TRUE(MemorySim_WasWatchpointEncountered(m_pMemory));
     }
 }

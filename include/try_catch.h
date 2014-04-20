@@ -30,6 +30,7 @@
 #define serialException                     11
 #define timeoutException                    12
 #define hardwareBreakpointException         13
+#define hardwareWatchpointException         14
 
 
 #ifndef __debugbreak

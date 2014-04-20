@@ -23,6 +23,13 @@
    in the first word of the FLASH image.  The region will start at initial_stack_pointer & RAM_ADDRESS_MASK. */
 #define RAM_ADDRESS_MASK   0xF0000000
 
+typedef enum WatchpointType
+{
+    WATCHPOINT_READ       = 1,
+    WATCHPOINT_WRITE      = 2,
+    WATCHPOINT_READ_WRITE = 3
+} WatchpointType;
+
 
 IMemory*      MemorySim_Init(void);
 void          MemorySim_Uninit(IMemory* pMemory);
@@ -32,5 +39,10 @@ __throws void MemorySim_CreateRegionsFromFlashImage(IMemory* pMemory, const void
 
 __throws void MemorySim_SetHardwareBreakpoint(IMemory* pMemory, uint32_t address, uint32_t size);
 __throws void MemorySim_ClearHardwareBreakpoint(IMemory* pMemory, uint32_t address, uint32_t size);
+
+__throws void MemorySim_SetHardwareWatchpoint(IMemory* pMemory, uint32_t address, uint32_t size, WatchpointType type);
+__throws void MemorySim_ClearHardwareWatchpoint(IMemory* pMemory, uint32_t address, uint32_t size, WatchpointType type);
+         int  MemorySim_WasWatchpointEncountered(IMemory* pMemory);
+
 
 #endif /* _MEMORY_SIM_H_ */
