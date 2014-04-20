@@ -29,6 +29,7 @@
 #define badResponseException                10
 #define serialException                     11
 #define timeoutException                    12
+#define hardwareBreakpointException         13
 
 
 #ifndef __debugbreak

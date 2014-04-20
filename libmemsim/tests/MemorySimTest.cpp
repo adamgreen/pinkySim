@@ -318,3 +318,225 @@ TEST(MemorySim, CreateRegionsBasedOnFlashImage_ShouldThrowIfNotBigEnoughForIniti
     __try_and_catch( MemorySim_CreateRegionsFromFlashImage(m_pMemory, &flashBinary, sizeof(flashBinary) - 1) );
     validateExceptionThrown(bufferOverrunException);
 }
+
+
+
+TEST(MemorySim, AttemptToSetBreakpointAtInvalidAddress_ShouldThrow)
+{
+    uint32_t testBase = 0x00000000;
+    __try_and_catch( MemorySim_SetHardwareBreakpoint(m_pMemory, testBase, sizeof(uint16_t)) );
+    validateExceptionThrown(busErrorException);
+}
+
+TEST(MemorySim, AttemptToClearBreakpointAtInvalidAddress_ShouldThrow)
+{
+    uint32_t testBase = 0x00000000;
+    __try_and_catch( MemorySim_ClearHardwareBreakpoint(m_pMemory, testBase, sizeof(uint16_t)) );
+    validateExceptionThrown(busErrorException);
+}
+
+TEST(MemorySim, SetBreakpointShouldThrowIfOutOfMemory)
+{
+    static const size_t allocationsToFail = 1;
+    uint32_t            testBase = 0x00000000;
+    size_t              i;
+    
+    MemorySim_CreateRegion(m_pMemory, testBase, 3 * sizeof(uint16_t));
+    for (i = 1 ; i <= allocationsToFail ; i++)
+    {
+        MallocFailureInject_FailAllocation(i);
+        __try_and_catch( MemorySim_SetHardwareBreakpoint(m_pMemory, testBase, sizeof(uint16_t)) );
+        validateExceptionThrown(outOfMemoryException);
+    }
+    MallocFailureInject_FailAllocation(i);
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase, sizeof(uint16_t));
+}
+
+TEST(MemorySim, SetAndClear2ByteHardwareBreakpoint_IssueReadsWhichHitAndMissBreakpoint)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 3 * sizeof(uint16_t));
+    
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 0 * sizeof(uint16_t)));
+        __try_and_catch( IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)) );
+        validateExceptionThrown(hardwareBreakpointException);
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 2 * sizeof(uint16_t)));
+
+    MemorySim_ClearHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)));
+}
+
+TEST(MemorySim, SetAndClear4ByteHardwareBreakpoint_IssueReadsWhichHitAndMissBreakpoint)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 3 * sizeof(uint32_t));
+    
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint32_t), sizeof(uint32_t));
+    CHECK_EQUAL(0x0000, IMemory_Read32(m_pMemory, testBase + 0 * sizeof(uint32_t)));
+        __try_and_catch( IMemory_Read32(m_pMemory, testBase + 1 * sizeof(uint32_t)) );
+        validateExceptionThrown(hardwareBreakpointException);
+    CHECK_EQUAL(0x0000, IMemory_Read32(m_pMemory, testBase + 2 * sizeof(uint32_t)));
+
+    MemorySim_ClearHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint32_t), sizeof(uint32_t));
+    CHECK_EQUAL(0x0000, IMemory_Read32(m_pMemory, testBase + 1 * sizeof(uint32_t)));
+}
+
+TEST(MemorySim, HardwareBreakpoint_NoHitOnWrites)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 3 * sizeof(uint16_t));
+    
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t));
+    IMemory_Write16(m_pMemory, testBase + 0 * sizeof(uint16_t), 0x1234);
+    IMemory_Write16(m_pMemory, testBase + 1 * sizeof(uint16_t), 0x1234);
+    IMemory_Write16(m_pMemory, testBase + 2 * sizeof(uint16_t), 0x1234);
+}
+
+TEST(MemorySim, SetAndVerifyTwoHardwareBreakpoints_SetInAscendingAddressOrder)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 4 * sizeof(uint16_t));
+    
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t));
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 2 * sizeof(uint16_t), sizeof(uint16_t));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 0 * sizeof(uint16_t)));
+        __try_and_catch( IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)) );
+        validateExceptionThrown(hardwareBreakpointException);
+        __try_and_catch( IMemory_Read16(m_pMemory, testBase + 2 * sizeof(uint16_t)) );
+        validateExceptionThrown(hardwareBreakpointException);
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 3 * sizeof(uint16_t)));
+}
+
+TEST(MemorySim, SetAndVerifyTwoHardwareBreakpoints_SetInDescendingAddressOrder)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 4 * sizeof(uint16_t));
+    
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 2 * sizeof(uint16_t), sizeof(uint16_t));
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 0 * sizeof(uint16_t)));
+        __try_and_catch( IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)) );
+        validateExceptionThrown(hardwareBreakpointException);
+        __try_and_catch( IMemory_Read16(m_pMemory, testBase + 2 * sizeof(uint16_t)) );
+        validateExceptionThrown(hardwareBreakpointException);
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 3 * sizeof(uint16_t)));
+}
+
+TEST(MemorySim, SetAndClearTwoHardwareBreakpoints_ClearInSameOrderAsSet)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 4 * sizeof(uint16_t));
+    
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t));
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 2 * sizeof(uint16_t), sizeof(uint16_t));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 0 * sizeof(uint16_t)));
+        __try_and_catch( IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)) );
+        validateExceptionThrown(hardwareBreakpointException);
+        __try_and_catch( IMemory_Read16(m_pMemory, testBase + 2 * sizeof(uint16_t)) );
+        validateExceptionThrown(hardwareBreakpointException);
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 3 * sizeof(uint16_t)));
+
+    // Clear first breakpoint.
+    MemorySim_ClearHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)));
+    __try_and_catch( IMemory_Read16(m_pMemory, testBase + 2 * sizeof(uint16_t)) );
+    validateExceptionThrown(hardwareBreakpointException);
+
+    // Clear second breakpoint.
+    MemorySim_ClearHardwareBreakpoint(m_pMemory, testBase + 2 * sizeof(uint16_t), sizeof(uint16_t));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 2 * sizeof(uint16_t)));
+}
+
+TEST(MemorySim, SetAndClearTwoHardwareBreakpoints_ClearInOppositeOrderAsSet)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 4 * sizeof(uint16_t));
+    
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t));
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 2 * sizeof(uint16_t), sizeof(uint16_t));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 0 * sizeof(uint16_t)));
+        __try_and_catch( IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)) );
+        validateExceptionThrown(hardwareBreakpointException);
+        __try_and_catch( IMemory_Read16(m_pMemory, testBase + 2 * sizeof(uint16_t)) );
+        validateExceptionThrown(hardwareBreakpointException);
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 3 * sizeof(uint16_t)));
+
+    // Clear second breakpoint.
+    MemorySim_ClearHardwareBreakpoint(m_pMemory, testBase + 2 * sizeof(uint16_t), sizeof(uint16_t));
+    __try_and_catch( IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)) );
+    validateExceptionThrown(hardwareBreakpointException);
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 2 * sizeof(uint16_t)));
+
+    // Clear first breakpoint.
+    MemorySim_ClearHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 2 * sizeof(uint16_t)));
+}
+
+TEST(MemorySim, SetAndVerifyThreeHardwareBreakpoints)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 5 * sizeof(uint16_t));
+    
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t));
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 2 * sizeof(uint16_t), sizeof(uint16_t));
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 3 * sizeof(uint16_t), sizeof(uint16_t));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 0 * sizeof(uint16_t)));
+        __try_and_catch( IMemory_Read16(m_pMemory, testBase + 1 * sizeof(uint16_t)) );
+        validateExceptionThrown(hardwareBreakpointException);
+        __try_and_catch( IMemory_Read16(m_pMemory, testBase + 2 * sizeof(uint16_t)) );
+        validateExceptionThrown(hardwareBreakpointException);
+        __try_and_catch( IMemory_Read16(m_pMemory, testBase + 3 * sizeof(uint16_t)) );
+        validateExceptionThrown(hardwareBreakpointException);
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 4 * sizeof(uint16_t)));
+}
+
+TEST(MemorySim, SetSameBreakpointTwice_SecondShouldBeIgnored)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 1 * sizeof(uint16_t));
+    
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase, sizeof(uint16_t));
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase, sizeof(uint16_t));
+
+    __try_and_catch( IMemory_Read16(m_pMemory, testBase) );
+    validateExceptionThrown(hardwareBreakpointException);
+
+    // Clear breakpoint once and it should now be completely cleared.
+    MemorySim_ClearHardwareBreakpoint(m_pMemory, testBase, sizeof(uint16_t));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase));
+}
+
+TEST(MemorySim, TryClearingBreakpointWhichNoExist_ShouldBeIgnored)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 2 * sizeof(uint16_t));
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase + 1 * sizeof(uint16_t), sizeof(uint16_t));
+
+    MemorySim_ClearHardwareBreakpoint(m_pMemory, testBase + 0 * sizeof(uint16_t), sizeof(uint16_t));
+    CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 0 * sizeof(uint16_t)));
+}
+
+TEST(MemorySim, SetAndVerifySeveralBreakpoints)
+{
+    uint32_t startAddress = 0x00000000;
+    uint32_t size = 16 * 1024;
+    uint32_t endAddress = startAddress + size;
+    uint32_t address;
+    
+    MemorySim_CreateRegion(m_pMemory, startAddress, size);
+    
+    for (address = startAddress ; address < endAddress ; address += 2 * sizeof(uint16_t))
+        MemorySim_SetHardwareBreakpoint(m_pMemory, address, sizeof(uint16_t));
+    
+    for (address = startAddress + sizeof(uint16_t) ; address < endAddress ; address += 2 * sizeof(uint16_t))
+        CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, address));
+
+    for (address = startAddress ; address < endAddress ; address += 2 * sizeof(uint16_t))
+    {
+        __try_and_catch( IMemory_Read16(m_pMemory, address) );
+        validateExceptionThrown(hardwareBreakpointException);
+    }
+}

@@ -19,9 +19,18 @@
 #define READING 0
 #define WRITING  1
 
+typedef enum MatchResult
+{
+    FOUND,          /* Found requested value. */
+    FOUND_HIGHER,   /* Found a value higher than requested but not exact value requested. */
+    NOT_FOUND       /* Walked all entries and found no match or anything higher. */
+    
+} MatchResult;
+
 /* Forward Declarations */
 typedef struct MemorySim MemorySim;
 typedef struct MemoryRegion MemoryRegion;
+typedef struct HardwareBreakpoint HardwareBreakpoint;
 
 static void freeRegion(MemoryRegion* pRegion);
 static void* throwingZeroedMalloc(size_t size);
@@ -29,7 +38,11 @@ static void addRegionToTail(MemorySim* pThis, MemoryRegion* pRegion);
 static MemoryRegion* findMatchingRegion(MemorySim* pThis, uint32_t address, uint32_t size);
 static void copyImageToRegion(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize);
 static void freeLastRegion(MemorySim* pThis);
+static MatchResult findMatchingOrHigherBreakpoint(MemoryRegion* pRegion, uint32_t startAddress, uint32_t endAddress, uint32_t* pIndex);
+static int compareBreakpoints(const void* pvKey, const void* pvCurr);
+static void growHardwareBreakpointArrayIfNeeded(MemoryRegion* pRegion, uint32_t requiredSize);
 static void* getDataPointer(MemorySim* pThis, uint32_t address, uint32_t size, int writeMode);
+static void checkForBreakWatchPoint(MemoryRegion* pRegion, uint32_t address, uint32_t size, int writeMode);
 
 static uint32_t read32(IMemory* pMemory, uint32_t address);
 static uint16_t read16(IMemory* pMemory, uint32_t address);
@@ -40,6 +53,12 @@ static void write8(IMemory* pMemory, uint32_t address, uint8_t value);
 
 static IMemoryVTable g_vTable = {read32, read16, read8, write32, write16, write8};
 
+struct HardwareBreakpoint
+{
+    uint32_t startAddress;
+    uint32_t endAddress;
+};
+
 struct MemoryRegion
 {
     struct MemoryRegion* pNext;
@@ -47,6 +66,9 @@ struct MemoryRegion
     int                  readOnly;
     uint32_t             baseAddress;
     uint32_t             size;
+    HardwareBreakpoint*  pHardwareBreakpoints;
+    uint32_t             hardwareBreakpointCount;
+    uint32_t             hardwareBreakpointAlloc;
 };
 
 struct MemorySim
@@ -89,7 +111,8 @@ static void freeRegion(MemoryRegion* pRegion)
 {
     if (!pRegion)
         return;
-        
+    
+    free(pRegion->pHardwareBreakpoints);
     free(pRegion->pData);
     free(pRegion);
 }
@@ -216,6 +239,94 @@ static void freeLastRegion(MemorySim* pThis)
 }
 
 
+__throws void MemorySim_SetHardwareBreakpoint(IMemory* pMemory, uint32_t address, uint32_t size)
+{
+    MemoryRegion*      pRegion = findMatchingRegion((MemorySim*)pMemory, address, size);
+    uint32_t           endAddress = address + size;
+    HardwareBreakpoint breakpoint = {address, endAddress};
+    uint32_t           i;
+    MatchResult        match = findMatchingOrHigherBreakpoint(pRegion, address, endAddress, &i);
+
+    if (match == FOUND)
+        return;
+    growHardwareBreakpointArrayIfNeeded(pRegion, pRegion->hardwareBreakpointCount + 1);
+    memmove(&pRegion->pHardwareBreakpoints[i+1],
+            &pRegion->pHardwareBreakpoints[i],
+            sizeof(*pRegion->pHardwareBreakpoints) * (pRegion->hardwareBreakpointCount - i));
+    pRegion->pHardwareBreakpoints[i] = breakpoint;
+    pRegion->hardwareBreakpointCount++;
+}
+
+static MatchResult findMatchingOrHigherBreakpoint(MemoryRegion* pRegion,
+                                                  uint32_t startAddress,
+                                                  uint32_t endAddress,
+                                                  uint32_t* pIndex)
+{
+    HardwareBreakpoint key = {startAddress, endAddress};
+    uint32_t           i;
+    
+    for (i = 0 ; i < pRegion->hardwareBreakpointCount ; i++)
+    {
+        int result = compareBreakpoints(&key, &pRegion->pHardwareBreakpoints[i]);
+        if (result == 0)
+        {
+            *pIndex = i;
+            return FOUND;
+        }
+        else if (result < 0)
+        {
+            *pIndex = i;
+            return FOUND_HIGHER;
+        }
+    }
+    *pIndex = i;
+    return NOT_FOUND;
+}
+
+static int compareBreakpoints(const void* pvKey, const void* pvCurr)
+{
+    const HardwareBreakpoint* pKey = (const HardwareBreakpoint*)pvKey;
+    const HardwareBreakpoint* pCurr = (const HardwareBreakpoint*)pvCurr;
+    
+    if (pKey->startAddress == pCurr->startAddress && pKey->endAddress == pCurr->endAddress)
+        return 0;
+    else if (pKey->startAddress < pCurr->startAddress)
+        return -1;
+    else
+        return 1;
+}
+
+static void growHardwareBreakpointArrayIfNeeded(MemoryRegion* pRegion, uint32_t requiredSize)
+{
+    if (requiredSize > pRegion->hardwareBreakpointAlloc)
+    {
+        HardwareBreakpoint* pRealloc = realloc(pRegion->pHardwareBreakpoints, 
+                                               sizeof(*pRegion->pHardwareBreakpoints) * requiredSize);
+        if (!pRealloc)
+            __throw(outOfMemoryException);
+        pRegion->pHardwareBreakpoints = pRealloc;
+        pRegion->hardwareBreakpointAlloc = requiredSize;
+    }
+}
+
+
+__throws void MemorySim_ClearHardwareBreakpoint(IMemory* pMemory, uint32_t address, uint32_t size)
+{
+    MemoryRegion* pRegion = findMatchingRegion((MemorySim*)pMemory, address, size);
+    uint32_t      endAddress = address + size;
+    uint32_t      i;
+    MatchResult   match = findMatchingOrHigherBreakpoint(pRegion, address, endAddress, &i);
+
+    if (match != FOUND)
+        return;
+    memmove(&pRegion->pHardwareBreakpoints[i],
+            &pRegion->pHardwareBreakpoints[i+1],
+            sizeof(*pRegion->pHardwareBreakpoints) * (pRegion->hardwareBreakpointCount - i - 1));
+    pRegion->hardwareBreakpointCount--;
+}
+
+
+
 /* IMemory interface methods */
 static uint32_t read32(IMemory* pMemory, uint32_t address)
 {
@@ -254,5 +365,20 @@ static void* getDataPointer(MemorySim* pThis, uint32_t address, uint32_t size, i
     uint32_t regionOffset = address - pRegion->baseAddress;
     if (writeMode && pRegion->readOnly)
         __throw(busErrorException);
+    checkForBreakWatchPoint(pRegion, address, size, writeMode);
     return pRegion->pData + regionOffset;
+}
+
+static void checkForBreakWatchPoint(MemoryRegion* pRegion, uint32_t address, uint32_t size, int writeMode)
+{
+    HardwareBreakpoint  key = {address, address + size};
+    HardwareBreakpoint* pBreakpoint = bsearch(&key,
+                                              pRegion->pHardwareBreakpoints,
+                                              pRegion->hardwareBreakpointCount,
+                                              sizeof(*pRegion->pHardwareBreakpoints),
+                                              compareBreakpoints);
+    if (!pBreakpoint)
+        return;
+    if (!writeMode && address >= pBreakpoint->startAddress && (address + size) <= pBreakpoint->endAddress)
+        __throw(hardwareBreakpointException);
 }

@@ -30,5 +30,7 @@ __throws void MemorySim_CreateRegion(IMemory* pMemory, uint32_t baseAddress, uin
 void          MemorySim_MakeRegionReadOnly(IMemory* pMemory, uint32_t baseAddress);
 __throws void MemorySim_CreateRegionsFromFlashImage(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize);
 
+__throws void MemorySim_SetHardwareBreakpoint(IMemory* pMemory, uint32_t address, uint32_t size);
+__throws void MemorySim_ClearHardwareBreakpoint(IMemory* pMemory, uint32_t address, uint32_t size);
 
 #endif /* _MEMORY_SIM_H_ */
