@@ -28,21 +28,8 @@ endif
 all:
 test:
 gcov:
-clean: 
+clean:
 
-
-# Make sure that gcov goal isn't used with incompatible rules.
-ifeq "$(findstring gcov,$(MAKECMDGOALS))" "gcov"
-    ifeq "$(findstring all,$(MAKECMDGOALS))" "all"
-        $(error Can't use 'all' and 'gcov' goals together.)
-    endif
-    ifeq "$(findstring host,$(MAKECMDGOALS))" "host"
-        $(error Can't use 'host' and 'gcov' goals together.)
-    endif
-    ifeq "$(findstring test,$(MAKECMDGOALS))" "test"
-        $(error Can't use 'test' and 'gcov' goals together.)
-    endif
-endif
 
 #  Names of tools for compiling binaries to run on this host system.
 HOST_GCC := gcc
@@ -85,19 +72,12 @@ GCOVDIR := gcov
 LIBDIR        := lib
 HOST_LIBDIR   := $(LIBDIR)
 
-# Modify some things if we want to run code coverage as part of this build.
-ifeq "$(findstring gcov,$(MAKECMDGOALS))" "gcov"
-    HOST_OBJDIR        := $(GCOVDIR)/$(HOST_OBJDIR)
-    HOST_LIBDIR        := $(GCOVDIR)/$(HOST_LIBDIR)
-    HOST_GCCFLAGS      += -fprofile-arcs -ftest-coverage
-    HOST_GPPFLAGS      += -fprofile-arcs -ftest-coverage
-    HOST_LDFLAGS       += -fprofile-arcs -ftest-coverage
-    GCOV               := _gcov
-    EXTRA_COMPILE_STEP = $(REMOVE) $(call obj_to_gcda,$@) $(QUIET)
-else
-    GCOV :=
-    EXTRA_COMPILE_STEP =
-endif
+# Customize some variables for code coverage builds.
+GCOV_HOST_OBJDIR        := $(GCOVDIR)/$(HOST_OBJDIR)
+GCOV_HOST_LIBDIR        := $(GCOVDIR)/$(HOST_LIBDIR)
+GCOV_HOST_GCCFLAGS      := $(HOST_GCCFLAGS) -fprofile-arcs -ftest-coverage
+GCOV_HOST_GPPFLAGS      := $(HOST_GPPFLAGS) -fprofile-arcs -ftest-coverage
+GCOV_HOST_LDFLAGS       := $(HOST_LDFLAGS) -fprofile-arcs -ftest-coverage
 
 # Start out with empty pre-req lists.  Add modules as we go.
 ALL_TARGETS  :=
@@ -110,7 +90,8 @@ DEPS :=
 # Useful macros.
 objs = $(addprefix $2/,$(addsuffix .o,$(basename $(wildcard $1/*.c $1/*.cpp $1/*.S))))
 host_objs = $(call objs,$1,$(HOST_OBJDIR))
-add_deps = $(patsubst %.o,%.d,$(HOST_$1_OBJ))
+gcov_host_objs = $(call objs,$1,$(GCOV_HOST_OBJDIR))
+add_deps = $(patsubst %.o,%.d,$(HOST_$1_OBJ) $(GCOV_HOST_$1_OBJ))
 obj_to_gcda = $(patsubst %.o,%.gcda,$1)
 includes = $(patsubst %,-I%,$1)
 define build_lib
@@ -123,37 +104,55 @@ define link_exe
 	$Q $(MAKEDIR)
 	$Q $($1_LD) $($1_LDFLAGS) $^ -o $@
 endef
+define gcov_link_exe
+	@echo Building $@
+	$Q $(MAKEDIR)
+	$Q $($1_LD) $(GCOV_$1_LDFLAGS) $^ -o $@
+endef
 define run_gcov
     GCOV_TARGETS += GCOV_$1
-    GCOV_$1 : RUN_$1_TESTS
+    GCOV_$1 : GCOV_RUN_$1_TESTS
 		$Q $(REMOVE) $1_output.txt $(QUIET)
 		$Q mkdir -p gcov/$1_tests $(QUIET)
-		$Q $(foreach i,$(HOST_$1_OBJ),gcov -object-directory=$(dir $i) $(notdir $i) >> $1_output.txt ;)
+		$Q $(foreach i,$(GCOV_HOST_$1_OBJ),gcov -object-directory=$(dir $i) $(notdir $i) >> $1_output.txt ;)
 		$Q mv $1_output.txt gcov/$1_tests/ $(QUIET)
 		$Q mv *.gcov gcov/$1_tests/ $(QUIET)
 		$Q mri/CppUTest/scripts/filterGcov.sh gcov/$1_tests/$1_output.txt /dev/null gcov/$1_tests/$1.txt
 		$Q cat gcov/$1_tests/$1.txt
 endef
 define make_library # ,LIBRARY,src_dirs,libname.a,includes
-    HOST_$1_OBJ := $(foreach i,$2,$(call host_objs,$i))
-    HOST_$1_LIB := $(HOST_LIBDIR)/$3
-    DEPS += $(call add_deps,$1)
-    ALL_TARGETS += $$(HOST_$1_LIB)
-    $$(HOST_$1_LIB) : INCLUDES := $4
+    HOST_$1_OBJ      := $(foreach i,$2,$(call host_objs,$i))
+    GCOV_HOST_$1_OBJ := $(foreach i,$2,$(call gcov_host_objs,$i))
+    HOST_$1_LIB      := $(HOST_LIBDIR)/$3
+    GCOV_HOST_$1_LIB := $(GCOV_HOST_LIBDIR)/$3
+    DEPS             += $(call add_deps,$1)
+    ALL_TARGETS      += $$(HOST_$1_LIB)
+    $$(HOST_$1_LIB)      : INCLUDES := $4
+    $$(GCOV_HOST_$1_LIB) : INCLUDES := $4
     $$(HOST_$1_LIB) : $$(HOST_$1_OBJ)
+		$$(call build_lib,HOST)
+    $$(GCOV_HOST_$1_LIB) : $$(GCOV_HOST_$1_OBJ)
 		$$(call build_lib,HOST)
 endef
 define make_tests # ,LIB2TEST,test_src_dirs,includes,other_libs
-    HOST_$1_TESTS_OBJ := $(foreach i,$2,$(call host_objs,$i))
-    HOST_$1_TESTS_EXE := $1_tests$(GCOV)
-    DEPS += $(call add_deps,$1_TESTS)
+    HOST_$1_TESTS_OBJ      := $(foreach i,$2,$(call host_objs,$i))
+    GCOV_HOST_$1_TESTS_OBJ := $(foreach i,$2,$(call gcov_host_objs,$i))
+    HOST_$1_TESTS_EXE      := $1_tests
+    GCOV_HOST_$1_TESTS_EXE := $1_tests_gcov
+    DEPS                   += $(call add_deps,$1_TESTS)
     ALL_TARGETS += RUN_$1_TESTS
-    $$(HOST_$1_TESTS_EXE) : INCLUDES := mri/CppUTest/include $3
+    $$(HOST_$1_TESTS_EXE)      : INCLUDES := mri/CppUTest/include $3
+    $$(GCOV_HOST_$1_TESTS_EXE) : INCLUDES := mri/CppUTest/include $3
     $$(HOST_$1_TESTS_EXE) : $$(HOST_$1_TESTS_OBJ) $(HOST_$1_LIB) $(HOST_CPPUTEST_LIB) $4
 		$$(call link_exe,HOST)
     RUN_$1_TESTS : $$(HOST_$1_TESTS_EXE)
 		@echo Runnning $$^
-		$Q $$(HOST_$1_TESTS_EXE)
+		$Q $$^
+    $$(GCOV_HOST_$1_TESTS_EXE) : $$(GCOV_HOST_$1_TESTS_OBJ) $(GCOV_HOST_$1_LIB) $(GCOV_HOST_CPPUTEST_LIB) $4
+		$$(call gcov_link_exe,HOST)
+    GCOV_RUN_$1_TESTS : $$(GCOV_HOST_$1_TESTS_EXE)
+		@echo Runnning $$^
+		$Q $$^
 endef
 
 #######################################
@@ -271,6 +270,18 @@ $(HOST_OBJDIR)/%.o : %.cpp
 	$Q $(MAKEDIR)
 	$Q $(EXTRA_COMPILE_STEP)
 	$Q $(HOST_GPP) $(HOST_GPPFLAGS) $(call includes,$(INCLUDES)) -c $< -o $@
+
+$(GCOV_HOST_OBJDIR)/%.o : %.c
+	@echo Compiling $<
+	$Q $(MAKEDIR)
+	$Q $(REMOVE) $(call obj_to_gcda,$@) $(QUIET)
+	$Q $(HOST_GCC) $(GCOV_HOST_GCCFLAGS) $(call includes,$(INCLUDES)) -c $< -o $@
+
+$(GCOV_HOST_OBJDIR)/%.o : %.cpp
+	@echo Compiling $<
+	$Q $(MAKEDIR)
+	$Q $(REMOVE) $(call obj_to_gcda,$@) $(QUIET)
+	$Q $(HOST_GPP) $(GCOV_HOST_GPPFLAGS) $(call includes,$(INCLUDES)) -c $< -o $@
 
 
 # *** Pull in header dependencies if not performing a clean build. ***
