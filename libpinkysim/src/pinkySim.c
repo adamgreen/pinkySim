@@ -206,6 +206,20 @@ static int mrs(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
 static int bl(PinkySimContext* pContext, uint16_t instr1, uint16_t instr2);
 
 
+int pinkySimRun(PinkySimContext* pContext, int (*callback)(PinkySimContext*))
+{
+    int result;
+    
+    do
+    {
+        result = callback ? callback(pContext) : PINKYSIM_STEP_OK;
+        if (result == PINKYSIM_STEP_OK)
+            result = pinkySimStep(pContext);
+    } while (result == PINKYSIM_STEP_OK);
+    return result;
+}
+
+
 int pinkySimStep(PinkySimContext* pContext)
 {
     int      result = PINKYSIM_STEP_UNDEFINED;

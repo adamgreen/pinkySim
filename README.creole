@@ -9,7 +9,7 @@ TDD, on future projects where the code under test will be written in assembly la
   automated cross-compile/build process.
 * pinkSim itself contains a healthy suite of unit tests:
 ** Contains >450 unit tests that run as part of the automated build process.
-** Covers 100% of the code in pinkySimStep.c.
+** Covers 100% of the code in pinkySim.c.
 ** A good proportion of the unit tests have been deployed and validated on actual ARM hardware.
 * Will integrate with arm-none-eabi-gdb to allow debugging of ARM code running in the simulator.  //This feature is
   currently in the process of being developed.//
