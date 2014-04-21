@@ -95,7 +95,7 @@ typedef struct PinkySimContext
 } PinkySimContext;
 
 
-/* Values that can be returned from the pinkSimStep() function. */
+/* Values that can be returned from the pinkySimStep() or pinkySimRun() function. */
 #define PINKYSIM_STEP_OK            0   /* Executed instruction successfully. */
 #define PINKYSIM_STEP_UNDEFINED     1   /* Encountered undefined instruction. */
 #define PINKYSIM_STEP_UNPREDICTABLE 2   /* Encountered instruction with unpredictable behaviour. */
@@ -103,9 +103,12 @@ typedef struct PinkySimContext
 #define PINKYSIM_STEP_BKPT          4   /* Encountered BKPT instruction or other debug event. */
 #define PINKYSIM_STEP_UNSUPPORTED   5   /* Encountered instruction not supported by simulator. */
 #define PINKYSIM_STEP_SVC           6   /* Encountered SVC instruction. */
+#define PINKYSIM_RUN_INTERRUPT      7   /* pinkySimRun() callback signalled interrupt. */
+#define PINKYSIM_RUN_WATCHPOINT     8   /* pinkySimRun() callback signalled watchpoint event. */
 
 
 int pinkySimStep(PinkySimContext* pContext);
+int pinkySimRun(PinkySimContext* pContext, int (*callback)(PinkySimContext*));
 
 
 #endif /* _PINKY_SIM_H_ */
