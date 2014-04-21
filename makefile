@@ -125,7 +125,7 @@ define make_library # ,LIBRARY,src_dirs,libname.a,includes
     GCOV_HOST_$1_OBJ := $(foreach i,$2,$(call gcov_host_objs,$i))
     HOST_$1_LIB      := $(HOST_LIBDIR)/$3
     GCOV_HOST_$1_LIB := $(GCOV_HOST_LIBDIR)/$3
-    DEPS             += $(call add_deps,$1)
+    DEPS             += $$(call add_deps,$1)
     ALL_TARGETS      += $$(HOST_$1_LIB)
     $$(HOST_$1_LIB)      : INCLUDES := $4
     $$(GCOV_HOST_$1_LIB) : INCLUDES := $4
@@ -139,7 +139,7 @@ define make_tests # ,LIB2TEST,test_src_dirs,includes,other_libs
     GCOV_HOST_$1_TESTS_OBJ := $(foreach i,$2,$(call gcov_host_objs,$i))
     HOST_$1_TESTS_EXE      := $1_tests
     GCOV_HOST_$1_TESTS_EXE := $1_tests_gcov
-    DEPS                   += $(call add_deps,$1_TESTS)
+    DEPS                   += $$(call add_deps,$1_TESTS)
     ALL_TARGETS += RUN_$1_TESTS
     $$(HOST_$1_TESTS_EXE)      : INCLUDES := mri/CppUTest/include $3
     $$(GCOV_HOST_$1_TESTS_EXE) : INCLUDES := mri/CppUTest/include $3
