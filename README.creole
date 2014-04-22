@@ -19,7 +19,7 @@ TDD, on future projects where the code under test will be written in assembly la
 
 
 ==How to Clone
-This project uses submodules (ie. MRI and CppUTest).  Cloning requires a few more steps to get all of the necessary
+This project uses submodules (ie. MRI).  Cloning requires a few more steps to get all of the necessary
 code.
 
 {{{
@@ -37,6 +37,52 @@ cd mri
 git submodule init
 git submodule update
 }}}
+
+
+== How to Build
+pinkySim uses a single non-recursive makefile at the root of the project to build everything.  It supports these top
+level targets:
+* **all**: This builds the pinkySim code, builds the unit tests, executes the unit tests, and reports the test results.
+  This is the default target if no other is provided to make.
+* **clean**: Cleans up all ouptut files from any previous builds.  This forces everything to be built on the next make
+  run.
+* **gcov**: Like the **all** target, this builds all of the pinkySim code and runs the unit tests but it also
+  instruments the binaries with code coverage tracking and then reports the code coverage obtained from executing
+  the unit tests.
+* **test**: This builds and runs some very special tests which aren't required for the main pinkySim funtionality.
+  There is a [[https://github.com/adamgreen/pinkySim#unit-test-validation | section below]] related to the unit test
+  validation suite run by specifying this target.
+
+The makefile is constructed in such a way that all dependencies for any single target within the build system are known
+by GNU Make, including header file dependencies.  This means that the user can specify a specific binary target on the
+make command line and it should successfully build it and all of its dependencies.
+
+Examples:\\
+{{{make lib/libpinkysim.a}}} - Build the main pinkySim library.\\
+{{{make LIBPINKYSIM_tests}}} - Build the main pinkySim library, unit tests, and all required dependencies.\\
+{{{make RUN_LIBPINKYSIM_TESTS}}} - This does what the previous example does but also runs the unit tests.\\
+{{{make GCOV_LIBPINKYSIM}}} - This is similar to the previous example except that it builds binaries which
+include code coverage instrumentation and then reports the resulting code coverage results after running the unit
+tests.\\
+
+=== Parallel Build Notes
+The user should feel free to use the {{{-j}}} or {{{--jobs}}} command line flag with GNU Make to let it perform the
+required build steps in parallel to decrease the build time.  It can be hard to read the output when using this feature
+since the output from the parallel executing commands can be interleaved in a random fashion.  If this becomes an issue
+when attempting to track down a build issue, then just drop the {{{-j}}} flag while debugging.
+
+Example:\\
+{{{make -j4 all}}} - Tells GNU Make that it can have a maximum of 4 commands running at the same time while it is
+building the default **all** target.
+
+**Note:** Multiple targets can be specified on the make command line in combination with this parallel build flag except
+for the **clean** target which shouldn't be combined with any others.
+
+=== GCOV Code Coverage Notes
+All intermediate binaries (*.o and *.a) for code coverage runs are found in the gcov/obj and gcov/lib directories.  If
+you want to examine the line by line coverage results for a library like libpinkysim, you would find it in the
+gcov/LIBPINKYSIM_tests/ directory.
+
 
 
 ==Unit Test Validation
