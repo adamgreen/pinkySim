@@ -111,6 +111,7 @@ define gcov_link_exe
 endef
 define run_gcov
     GCOV_TARGETS += GCOV_$1
+    .PHONY : GCOV_$1
     GCOV_$1 : GCOV_RUN_$1_TESTS
 		$Q $(REMOVE) $1_output.txt $(QUIET)
 		$Q mkdir -p gcov/$1_tests $(QUIET)
@@ -145,6 +146,7 @@ define make_tests # ,LIB2TEST,test_src_dirs,includes,other_libs
     $$(GCOV_HOST_$1_TESTS_EXE) : INCLUDES := mri/CppUTest/include $3
     $$(HOST_$1_TESTS_EXE) : $$(HOST_$1_TESTS_OBJ) $(HOST_$1_LIB) $(HOST_CPPUTEST_LIB) $4
 		$$(call link_exe,HOST)
+    .PHONY : RUN_$1_TESTS GCOV_RUN_$1_TESTS
     RUN_$1_TESTS : $$(HOST_$1_TESTS_EXE)
 		@echo Runnning $$^
 		$Q $$^
@@ -199,6 +201,16 @@ $(eval $(call make_tests,LIBMEMSIM,libmemsim/tests,include,$(HOST_LIBCOMMON_LIB)
 $(eval $(call run_gcov,LIBMEMSIM))
 
 #######################################
+# libmri4sim.a
+$(eval $(call make_library,LIBMRI4SIM,libmri4sim/src,libmri4sim.a,include mri/include))
+$(eval $(call make_tests,LIBMRI4SIM,libmri4sim/tests,include mri/include,$(HOST_LIBCOMMON_LIB) \
+                                                                         $(HOST_LIBMOCKS_LIB) \
+                                                                         $(HOST_LIBPINKYSIM_LIB) \
+                                                                         $(HOST_LIBMEMSIM_LIB) \
+                                                                         $(HOST_LIBMRICORE_LIB) ))
+$(eval $(call run_gcov,LIBMRI4SIM))
+
+#######################################
 # libgdbremote.a
 $(eval $(call make_library,LIBGDBREMOTE,libgdbremote/src,libgdbremote.a,include))
 $(eval $(call make_tests,LIBGDBREMOTE,\
@@ -228,6 +240,7 @@ $(HOST_LIBTHUNK2REAL_TESTS_EXE) : $(HOST_LIBTHUNK2REAL_TESTS_OBJ) \
                                   $(HOST_LIBCOMMSERIAL_LIB) \
                                   $(HOST_CPPUTEST_LIB)
 	$(call link_exe,HOST)
+.PHONY : RUN_LIBTHUNK2REAL_TESTS
 RUN_LIBTHUNK2REAL_TESTS : $(HOST_LIBTHUNK2REAL_TESTS_EXE)
 	$Q $(HOST_LIBTHUNK2REAL_TESTS_EXE)
 DEPS += $(call add_deps,LIBTHUNK2REAL_TESTS)
