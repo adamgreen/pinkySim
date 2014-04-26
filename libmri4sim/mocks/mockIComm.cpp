@@ -273,6 +273,8 @@ void mockIComm_Uninit(void)
     g_pAlloc1 = NULL;
     g_pAlloc2 = NULL;
     g_pAllocChecksum = NULL;
+    g_receiveBuffers[0].init("");
+    g_receiveBuffers[1].init("");
     commUninitTransmitDataBuffer();
 }
 
