@@ -26,6 +26,9 @@ extern "C"
 #include "CppUTest/TestHarness.h"
 #include <mockIComm.h>
 
+#define FALSE 0
+#define TRUE  1
+
 // Initial values for special registers.
 #define INITIAL_SP 0x10008000
 #define INITIAL_LR 0x00000000
@@ -133,6 +136,11 @@ protected:
     void emitNOP()
     {
         emitInstruction16("1011111100000000");
+    }
+    
+    void emitMOVimmediate(uint32_t Rd, uint32_t imm8)
+    {
+        emitInstruction16("00100dddiiiiiiii", Rd, imm8);
     }
     
     void emitInstruction16(const char* pEncoding, ...)

@@ -20,7 +20,7 @@
 
 
 __throws void mri4simInit(IMemory* pMem);
-         void mri4simRun(IComm* pComm);
+         void mri4simRun(IComm* pComm, int breakOnStart);
 
 PinkySimContext* mri4simGetContext(void);
 

@@ -34,6 +34,8 @@ void __mriDebugException(void);
 
 /* Forward static function declarations. */
 static int shouldInterruptRun(PinkySimContext* pContext);
+static int isExitSemihost(void);
+static int isMbedSemihostCall(void);
 static int isInstruction32Bit(uint16_t firstWordOfInstruction);
 static void sendRegisterForTResponse(Buffer* pBuffer, uint8_t registerOffset, uint32_t registerValue);
 static void writeBytesToBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount);
@@ -55,12 +57,22 @@ __throws void mri4simInit(IMemory* pMem)
 }
 
 
-void mri4simRun(IComm* pComm)
+void mri4simRun(IComm* pComm, int breakOnStart)
 {
     g_pComm = pComm;
     do
     {
-        g_runResult = pinkySimRun(&g_context, shouldInterruptRun);
+        if (breakOnStart)
+        {
+            g_runResult = PINKYSIM_STEP_BKPT;
+            breakOnStart = FALSE;
+        }
+        else
+        {
+            g_runResult = pinkySimRun(&g_context, shouldInterruptRun);
+            if (isExitSemihost())
+                break;
+        }
         __mriDebugException();
     } while (!IComm_ShouldStopRun(pComm));
 }
@@ -70,6 +82,18 @@ static int shouldInterruptRun(PinkySimContext* pContext)
     if (IComm_HasReceiveData(g_pComm))
         return PINKYSIM_RUN_INTERRUPT;
     return PINKYSIM_STEP_OK;
+}
+
+static int isExitSemihost(void)
+{
+    if (g_runResult != PINKYSIM_STEP_BKPT)
+        return FALSE;
+    return isMbedSemihostCall() && g_context.R[0] == 0x18;
+}
+
+static int isMbedSemihostCall(void)
+{
+    return Platform_TypeOfCurrentInstruction() == MRI_PLATFORM_INSTRUCTION_MBED_SEMIHOST_CALL;
 }
 
 PinkySimContext* mri4simGetContext(void)

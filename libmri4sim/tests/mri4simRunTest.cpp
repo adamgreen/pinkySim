@@ -32,7 +32,7 @@ TEST(mri4simRun, QueueUpDebuggerContinueCommand_ShouldInterruptSimAndGoStraightT
     char expectedData[128];
     
     mockIComm_InitReceiveChecksummedData("+$c#");
-        mri4simRun(mockIComm_Get());
+        mri4simRun(mockIComm_Get(), FALSE);
     snprintf(expectedData, sizeof(expectedData),
              "$T%02x0c:%08x;0d:%08x;0e:%08x;0f:%08x;#+",
              SIGINT,
@@ -52,7 +52,7 @@ TEST(mri4simRun, DontInterruptSimAndLetRunToBreakpoint_SendContinue_ShouldAdvanc
     emitBKPT(0);
     mockIComm_InitReceiveChecksummedData("+$c#");
     mockIComm_DelayReceiveData(2);
-        mri4simRun(mockIComm_Get());
+        mri4simRun(mockIComm_Get(), FALSE);
     snprintf(expectedData, sizeof(expectedData),
              "$T%02x0c:%08x;0d:%08x;0e:%08x;0f:%08x;#+",
              SIGTRAP,
@@ -63,3 +63,34 @@ TEST(mri4simRun, DontInterruptSimAndLetRunToBreakpoint_SendContinue_ShouldAdvanc
     STRCMP_EQUAL(mockIComm_ChecksumData(expectedData), mockIComm_GetTransmittedData());
     CHECK_EQUAL(INITIAL_PC + 4, m_pContext->pc);
 }
+
+TEST(mri4simRun, BreakOnStart_SendContinue)
+{
+    char expectedData[128];
+    
+    emitNOP();
+    emitBKPT(0);
+    mockIComm_InitReceiveChecksummedData("+$c#");
+    mockIComm_DelayReceiveData(2);
+        mri4simRun(mockIComm_Get(), TRUE);
+    snprintf(expectedData, sizeof(expectedData),
+             "$T%02x0c:%08x;0d:%08x;0e:%08x;0f:%08x;#+",
+             SIGTRAP,
+             byteSwap(0x00000000),
+             byteSwap(INITIAL_SP),
+             byteSwap(INITIAL_LR),
+             byteSwap(INITIAL_PC));
+    STRCMP_EQUAL(mockIComm_ChecksumData(expectedData), mockIComm_GetTransmittedData());
+    CHECK_EQUAL(INITIAL_PC, m_pContext->pc);
+}
+
+TEST(mri4simRun, IssueExitSemihostCall_ShouldExitRunLoopImmediately_NotEnterDebugger)
+{
+    emitMOVimmediate(R0, 0x18);
+    emitBKPT(0xab);
+        mri4simRun(mockIComm_Get(), FALSE);
+    STRCMP_EQUAL("", mockIComm_GetTransmittedData());
+    CHECK_EQUAL(INITIAL_PC + 2, m_pContext->pc);
+}
+
+// Generate faults and implement Platform_DisplayFaultCauseToGdbConsole()
