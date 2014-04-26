@@ -18,7 +18,10 @@ typedef struct IComm IComm;
 
 typedef struct ICommVTable
 {
-    int (* shouldExit)(IComm* pThis);
+    int  (*hasReceiveData)(IComm* pComm);
+    int  (*receiveChar)(IComm* pComm);
+    void (*sendChar)(IComm* pComm, int character);
+    int  (*shouldStopRun)(IComm* pThis);
 } ICommVTable;
 
 struct IComm
@@ -27,9 +30,24 @@ struct IComm
 };
 
 
-static inline int IComm_ShouldExit(IComm* pThis)
+static inline int IComm_HasReceiveData(IComm* pThis)
 {
-    return pThis->pVTable->shouldExit(pThis);
+    return pThis->pVTable->hasReceiveData(pThis);
+}
+
+static inline int IComm_ReceiveChar(IComm* pThis)
+{
+    return pThis->pVTable->receiveChar(pThis);
+}
+
+static inline void IComm_SendChar(IComm* pThis, int character)
+{
+    pThis->pVTable->sendChar(pThis, character);
+}
+
+static inline int IComm_ShouldStopRun(IComm* pThis)
+{
+    return pThis->pVTable->shouldStopRun(pThis);
 }
 
 

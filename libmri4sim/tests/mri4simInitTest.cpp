@@ -22,7 +22,7 @@ extern "C"
 #include "CppUTest/TestHarness.h"
 
 
-TEST_GROUP(mri4sim)
+TEST_GROUP(mri4simInit)
 {
     IMemory* m_pMem;
     
@@ -40,7 +40,7 @@ TEST_GROUP(mri4sim)
 };
 
 
-TEST(mri4sim, mri4simInit_ResetVectorNotAvailable_ShouldThrowBusError)
+TEST(mri4simInit, ResetVectorNotAvailable_ShouldThrowBusError)
 {
     MemorySim_CreateRegion(m_pMem, FLASH_BASE_ADDRESS, sizeof(uint32_t));
     MemorySim_MakeRegionReadOnly(m_pMem, FLASH_BASE_ADDRESS);
@@ -49,7 +49,7 @@ TEST(mri4sim, mri4simInit_ResetVectorNotAvailable_ShouldThrowBusError)
     clearExceptionCode();
 }
 
-TEST(mri4sim, mri4simInit_InitialStackValueNotAvailable_ShouldThrowBusError)
+TEST(mri4simInit, InitialStackValueNotAvailable_ShouldThrowBusError)
 {
     MemorySim_CreateRegion(m_pMem, FLASH_BASE_ADDRESS, sizeof(uint32_t) - 1);
     MemorySim_MakeRegionReadOnly(m_pMem, FLASH_BASE_ADDRESS);
@@ -58,7 +58,7 @@ TEST(mri4sim, mri4simInit_InitialStackValueNotAvailable_ShouldThrowBusError)
     clearExceptionCode();
 }
 
-TEST(mri4sim, mri4simInit_ShouldInitializeContextSPandPCfromFirstTwoFlashWordsAndRestOfRegisterShouldBeZero)
+TEST(mri4simInit, ShouldInitializeContextSPandPCfromFirstTwoFlashWordsAndRestOfRegisterShouldBeZero)
 {
     uint32_t flashVectors[] = {0x10008000, 0x00000101};
     MemorySim_CreateRegionsFromFlashImage(m_pMem, flashVectors, sizeof(flashVectors));
@@ -74,32 +74,11 @@ TEST(mri4sim, mri4simInit_ShouldInitializeContextSPandPCfromFirstTwoFlashWordsAn
     CHECK_EQUAL(m_pMem, pContext->pMemory);
 }
 
-TEST(mri4sim, mri4simInit_MriCoreShouldBeSuccessfullyInitialized)
+TEST(mri4simInit, MriCoreShouldBeSuccessfullyInitialized)
 {
     uint32_t flashVectors[] = {0x10008000, 0x00000101};
     MemorySim_CreateRegionsFromFlashImage(m_pMem, flashVectors, sizeof(flashVectors));
         mri4simInit(m_pMem);
     CHECK_TRUE( IsFirstException() );
     CHECK_TRUE( WasSuccessfullyInit() );
-}
-
-
-static int testReturnTrue(IComm* pThis)
-{
-    return 1;
-}
-
-TEST(mri4sim, mri4simRun_IComm_ShouldExit_WillTriggerImmediateReturn)
-{
-    uint32_t flashVectors[] = {0x10008000, 0x00000101};
-    MemorySim_CreateRegionsFromFlashImage(m_pMem, flashVectors, sizeof(flashVectors));
-    mri4simInit(m_pMem);
-    ICommVTable testVTable = { testReturnTrue };
-    struct ITestComm
-    {
-        ICommVTable* pVTable;
-    } testComm = { &testVTable };
-        mri4simRun((IComm*)&testComm);
-    PinkySimContext* pContext = mri4simGetContext();
-    CHECK_EQUAL(0x00000100, pContext->pc);
 }

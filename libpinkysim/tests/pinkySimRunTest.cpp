@@ -139,7 +139,7 @@ TEST_SIM_ONLY(pinkySimRun, HaveCallbackReturnOkAndStopAtSecondBreakpoint)
     validateRegisters();
 }
 
-int interruptCallback(PinkySimContext* pContect)
+int interruptCallback(PinkySimContext* pContext)
 {
     return PINKYSIM_RUN_INTERRUPT;
 }
@@ -154,7 +154,7 @@ TEST_SIM_ONLY(pinkySimRun, HaveCallbackReturnInterruptResponseToStopImmediately)
     validateRegisters();
 }
 
-int watchpointCallback(PinkySimContext* pContect)
+int watchpointCallback(PinkySimContext* pContext)
 {
     return PINKYSIM_RUN_WATCHPOINT;
 }
@@ -169,7 +169,7 @@ TEST_SIM_ONLY(pinkySimRun, HaveCallbackReturnWatchpointResponseToStopImmediately
     validateRegisters();
 }
 
-int nullCallback(PinkySimContext* pContect)
+int nullCallback(PinkySimContext* pContext)
 {
     return PINKYSIM_STEP_OK;
 }

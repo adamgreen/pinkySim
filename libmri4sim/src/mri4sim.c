@@ -10,6 +10,8 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 */
+#include <IMemory.h>
+#include <signal.h>
 #include <string.h>
 #include <mri.h>
 #include <mri4sim.h>
@@ -21,6 +23,24 @@
 #define TRUE  1
 
 static PinkySimContext g_context;
+static IComm*          g_pComm;
+static char            g_packetBuffer[64 * 1024];
+static int             g_runResult;
+static uint32_t        g_pcOrig;
+
+
+/* Core MRI function not exposed in public header since typically called by ASM. */
+void __mriDebugException(void);
+
+/* Forward static function declarations. */
+static int shouldInterruptRun(PinkySimContext* pContext);
+static int isInstruction32Bit(uint16_t firstWordOfInstruction);
+static void sendRegisterForTResponse(Buffer* pBuffer, uint8_t registerOffset, uint32_t registerValue);
+static void writeBytesToBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount);
+static uint16_t getFirstHalfWordOfCurrentInstruction(void);
+static int isInstructionMbedSemihostBreakpoint(uint16_t instruction);
+static int isInstructionNewlibSemihostBreakpoint(uint16_t instruction);
+static int isInstructionHardcodedBreakpoint(uint16_t instruction);
 
 
 __throws void mri4simInit(IMemory* pMem)
@@ -37,13 +57,20 @@ __throws void mri4simInit(IMemory* pMem)
 
 void mri4simRun(IComm* pComm)
 {
+    g_pComm = pComm;
     do
     {
-        if (IComm_ShouldExit(pComm))
-            break;
-    } while (1);
+        g_runResult = pinkySimRun(&g_context, shouldInterruptRun);
+        __mriDebugException();
+    } while (!IComm_ShouldStopRun(pComm));
 }
 
+static int shouldInterruptRun(PinkySimContext* pContext)
+{
+    if (IComm_HasReceiveData(g_pComm))
+        return PINKYSIM_RUN_INTERRUPT;
+    return PINKYSIM_STEP_OK;
+}
 
 PinkySimContext* mri4simGetContext(void)
 {
@@ -58,16 +85,17 @@ void Platform_Init(Token* pParameterTokens)
 
 char* Platform_GetPacketBuffer(void)
 {
-    return NULL;
+    return g_packetBuffer;
 }
 
 uint32_t  Platform_GetPacketBufferSize(void)
 {
-    return 0;
+    return sizeof(g_packetBuffer);
 }
 
 void Platform_EnteringDebugger(void)
 {
+    g_pcOrig = g_context.pc;
 }
 
 void Platform_LeavingDebugger(void)
@@ -103,16 +131,17 @@ void Platform_MemWrite8(void* pv, uint8_t value)
 
 uint32_t Platform_CommHasReceiveData(void)
 {
-    return FALSE;
+    return IComm_HasReceiveData(g_pComm);
 }
 
 int Platform_CommReceiveChar(void)
 {
-    return 0;
+    return IComm_ReceiveChar(g_pComm);
 }
 
 void Platform_CommSendChar(int character)
 {
+    IComm_SendChar(g_pComm, character);
 }
 
 int Platform_CommCausedInterrupt(void)
@@ -154,7 +183,23 @@ int Platform_CommUartIndex(void)
 
 uint8_t Platform_DetermineCauseOfException(void)
 {
-    return 0;
+    switch (g_runResult)
+    {
+    case PINKYSIM_STEP_UNDEFINED:
+    case PINKYSIM_STEP_UNPREDICTABLE:
+    case PINKYSIM_STEP_UNSUPPORTED:
+    case PINKYSIM_STEP_SVC:
+        return SIGILL;
+    case PINKYSIM_STEP_HARDFAULT:
+        return SIGSEGV;
+    case PINKYSIM_STEP_BKPT:
+    case PINKYSIM_RUN_WATCHPOINT:
+        return SIGTRAP;
+    case PINKYSIM_RUN_INTERRUPT:
+        return SIGINT;
+    default:
+        return SIGSTOP;
+    }
 }
 
 void Platform_DisplayFaultCauseToGdbConsole(void)
@@ -185,11 +230,45 @@ void Platform_SetProgramCounter(uint32_t newPC)
 
 void Platform_AdvanceProgramCounterToNextInstruction(void)
 {
+    uint16_t  firstWordOfCurrentInstruction;
+    
+    __try
+    {
+        firstWordOfCurrentInstruction = getFirstHalfWordOfCurrentInstruction();
+    }
+    __catch
+    {
+        /* Will get here if PC isn't pointing to valid memory so don't bother to advance. */
+        clearExceptionCode();
+        return;
+    }
+    
+    if (isInstruction32Bit(firstWordOfCurrentInstruction))
+    {
+        /* 32-bit Instruction. */
+        g_context.pc += 4;
+    }
+    else
+    {
+        /* 16-bit Instruction. */
+        g_context.pc += 2;
+    }
+}
+
+static int isInstruction32Bit(uint16_t firstWordOfInstruction)
+{
+    uint16_t maskedOffUpper5BitsOfWord = firstWordOfInstruction & 0xF800;
+    
+    /* 32-bit instructions start with 0b11101, 0b11110, 0b11111 according to page A5-152 of the 
+       ARMv7-M Architecture Manual. */
+    return  (maskedOffUpper5BitsOfWord == 0xE800 ||
+             maskedOffUpper5BitsOfWord == 0xF000 ||
+             maskedOffUpper5BitsOfWord == 0xF800);
 }
 
 int Platform_WasProgramCounterModifiedByUser(void)
 {
-    return FALSE;
+    return g_context.pc != g_pcOrig;
 }
 
 int Platform_WasMemoryFaultEncountered(void)
@@ -197,9 +276,32 @@ int Platform_WasMemoryFaultEncountered(void)
     return FALSE;
 }
 
+
 void Platform_WriteTResponseRegistersToBuffer(Buffer* pBuffer)
 {
+    sendRegisterForTResponse(pBuffer, 12, g_context.R[12]);
+    sendRegisterForTResponse(pBuffer, 13, g_context.spMain);
+    sendRegisterForTResponse(pBuffer, 14, g_context.lr);
+    sendRegisterForTResponse(pBuffer, 15, g_context.pc);
 }
+
+static void sendRegisterForTResponse(Buffer* pBuffer, uint8_t registerOffset, uint32_t registerValue)
+{
+    Buffer_WriteByteAsHex(pBuffer, registerOffset);
+    Buffer_WriteChar(pBuffer, ':');
+    writeBytesToBufferAsHex(pBuffer, &registerValue, sizeof(registerValue));
+    Buffer_WriteChar(pBuffer, ';');
+}
+
+static void writeBytesToBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount)
+{
+    uint8_t* pByte = (uint8_t*)pBytes;
+    size_t   i;
+    
+    for (i = 0 ; i < byteCount ; i++)
+        Buffer_WriteByteAsHex(pBuffer, *pByte++);
+}
+
 
 void Platform_CopyContextToBuffer(Buffer* pBuffer)
 {
@@ -245,10 +347,58 @@ __throws void Platform_ClearHardwareWatchpoint(uint32_t address, uint32_t size, 
 {
 }
 
+
 PlatformInstructionType Platform_TypeOfCurrentInstruction(void)
 {
-    return MRI_PLATFORM_INSTRUCTION_OTHER;
+    uint16_t currentInstruction;
+    
+    __try
+    {
+        currentInstruction = getFirstHalfWordOfCurrentInstruction();
+    }
+    __catch
+    {
+        /* Will get here if PC isn't pointing to valid memory so treat as other. */
+        clearExceptionCode();
+        return MRI_PLATFORM_INSTRUCTION_OTHER;
+    }
+    
+    if (isInstructionMbedSemihostBreakpoint(currentInstruction))
+        return MRI_PLATFORM_INSTRUCTION_MBED_SEMIHOST_CALL;
+    else if (isInstructionNewlibSemihostBreakpoint(currentInstruction))
+        return MRI_PLATFORM_INSTRUCTION_NEWLIB_SEMIHOST_CALL;
+    else if (isInstructionHardcodedBreakpoint(currentInstruction))
+        return MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT;
+    else
+        return MRI_PLATFORM_INSTRUCTION_OTHER;
 }
+
+static uint16_t getFirstHalfWordOfCurrentInstruction(void)
+{
+    return IMemory_Read16(g_context.pMemory, g_context.pc);
+}
+
+static int isInstructionMbedSemihostBreakpoint(uint16_t instruction)
+{
+    static const uint16_t mbedSemihostBreakpointMachineCode = 0xbeab;
+
+    return mbedSemihostBreakpointMachineCode == instruction;
+}
+
+static int isInstructionNewlibSemihostBreakpoint(uint16_t instruction)
+{
+    static const uint16_t newlibSemihostBreakpointMachineCode = 0xbeff;
+
+    return (newlibSemihostBreakpointMachineCode == instruction);
+}
+
+static int isInstructionHardcodedBreakpoint(uint16_t instruction)
+{
+    static const uint16_t hardCodedBreakpointMachineCode = 0xbe00;
+
+    return (hardCodedBreakpointMachineCode == instruction);
+}
+
 
 PlatformSemihostParameters Platform_GetSemihostCallParameters(void)
 {

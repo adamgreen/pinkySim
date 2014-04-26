@@ -202,12 +202,15 @@ $(eval $(call run_gcov,LIBMEMSIM))
 
 #######################################
 # libmri4sim.a
-$(eval $(call make_library,LIBMRI4SIM,libmri4sim/src,libmri4sim.a,include mri/include))
-$(eval $(call make_tests,LIBMRI4SIM,libmri4sim/tests,include mri/include,$(HOST_LIBCOMMON_LIB) \
-                                                                         $(HOST_LIBMOCKS_LIB) \
-                                                                         $(HOST_LIBPINKYSIM_LIB) \
-                                                                         $(HOST_LIBMEMSIM_LIB) \
-                                                                         $(HOST_LIBMRICORE_LIB) ))
+$(eval $(call make_library,LIBMRI4SIM,libmri4sim/src libmri4sim/mocks,libmri4sim.a,include mri/include))
+$(eval $(call make_tests,LIBMRI4SIM, \
+                         libmri4sim/tests, \
+                         include libmri4sim/mocks mri/include, \
+                             $(HOST_LIBCOMMON_LIB) \
+                             $(HOST_LIBMOCKS_LIB) \
+                             $(HOST_LIBPINKYSIM_LIB) \
+                             $(HOST_LIBMEMSIM_LIB) \
+                             $(HOST_LIBMRICORE_LIB) ))
 $(eval $(call run_gcov,LIBMRI4SIM))
 
 #######################################
