@@ -105,6 +105,7 @@ typedef struct PinkySimContext
 #define PINKYSIM_STEP_SVC           6   /* Encountered SVC instruction. */
 #define PINKYSIM_RUN_INTERRUPT      7   /* pinkySimRun() callback signalled interrupt. */
 #define PINKYSIM_RUN_WATCHPOINT     8   /* pinkySimRun() callback signalled watchpoint event. */
+#define PINKYSIM_RUN_SINGLESTEP     9   /* pinkySimRun() callback signalled single step. */
 
 
 int pinkySimStep(PinkySimContext* pContext);

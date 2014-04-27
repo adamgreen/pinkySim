@@ -29,6 +29,7 @@ static IComm*          g_pComm;
 static char            g_packetBuffer[64 * 1024];
 static int             g_runResult;
 static uint32_t        g_pcOrig;
+static int             g_singleStepping;
 
 
 /* Core MRI function not exposed in public header since typically called by ASM. */
@@ -55,6 +56,7 @@ __throws void mri4simInit(IMemory* pMem)
     g_context.pc = IMemory_Read32(pMem, 0x00000004) & 0xFFFFFFFE;
     g_context.xPSR |= EPSR_T;
     g_context.pMemory = pMem;
+    g_singleStepping = 0;
     
     __mriInit("");
 }
@@ -82,6 +84,11 @@ void mri4simRun(IComm* pComm, int breakOnStart)
 
 static int shouldInterruptRun(PinkySimContext* pContext)
 {
+    if (g_singleStepping > 1)
+        g_singleStepping--;
+    else if (g_singleStepping == 1)
+        return PINKYSIM_RUN_SINGLESTEP;
+    
     if (IComm_HasReceiveData(g_pComm))
         return PINKYSIM_RUN_INTERRUPT;
     return PINKYSIM_STEP_OK;
@@ -123,6 +130,7 @@ uint32_t  Platform_GetPacketBufferSize(void)
 void Platform_EnteringDebugger(void)
 {
     g_pcOrig = g_context.pc;
+    Platform_DisableSingleStep();
 }
 
 void Platform_LeavingDebugger(void)
@@ -225,6 +233,7 @@ uint8_t Platform_DetermineCauseOfException(void)
         break;
     case PINKYSIM_STEP_BKPT:
     case PINKYSIM_RUN_WATCHPOINT:
+    case PINKYSIM_RUN_SINGLESTEP:
         signal = SIGTRAP;
         break;
     case PINKYSIM_RUN_INTERRUPT:
@@ -264,15 +273,17 @@ static void logMessageToLocalAndGdbConsoles(const char* pMessage)
 
 void Platform_EnableSingleStep(void)
 {
+    g_singleStepping = 2;
 }
 
 void Platform_DisableSingleStep(void)
 {
+    g_singleStepping = 0;
 }
 
 int Platform_IsSingleStepping(void)
 {
-    return FALSE;
+    return g_singleStepping > 0;
 }
 
 uint32_t Platform_GetProgramCounter(void)

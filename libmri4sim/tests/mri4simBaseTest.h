@@ -63,6 +63,11 @@ protected:
         mockIComm_SetShouldStopRunFlag(1);
         m_emitAddress = INITIAL_PC;
         
+        resetExpectedBuffer();
+    }
+    
+    void resetExpectedBuffer()
+    {
         m_pBufferCurr = m_buffer;
     }
 
