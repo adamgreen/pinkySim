@@ -183,7 +183,7 @@ static MemoryRegion* findMatchingRegion(MemorySim* pThis, uint32_t address, uint
     while (pCurr)
     {
         MemoryRegion* pNext = pCurr->pNext;
-        if (address >= pCurr->baseAddress && address + size <= pCurr->baseAddress + pCurr->size)
+        if (address >= pCurr->baseAddress && (uint64_t)address + size <= (uint64_t)pCurr->baseAddress + pCurr->size)
             return pCurr;
         pCurr = pNext;
     }

@@ -95,6 +95,13 @@ TEST(MemorySim, SimulateFourBytes_ShouldBeZeroFilledByDefault)
     CHECK_EQUAL(0x0000000, IMemory_Read32(m_pMemory, 0x00000004));
 }
 
+TEST(MemorySim, CreateRegionAtLowerAddressRange_MakeSureThatHighestPossibleWordThrows)
+{
+    MemorySim_CreateRegion(m_pMemory, 0x00000000, 4);
+    __try_and_catch( IMemory_Read32(m_pMemory, 0xFFFFFFFC) );
+    validateExceptionThrown(busErrorException);
+}
+
 TEST(MemorySim, SimulateFourBytes_DefaultsToReadWrite_VerifyCanReadAndWrite)
 {
     static const uint32_t testAddress = 0x00000004;
@@ -178,6 +185,14 @@ TEST(MemorySim, SimulateFourBytes_VerifyCanMakeReadOnly)
     CHECK_EQUAL(0x00000000, IMemory_Read32(m_pMemory, testAddress));
     CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testAddress));
     CHECK_EQUAL(0x00, IMemory_Read8(m_pMemory, testAddress));
+}
+
+TEST(MemorySim, CreateZeroLengthRegion_ShouldThrowWhenTryingToMakeReadOnly)
+{
+    static const uint32_t testAddress = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testAddress, 0);
+    __try_and_catch( MemorySim_MakeRegionReadOnly(m_pMemory, testAddress) );
+    validateExceptionThrown(busErrorException);
 }
 
 TEST(MemorySim, SimulateFourBytes_VerifyCanReadBothHalfWords)
@@ -525,6 +540,14 @@ TEST(MemorySim, TryClearingBreakpointWhichNoExist_ShouldBeIgnored)
 
     MemorySim_ClearHardwareBreakpoint(m_pMemory, testBase + 0 * sizeof(uint16_t), sizeof(uint16_t));
     CHECK_EQUAL(0x0000, IMemory_Read16(m_pMemory, testBase + 0 * sizeof(uint16_t)));
+}
+
+TEST(MemorySim, SetZeroLengthBreakpointInZeroLengthRegion_NoThrow)
+{
+    uint32_t testBase = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testBase, 0);
+    MemorySim_SetHardwareBreakpoint(m_pMemory, testBase, 0);
+    MemorySim_ClearHardwareBreakpoint(m_pMemory, testBase, 0);
 }
 
 TEST(MemorySim, SetAndVerifySeveralBreakpoints)
