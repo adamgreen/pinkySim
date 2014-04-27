@@ -103,6 +103,22 @@ TEST(mri4simRun, UnalignedAccess_WillHardfault_ShouldStopImmediately_DumpHardFau
     CHECK_EQUAL(INITIAL_PC, m_pContext->pc);
 }
 
+TEST(mri4simRun, InvalidMemoryAddress_WillHardfault_ShouldStopImmediately_DumpHardFaultMessage)
+{
+    const char* expectedMessage = "\n**Hard Fault**\n";
+    emitLDRImmediate(R2, R3, 0);
+    setRegisterValue(R3, 0xFFFFFFFC);
+    mockIComm_InitReceiveChecksummedData("++$c#");
+    mockIComm_DelayReceiveData(1);
+        mri4simRun(mockIComm_Get(), FALSE);
+    appendExpectedOPacket(expectedMessage);
+    appendExpectedTPacket(SIGSEGV, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);
+    appendExpectedString("+");
+    STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
+    STRCMP_EQUAL(expectedMessage, printfSpy_GetLastOutput());
+    CHECK_EQUAL(INITIAL_PC, m_pContext->pc);
+}
+
 TEST(mri4simRun, UndefinedInstruction_ShouldStopImmediately_DumpUndefinedMessage)
 {
     const char* expectedMessage = "\n**Undefined Instruction**\n";
