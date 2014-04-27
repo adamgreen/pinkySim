@@ -63,6 +63,21 @@ TEST(mri4simRun, BreakOnStart_SendContinue)
     CHECK_EQUAL(INITIAL_PC, m_pContext->pc);
 }
 
+TEST(mri4simRun, BreakOnStart_SendContinueWithSpecificAddressToSkipSomeInstructions)
+{
+    emitNOP();
+    emitNOP();
+    emitBKPT(0);
+    char commands[64];
+    snprintf(commands, sizeof(commands), "+$c%x#", INITIAL_PC + 4);
+    mockIComm_InitReceiveChecksummedData(commands);
+        mri4simRun(mockIComm_Get(), TRUE);
+    appendExpectedTPacket(SIGTRAP, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);
+    appendExpectedString("+");
+    STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
+    CHECK_EQUAL(INITIAL_PC + 4, m_pContext->pc);
+}
+
 TEST(mri4simRun, IssueExitSemihostCall_ShouldExitRunLoopImmediately_NotEnterDebugger)
 {
     emitMOVimmediate(R0, 0x18);

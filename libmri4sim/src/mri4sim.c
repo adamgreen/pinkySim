@@ -277,11 +277,12 @@ int Platform_IsSingleStepping(void)
 
 uint32_t Platform_GetProgramCounter(void)
 {
-    return 0;
+    return g_context.pc;
 }
 
 void Platform_SetProgramCounter(uint32_t newPC)
 {
+    g_context.pc = newPC;
 }
 
 void Platform_AdvanceProgramCounterToNextInstruction(void)
