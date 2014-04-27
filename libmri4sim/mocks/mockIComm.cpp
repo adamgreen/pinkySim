@@ -80,6 +80,7 @@ static char*       g_pTransmitDataBufferCurr;
 
 static void waitForReceiveData(IComm* pComm);
 static int isReceiveBufferEmpty();
+static void freeReceiveAllocations();
 static char* allocateAndCopyChecksummedData(const char* pData);
 static size_t countPoundSigns(const char* p);
 static void copyChecksummedData(char* pDest, const char* pSrc);
@@ -177,6 +178,7 @@ void mockIComm_InitReceiveData(const char* pDataToReceive1, const char* pDataToR
 
 void mockIComm_InitReceiveChecksummedData(const char* pDataToReceive1, const char* pDataToReceive2 /*= NULL*/)
 {
+    freeReceiveAllocations();
     g_pAlloc1 = allocateAndCopyChecksummedData(pDataToReceive1);
     g_receiveBuffers[0].init(g_pAlloc1);
     if (pDataToReceive2)
@@ -190,6 +192,13 @@ void mockIComm_InitReceiveChecksummedData(const char* pDataToReceive1, const cha
     }
     g_receiveIndex = 0;
     g_delayReceiveCount = 0;
+}
+
+static void freeReceiveAllocations()
+{
+    free(g_pAlloc1);
+    free(g_pAlloc2);
+    g_pAlloc1 = g_pAlloc2 = NULL;
 }
 
 static char* allocateAndCopyChecksummedData(const char* pData)
