@@ -29,58 +29,37 @@ TEST_GROUP_BASE(mri4simRun, mri4simBase)
 
 TEST(mri4simRun, QueueUpDebuggerContinueCommand_ShouldInterruptSimAndGoStraightToMri)
 {
-    char expectedData[128];
-    
     mockIComm_InitReceiveChecksummedData("+$c#");
         mri4simRun(mockIComm_Get(), FALSE);
-    snprintf(expectedData, sizeof(expectedData),
-             "$T%02x0c:%08x;0d:%08x;0e:%08x;0f:%08x;#+",
-             SIGINT,
-             byteSwap(0x00000000),
-             byteSwap(INITIAL_SP),
-             byteSwap(INITIAL_LR),
-             byteSwap(INITIAL_PC));
-    STRCMP_EQUAL(mockIComm_ChecksumData(expectedData), mockIComm_GetTransmittedData());
+    appendExpectedTPacket(SIGINT, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);
+    appendExpectedString("+");
+    STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
     CHECK_EQUAL(INITIAL_PC, m_pContext->pc);
 }
 
 TEST(mri4simRun, DontInterruptSimAndLetRunToBreakpoint_SendContinue_ShouldAdvancePastBreakpoint)
 {
-    char expectedData[128];
-    
     emitNOP();
     emitBKPT(0);
     mockIComm_InitReceiveChecksummedData("+$c#");
     mockIComm_DelayReceiveData(2);
         mri4simRun(mockIComm_Get(), FALSE);
-    snprintf(expectedData, sizeof(expectedData),
-             "$T%02x0c:%08x;0d:%08x;0e:%08x;0f:%08x;#+",
-             SIGTRAP,
-             byteSwap(0x00000000),
-             byteSwap(INITIAL_SP),
-             byteSwap(INITIAL_LR),
-             byteSwap(INITIAL_PC + 2));
-    STRCMP_EQUAL(mockIComm_ChecksumData(expectedData), mockIComm_GetTransmittedData());
+    appendExpectedTPacket(SIGTRAP, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC + 2);
+    appendExpectedString("+");
+    STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
     CHECK_EQUAL(INITIAL_PC + 4, m_pContext->pc);
 }
 
 TEST(mri4simRun, BreakOnStart_SendContinue)
 {
-    char expectedData[128];
-    
     emitNOP();
     emitBKPT(0);
     mockIComm_InitReceiveChecksummedData("+$c#");
     mockIComm_DelayReceiveData(2);
         mri4simRun(mockIComm_Get(), TRUE);
-    snprintf(expectedData, sizeof(expectedData),
-             "$T%02x0c:%08x;0d:%08x;0e:%08x;0f:%08x;#+",
-             SIGTRAP,
-             byteSwap(0x00000000),
-             byteSwap(INITIAL_SP),
-             byteSwap(INITIAL_LR),
-             byteSwap(INITIAL_PC));
-    STRCMP_EQUAL(mockIComm_ChecksumData(expectedData), mockIComm_GetTransmittedData());
+    appendExpectedTPacket(SIGTRAP, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);
+    appendExpectedString("+");
+    STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
     CHECK_EQUAL(INITIAL_PC, m_pContext->pc);
 }
 
@@ -93,4 +72,78 @@ TEST(mri4simRun, IssueExitSemihostCall_ShouldExitRunLoopImmediately_NotEnterDebu
     CHECK_EQUAL(INITIAL_PC + 2, m_pContext->pc);
 }
 
-// Generate faults and implement Platform_DisplayFaultCauseToGdbConsole()
+TEST(mri4simRun, UnalignedAccess_WillHardfault_ShouldStopImmediately_DumpHardFaultMessage)
+{
+    const char* expectedMessage = "\n**Hard Fault**\n";
+    emitLDRImmediate(R2, R3, 0);
+    setRegisterValue(R3, INITIAL_PC + 2);
+    mockIComm_InitReceiveChecksummedData("++$c#");
+    mockIComm_DelayReceiveData(1);
+        mri4simRun(mockIComm_Get(), FALSE);
+    appendExpectedOPacket(expectedMessage);
+    appendExpectedTPacket(SIGSEGV, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);
+    appendExpectedString("+");
+    STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
+    STRCMP_EQUAL(expectedMessage, printfSpy_GetLastOutput());
+    CHECK_EQUAL(INITIAL_PC, m_pContext->pc);
+}
+
+TEST(mri4simRun, UndefinedInstruction_ShouldStopImmediately_DumpUndefinedMessage)
+{
+    const char* expectedMessage = "\n**Undefined Instruction**\n";
+    emitUND(0);
+    mockIComm_InitReceiveChecksummedData("++$c#");
+    mockIComm_DelayReceiveData(1);
+        mri4simRun(mockIComm_Get(), FALSE);
+    appendExpectedOPacket(expectedMessage);
+    appendExpectedTPacket(SIGILL, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);
+    appendExpectedString("+");
+    STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
+    STRCMP_EQUAL(expectedMessage, printfSpy_GetLastOutput());
+    CHECK_EQUAL(INITIAL_PC, m_pContext->pc);
+}
+
+TEST(mri4simRun, UnpredictableInstruction_ShouldStopImmediately_DumpUnpredictableMessage)
+{
+    const char* expectedMessage = "\n**Unpredictable Instruction Encoding**\n";
+    emitInstruction16("0100010100000000");
+    mockIComm_InitReceiveChecksummedData("++$c#");
+    mockIComm_DelayReceiveData(1);
+        mri4simRun(mockIComm_Get(), FALSE);
+    appendExpectedOPacket(expectedMessage);
+    appendExpectedTPacket(SIGILL, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);
+    appendExpectedString("+");
+    STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
+    STRCMP_EQUAL(expectedMessage, printfSpy_GetLastOutput());
+    CHECK_EQUAL(INITIAL_PC, m_pContext->pc);
+}
+
+TEST(mri4simRun, UnsupportedInstruction_ShouldStopAfter_DumpUnsupportedMessage)
+{
+    const char* expectedMessage = "\n**Unsupported Instruction**\n";
+    emitYIELD();
+    mockIComm_InitReceiveChecksummedData("++$c#");
+    mockIComm_DelayReceiveData(1);
+        mri4simRun(mockIComm_Get(), FALSE);
+    appendExpectedOPacket(expectedMessage);
+    appendExpectedTPacket(SIGILL, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC + 2);
+    appendExpectedString("+");
+    STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
+    STRCMP_EQUAL(expectedMessage, printfSpy_GetLastOutput());
+    CHECK_EQUAL(INITIAL_PC + 2, m_pContext->pc);
+}
+
+TEST(mri4simRun, UnsupportedSVCInstruction_ShouldStopAfter_DumpUnsupportedMessage)
+{
+    const char* expectedMessage = "\n**Unsupported Instruction**\n";
+    emitSVC(0);
+    mockIComm_InitReceiveChecksummedData("++$c#");
+    mockIComm_DelayReceiveData(1);
+        mri4simRun(mockIComm_Get(), FALSE);
+    appendExpectedOPacket(expectedMessage);
+    appendExpectedTPacket(SIGILL, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC + 2);
+    appendExpectedString("+");
+    STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
+    STRCMP_EQUAL(expectedMessage, printfSpy_GetLastOutput());
+    CHECK_EQUAL(INITIAL_PC + 2, m_pContext->pc);
+}

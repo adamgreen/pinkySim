@@ -10,12 +10,14 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 */
+#include <gdb_console.h>
 #include <IMemory.h>
 #include <signal.h>
 #include <string.h>
 #include <mri.h>
 #include <mri4sim.h>
 #include <platforms.h>
+#include <printfSpy.h>
 #include <semihost.h>
 
 
@@ -36,6 +38,7 @@ void __mriDebugException(void);
 static int shouldInterruptRun(PinkySimContext* pContext);
 static int isExitSemihost(void);
 static int isMbedSemihostCall(void);
+static void logMessageToLocalAndGdbConsoles(const char* pMessage);
 static int isInstruction32Bit(uint16_t firstWordOfInstruction);
 static void sendRegisterForTResponse(Buffer* pBuffer, uint8_t registerOffset, uint32_t registerValue);
 static void writeBytesToBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount);
@@ -207,28 +210,57 @@ int Platform_CommUartIndex(void)
 
 uint8_t Platform_DetermineCauseOfException(void)
 {
+    uint8_t signal = SIGSTOP;
+    
     switch (g_runResult)
     {
     case PINKYSIM_STEP_UNDEFINED:
     case PINKYSIM_STEP_UNPREDICTABLE:
     case PINKYSIM_STEP_UNSUPPORTED:
     case PINKYSIM_STEP_SVC:
-        return SIGILL;
+        signal = SIGILL;
+        break;
     case PINKYSIM_STEP_HARDFAULT:
-        return SIGSEGV;
+        signal = SIGSEGV;
+        break;
     case PINKYSIM_STEP_BKPT:
     case PINKYSIM_RUN_WATCHPOINT:
-        return SIGTRAP;
+        signal = SIGTRAP;
+        break;
     case PINKYSIM_RUN_INTERRUPT:
-        return SIGINT;
-    default:
-        return SIGSTOP;
+        signal = SIGINT;
+        break;
     }
+    
+    return signal;
 }
 
 void Platform_DisplayFaultCauseToGdbConsole(void)
 {
+    switch (g_runResult)
+    {
+    case PINKYSIM_STEP_UNDEFINED:
+        logMessageToLocalAndGdbConsoles("\n**Undefined Instruction**\n");
+        break;
+    case PINKYSIM_STEP_UNPREDICTABLE:
+        logMessageToLocalAndGdbConsoles("\n**Unpredictable Instruction Encoding**\n");
+        break;
+    case PINKYSIM_STEP_UNSUPPORTED:
+    case PINKYSIM_STEP_SVC:
+        logMessageToLocalAndGdbConsoles("\n**Unsupported Instruction**\n");
+        break;
+    case PINKYSIM_STEP_HARDFAULT:
+        logMessageToLocalAndGdbConsoles("\n**Hard Fault**\n");
+        break;
+    }
 }
+
+static void logMessageToLocalAndGdbConsoles(const char* pMessage)
+{
+    printf("%s", pMessage);
+    WriteStringToGdbConsole(pMessage);
+}
+
 
 void Platform_EnableSingleStep(void)
 {

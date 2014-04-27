@@ -17,6 +17,7 @@ extern "C"
     #include <MemorySim.h>
     #include <mri4sim.h>
     #include <pinkySim.h>
+    #include <printfSpy.h>
 }
 
 // Include standard headers.
@@ -40,6 +41,8 @@ protected:
     IMemory*         m_pMemory;
     PinkySimContext* m_pContext;
     uint32_t         m_emitAddress;
+    char             m_buffer[256];
+    char*            m_pBufferCurr;
     
     void setup()
     {
@@ -53,13 +56,19 @@ protected:
         /* Setup to buffer a maximum of 1024 characters sent by MRI. */
         mockIComm_InitTransmitDataBuffer(1024);
         
+        /* Setup to buffer a maxmimum of 256 characters used with printf() calls. */
+        printfSpy_Hook(256);
+
         /* Most of the times a test will want to only run the mri4simRun() loop once so set stop flag to 1. */
         mockIComm_SetShouldStopRunFlag(1);
         m_emitAddress = INITIAL_PC;
+        
+        m_pBufferCurr = m_buffer;
     }
 
     void teardown()
     {
+        printfSpy_Unhook();
         MemorySim_Uninit(m_pMemory);
         mockIComm_Uninit();
     }
@@ -133,14 +142,34 @@ protected:
         emitInstruction16("10111110iiiiiiii", immediate);
     }
     
+    void emitSVC(uint32_t immediate)
+    {
+        emitInstruction16("11011111iiiiiiii", immediate);
+    }
+    
     void emitNOP()
     {
         emitInstruction16("1011111100000000");
     }
     
-    void emitMOVimmediate(uint32_t Rd, uint32_t imm8)
+    void emitMOVimmediate(uint32_t Rd, uint32_t immediate)
     {
-        emitInstruction16("00100dddiiiiiiii", Rd, imm8);
+        emitInstruction16("00100dddiiiiiiii", Rd, immediate);
+    }
+    
+    void emitLDRImmediate(uint32_t Rt, uint32_t Rn, uint32_t immediate)
+    {
+        emitInstruction16("01101iiiiinnnttt", immediate, Rn, Rt);
+    }
+    
+    void emitUND(uint32_t immediate)
+    {
+        emitInstruction16("11011110iiiiiiii", immediate);
+    }
+    
+    void emitYIELD()
+    {
+        emitInstruction16("1011111100010000");
     }
     
     void emitInstruction16(const char* pEncoding, ...)
@@ -289,5 +318,58 @@ protected:
     uint32_t byteSwap(uint32_t value)
     {
         return (value >> 24) | ((value >> 8) & 0xFF00) | ((value << 8) & 0xFF0000) | (value << 24);
+    }
+    
+    void appendExpectedTPacket(uint32_t expectedSignal,
+                               uint32_t expectedR12,
+                               uint32_t expectedSP,
+                               uint32_t expectedLR,
+                               uint32_t expectedPC)
+    {
+        int   bytesLeft = bufferBytesLeft();
+        
+        int result = snprintf(m_pBufferCurr, bytesLeft,
+                             "$T%02x0c:%08x;0d:%08x;0e:%08x;0f:%08x;#",
+                             expectedSignal,
+                             byteSwap(expectedR12),
+                             byteSwap(expectedSP),
+                             byteSwap(expectedLR),
+                             byteSwap(expectedPC));
+        assert(result < bytesLeft);
+        m_pBufferCurr += result;
+    }
+    
+    int bufferBytesLeft()
+    {
+        return (m_buffer + sizeof(m_buffer)) - m_pBufferCurr;
+    }
+
+    void appendExpectedString(const char* pExpectedString)
+    {
+        int   bytesLeft = bufferBytesLeft();
+        
+        int result = snprintf(m_pBufferCurr, bytesLeft, "%s", pExpectedString);
+        assert(result < bytesLeft);
+        m_pBufferCurr += result;
+    }
+    
+    void appendExpectedOPacket(const char* pExpectedString)
+    {
+        appendExpectedString("$O");
+        int bytesLeft = bufferBytesLeft();
+        while (*pExpectedString)
+        {
+            int result = snprintf(m_pBufferCurr, bytesLeft, "%02x", *pExpectedString);
+            assert (result < bytesLeft);
+            m_pBufferCurr += result;
+            bytesLeft -= result;
+            pExpectedString++;
+        }
+        appendExpectedString("#");
+    }
+    
+    const char* checksumExpected()
+    {
+        return mockIComm_ChecksumData(m_buffer);
     }
 };
