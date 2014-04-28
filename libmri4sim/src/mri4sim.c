@@ -44,6 +44,7 @@ static void logMessageToLocalAndGdbConsoles(const char* pMessage);
 static int isInstruction32Bit(uint16_t firstWordOfInstruction);
 static void sendRegisterForTResponse(Buffer* pBuffer, uint8_t registerOffset, uint32_t registerValue);
 static void writeBytesToBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount);
+static void readBytesFromBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount);
 static uint32_t convertWatchpointTypeToMemorySimType(PlatformWatchpointType type);
 static uint16_t getFirstHalfWordOfCurrentInstruction(void);
 static int isInstructionMbedSemihostBreakpoint(uint16_t instruction);
@@ -378,11 +379,24 @@ static void writeBytesToBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCo
 
 void Platform_CopyContextToBuffer(Buffer* pBuffer)
 {
+    writeBytesToBufferAsHex(pBuffer, &g_context.R[0], (16 + 1) * sizeof(uint32_t));
 }
+
 
 void Platform_CopyContextFromBuffer(Buffer* pBuffer)
 {
+    readBytesFromBufferAsHex(pBuffer, &g_context.R[0], (16 + 1) * sizeof(uint32_t));
 }
+
+static void readBytesFromBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount)
+{
+    uint8_t* pByte = (uint8_t*)pBytes;
+    size_t   i;
+    
+    for (i = 0 ; i < byteCount; i++)
+        *pByte++ = Buffer_ReadByteAsHex(pBuffer);
+}
+
 
 uint32_t Platform_GetDeviceMemoryMapXmlSize(void)
 {
