@@ -15,22 +15,20 @@
 #define _TRY_CATCH_H_
 
 #include <setjmp.h>
+#define MRI_SKIP_TRY_CATCH_MACRO_DEFINES
+#include "../mri/include/try_catch.h"
 
-#define noException                         0
-#define undefinedException                  1
-#define unpredictableException              2
-#define outOfMemoryException                3
-#define busErrorException                   4
-#define alignmentException                  5
-#define bkptException                       6
-#define invalidHexDigitException            7
-#define invalidValueException               8
-#define bufferOverrunException              9
-#define badResponseException                10
-#define serialException                     11
-#define timeoutException                    12
-#define hardwareBreakpointException         13
-#define hardwareWatchpointException         14
+
+#define undefinedException                  (mriMaxException + 1)
+#define unpredictableException              (mriMaxException + 2)
+#define outOfMemoryException                (mriMaxException + 3)
+#define busErrorException                   (mriMaxException + 4)
+#define alignmentException                  (mriMaxException + 5)
+#define bkptException                       (mriMaxException + 6)
+#define badResponseException                (mriMaxException + 7)
+#define serialException                     (mriMaxException + 8)
+#define hardwareBreakpointException         (mriMaxException + 9)
+#define hardwareWatchpointException         (mriMaxException + 10)
 
 
 #ifndef __debugbreak
