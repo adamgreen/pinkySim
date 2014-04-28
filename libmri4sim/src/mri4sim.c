@@ -44,6 +44,7 @@ static void logMessageToLocalAndGdbConsoles(const char* pMessage);
 static int isInstruction32Bit(uint16_t firstWordOfInstruction);
 static void sendRegisterForTResponse(Buffer* pBuffer, uint8_t registerOffset, uint32_t registerValue);
 static void writeBytesToBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount);
+static uint32_t convertWatchpointTypeToMemorySimType(PlatformWatchpointType type);
 static uint16_t getFirstHalfWordOfCurrentInstruction(void);
 static int isInstructionMbedSemihostBreakpoint(uint16_t instruction);
 static int isInstructionNewlibSemihostBreakpoint(uint16_t instruction);
@@ -90,6 +91,9 @@ static int shouldInterruptRun(PinkySimContext* pContext)
     else if (g_singleStepping == 1)
         return PINKYSIM_RUN_SINGLESTEP;
     
+    if (MemorySim_WasWatchpointEncountered(g_context.pMemory))
+        return PINKYSIM_RUN_WATCHPOINT;
+
     if (IComm_HasReceiveData(g_pComm))
         return PINKYSIM_RUN_INTERRUPT;
     return PINKYSIM_STEP_OK;
@@ -400,6 +404,7 @@ const char* Platform_GetTargetXml(void)
     return NULL;
 }
 
+
 __throws void Platform_SetHardwareBreakpoint(uint32_t address, uint32_t kind)
 {
     uint32_t size;
@@ -423,6 +428,7 @@ __throws void Platform_SetHardwareBreakpoint(uint32_t address, uint32_t kind)
     __catch
         __mriExceptionCode = exceededHardwareResourcesException;
 }
+
 
 __throws void Platform_ClearHardwareBreakpoint(uint32_t address, uint32_t kind)
 {
@@ -448,12 +454,41 @@ __throws void Platform_ClearHardwareBreakpoint(uint32_t address, uint32_t kind)
         __mriExceptionCode = memFaultException;
 }
 
-__throws void Platform_SetHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type)
+
+__throws void Platform_SetHardwareWatchpoint(uint32_t address, uint32_t size, PlatformWatchpointType type)
 {
+    __try
+        MemorySim_SetHardwareWatchpoint(g_context.pMemory, address, size, convertWatchpointTypeToMemorySimType(type));
+    __catch
+        __mriExceptionCode = exceededHardwareResourcesException;
 }
+
+static WatchpointType convertWatchpointTypeToMemorySimType(PlatformWatchpointType type)
+{
+    WatchpointType simType = 0;
+    
+    switch (type)
+    {
+    case MRI_PLATFORM_WRITE_WATCHPOINT:
+        simType = WATCHPOINT_WRITE;
+        break;
+    case MRI_PLATFORM_READ_WATCHPOINT:
+        simType = WATCHPOINT_READ;
+        break;
+    case MRI_PLATFORM_READWRITE_WATCHPOINT:
+        simType = WATCHPOINT_READ_WRITE;
+        break;
+    }
+    return simType;
+}
+
 
 __throws void Platform_ClearHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type)
 {
+    __try
+        MemorySim_ClearHardwareWatchpoint(g_context.pMemory, address, size, convertWatchpointTypeToMemorySimType(type));
+    __catch
+        __mriExceptionCode = invalidArgumentException;
 }
 
 

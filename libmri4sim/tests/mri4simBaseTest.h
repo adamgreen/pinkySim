@@ -167,6 +167,21 @@ protected:
         emitInstruction16("01101iiiiinnnttt", immediate, Rn, Rt);
     }
     
+    void emitLDRBImmediate(uint32_t Rt, uint32_t Rn, uint32_t immediate)
+    {
+        emitInstruction16("01111iiiiinnnttt", immediate, Rn, Rt);
+    }
+
+    void emitSTRImmediate(uint32_t Rt, uint32_t Rn, uint32_t immediate)
+    {
+        emitInstruction16("01100iiiiinnnttt", immediate, Rn, Rt);
+    }
+
+    void emitSTRHImmediate(uint32_t Rt, uint32_t Rn, uint32_t immediate)
+    {
+        emitInstruction16("10000iiiiinnnttt", immediate, Rn, Rt);
+    }
+    
     void emitUND(uint32_t immediate)
     {
         emitInstruction16("11011110iiiiiiii", immediate);
