@@ -14,6 +14,7 @@
 #include <IMemory.h>
 #include <signal.h>
 #include <string.h>
+#include <MemorySim.h>
 #include <mri.h>
 #include <mri4sim.h>
 #include <platforms.h>
@@ -401,10 +402,50 @@ const char* Platform_GetTargetXml(void)
 
 __throws void Platform_SetHardwareBreakpoint(uint32_t address, uint32_t kind)
 {
+    uint32_t size;
+    
+    switch (kind)
+    {
+    case 2:
+        size = 2;
+        break;
+    case 3:
+    case 4:
+        size = 4;
+        break;
+    default:
+        __mriExceptionCode = invalidArgumentException;
+        return;
+    }
+    
+    __try
+        MemorySim_SetHardwareBreakpoint(g_context.pMemory, address, size);
+    __catch
+        __mriExceptionCode = exceededHardwareResourcesException;
 }
 
 __throws void Platform_ClearHardwareBreakpoint(uint32_t address, uint32_t kind)
 {
+    uint32_t size;
+    
+    switch (kind)
+    {
+    case 2:
+        size = 2;
+        break;
+    case 3:
+    case 4:
+        size = 4;
+        break;
+    default:
+        __mriExceptionCode = invalidArgumentException;
+        return;
+    }
+    
+    __try
+        MemorySim_ClearHardwareBreakpoint(g_context.pMemory, address, size);
+    __catch
+        __mriExceptionCode = memFaultException;
 }
 
 __throws void Platform_SetHardwareWatchpoint(uint32_t address, uint32_t size,  PlatformWatchpointType type)

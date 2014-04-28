@@ -244,6 +244,7 @@ int pinkySimStep(PinkySimContext* pContext)
         switch (getExceptionCode())
         {
         case bkptException:
+        case hardwareBreakpointException:
             return PINKYSIM_STEP_BKPT;
         case undefinedException:
             return PINKYSIM_STEP_UNDEFINED;
