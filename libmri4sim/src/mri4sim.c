@@ -31,6 +31,7 @@ static char            g_packetBuffer[64 * 1024];
 static int             g_runResult;
 static uint32_t        g_pcOrig;
 static int             g_singleStepping;
+static int             g_memoryFaultEncountered;
 
 
 /* Core MRI function not exposed in public header since typically called by ASM. */
@@ -60,6 +61,7 @@ __throws void mri4simInit(IMemory* pMem)
     g_context.xPSR |= EPSR_T;
     g_context.pMemory = pMem;
     g_singleStepping = 0;
+    g_memoryFaultEncountered = 0;
     
     __mriInit("");
 }
@@ -145,29 +147,53 @@ void Platform_LeavingDebugger(void)
 
 uint32_t Platform_MemRead32(const void* pv)
 {
+    __try
+        return IMemory_Read32(g_context.pMemory, (uint32_t)pv);
+    __catch
+        g_memoryFaultEncountered++;
     return 0;
 }
 
 uint16_t Platform_MemRead16(const void* pv)
 {
+    __try
+        return IMemory_Read16(g_context.pMemory, (uint32_t)pv);
+    __catch
+        g_memoryFaultEncountered++;
     return 0;
 }
 
 uint8_t Platform_MemRead8(const void* pv)
 {
+    __try
+        return IMemory_Read8(g_context.pMemory, (uint32_t)pv);
+    __catch
+        g_memoryFaultEncountered++;
     return 0;
 }
 
 void Platform_MemWrite32(void* pv, uint32_t value)
 {
+    __try
+        IMemory_Write32(g_context.pMemory, (uint32_t)pv, value);
+    __catch
+        g_memoryFaultEncountered++;
 }
 
 void Platform_MemWrite16(void* pv, uint16_t value)
 {
+    __try
+        IMemory_Write16(g_context.pMemory, (uint32_t)pv, value);
+    __catch
+        g_memoryFaultEncountered++;
 }
 
 void Platform_MemWrite8(void* pv, uint8_t value)
 {
+    __try
+        IMemory_Write8(g_context.pMemory, (uint32_t)pv, value);
+    __catch
+        g_memoryFaultEncountered++;
 }
 
 uint32_t Platform_CommHasReceiveData(void)
@@ -347,7 +373,9 @@ int Platform_WasProgramCounterModifiedByUser(void)
 
 int Platform_WasMemoryFaultEncountered(void)
 {
-    return FALSE;
+    int memoryFaultEncountered = g_memoryFaultEncountered;
+    g_memoryFaultEncountered = 0;
+    return memoryFaultEncountered;
 }
 
 
