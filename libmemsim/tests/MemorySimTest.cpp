@@ -779,3 +779,62 @@ TEST(MemorySim, SetAndVerifySeveralWatchpoints)
         CHECK_TRUE(MemorySim_WasWatchpointEncountered(m_pMemory));
     }
 }
+
+
+
+TEST(MemorySim, GetMemoryMapXML_NoRegions)
+{
+    const char* pText = MemorySim_GetMemoryMapXML(m_pMemory);
+    CHECK(pText != NULL);
+    STRCMP_EQUAL(pText, "<?xml version=\"1.0\"?>"
+                        "<!DOCTYPE memory-map PUBLIC \"+//IDN gnu.org//DTD GDB Memory Map V1.0//EN\" \"http://sourceware.org/gdb/gdb-memory-map.dtd\">"
+                        "<memory-map>"
+                        "</memory-map>");
+}
+
+TEST(MemorySim, GetMemoryMapXML_ShouldThrowIfOutOfMemory)
+{
+    MallocFailureInject_FailAllocation(1);
+    __try_and_catch( MemorySim_GetMemoryMapXML(m_pMemory) );
+    validateExceptionThrown(outOfMemoryException);
+}
+
+TEST(MemorySim, GetMemoryMapXML_OneFlashRegion)
+{
+    MemorySim_CreateRegion(m_pMemory, 0, 256);
+    MemorySim_MakeRegionReadOnly(m_pMemory, 0);
+    const char* pText = MemorySim_GetMemoryMapXML(m_pMemory);
+    CHECK(pText != NULL);
+    STRCMP_EQUAL(pText, "<?xml version=\"1.0\"?>"
+                        "<!DOCTYPE memory-map PUBLIC \"+//IDN gnu.org//DTD GDB Memory Map V1.0//EN\" \"http://sourceware.org/gdb/gdb-memory-map.dtd\">"
+                        "<memory-map>"
+                        "<memory type=\"flash\" start=\"0x0\" length=\"0x100\"> </memory>"
+                        "</memory-map>");
+}
+
+TEST(MemorySim, GetMemoryMapXML_OneRamRegion)
+{
+    MemorySim_CreateRegion(m_pMemory, 0x10000000, 256);
+    const char* pText = MemorySim_GetMemoryMapXML(m_pMemory);
+    CHECK(pText != NULL);
+    STRCMP_EQUAL(pText, "<?xml version=\"1.0\"?>"
+                        "<!DOCTYPE memory-map PUBLIC \"+//IDN gnu.org//DTD GDB Memory Map V1.0//EN\" \"http://sourceware.org/gdb/gdb-memory-map.dtd\">"
+                        "<memory-map>"
+                        "<memory type=\"ram\" start=\"0x10000000\" length=\"0x100\"> </memory>"
+                        "</memory-map>");
+}
+
+
+TEST(MemorySim, GetMemoryMapXML_OneFlashAndOneRamRegion)
+{
+    uint32_t flashBinary[2] = { 0x10008000, 0x00000200 };
+    MemorySim_CreateRegionsFromFlashImage(m_pMemory, flashBinary, sizeof(flashBinary));
+    const char* pText = MemorySim_GetMemoryMapXML(m_pMemory);
+    CHECK(pText != NULL);
+    STRCMP_EQUAL(pText, "<?xml version=\"1.0\"?>"
+                        "<!DOCTYPE memory-map PUBLIC \"+//IDN gnu.org//DTD GDB Memory Map V1.0//EN\" \"http://sourceware.org/gdb/gdb-memory-map.dtd\">"
+                        "<memory-map>"
+                        "<memory type=\"flash\" start=\"0x0\" length=\"0x8\"> </memory>"
+                        "<memory type=\"ram\" start=\"0x10000000\" length=\"0x8000\"> </memory>"
+                        "</memory-map>");
+}

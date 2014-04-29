@@ -11,6 +11,7 @@
     GNU General Public License for more details.
 */
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 #include <MemorySim.h>
 #include <MallocFailureInject.h>
@@ -22,6 +23,19 @@
 #define AccessType WatchpointType
 #define READING    WATCHPOINT_READ
 #define WRITING    WATCHPOINT_WRITE
+
+
+static const char g_xmlHeader[] = "<?xml version=\"1.0\"?>"
+                                "<!DOCTYPE memory-map PUBLIC \"+//IDN gnu.org//DTD GDB Memory Map V1.0//EN\" \"http://sourceware.org/gdb/gdb-memory-map.dtd\">"
+                                "<memory-map>";
+static const char g_xmlTrailer[] = "</memory-map>";
+
+
+typedef struct SizedBuffer
+{
+    char*  pBuffer;
+    size_t size;
+} SizedBuffer;
 
 typedef enum MatchResult
 {
@@ -42,6 +56,11 @@ static void addRegionToTail(MemorySim* pThis, MemoryRegion* pRegion);
 static MemoryRegion* findMatchingRegion(MemorySim* pThis, uint32_t address, uint32_t size);
 static void copyImageToRegion(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize);
 static void freeLastRegion(MemorySim* pThis);
+static size_t countRegions(MemorySim* pThis);
+static void allocateMemoryMapXML(MemorySim* pThis, size_t allocSize);
+static void appendMemoryMapXmlHeader(MemorySim* pThis, SizedBuffer* pBuffer);
+static void appendMemoryMapRegions(MemorySim* pThis, SizedBuffer* pBuffer);
+static void appendMemoryMapXmlTrailer(MemorySim* pThis, SizedBuffer* pBuffer);
 static void setWatchpoint(IMemory* pMemory, uint32_t address, uint32_t size, WatchpointType type);
 static MatchResult findMatchingOrHigherWatchpoint(MemoryRegion* pRegion, Watchpoint* pKey, uint32_t* pIndex);
 static int compareWatchpoints(const void* pvKey, const void* pvCurr);
@@ -86,9 +105,10 @@ struct MemoryRegion
 struct MemorySim
 {
     IMemoryVTable* pVTable;
-    int            watchpointEncountered;
     MemoryRegion*  pHeadRegion;
     MemoryRegion*  pTailRegion;
+    char*          pMemoryMapXML;
+    int            watchpointEncountered;
 };
 
 static MemorySim g_object;
@@ -118,6 +138,9 @@ void MemorySim_Uninit(IMemory* pMemory)
         pCurr = pNext;
     }
     pThis->pHeadRegion = pThis->pTailRegion = NULL;
+    
+    free(pThis->pMemoryMapXML);
+    pThis->pMemoryMapXML = NULL;
 }
 
 static void freeRegion(MemoryRegion* pRegion)
@@ -249,6 +272,83 @@ static void freeLastRegion(MemorySim* pThis)
         pPrev->pNext = NULL;
     free(pCurr->pData);
     free(pCurr);
+}
+
+
+const char* MemorySim_GetMemoryMapXML(IMemory* pMemory)
+{
+    static const char xmlExampleLine[] = "<memory type=\"flash\" start=\"0x00000000\" length=\"0xFFFFFFFF\"> </memory>";
+    MemorySim*        pThis = (MemorySim*)pMemory;
+    size_t            regionCount = countRegions(pThis);
+    size_t            allocSize = sizeof(g_xmlHeader) + sizeof(g_xmlTrailer) + regionCount * sizeof(xmlExampleLine);
+    SizedBuffer       buffer;
+    
+    allocateMemoryMapXML(pThis, allocSize);
+    buffer.pBuffer = pThis->pMemoryMapXML;
+    buffer.size = allocSize;
+    
+    appendMemoryMapXmlHeader(pThis, &buffer);
+    appendMemoryMapRegions(pThis, &buffer);
+    appendMemoryMapXmlTrailer(pThis, &buffer);
+    
+    return pThis->pMemoryMapXML;
+}
+
+static size_t countRegions(MemorySim* pThis)
+{
+    size_t        count = 0;
+    MemoryRegion* pCurr = pThis->pHeadRegion;
+    while (pCurr)
+    {
+        count++;
+        pCurr = pCurr->pNext;
+    }
+    
+    return count;
+}
+
+static void allocateMemoryMapXML(MemorySim* pThis, size_t allocSize)
+{
+    char* pRealloc = realloc(pThis->pMemoryMapXML, allocSize);
+    if (!pRealloc)
+        __throw(outOfMemoryException);
+    pThis->pMemoryMapXML = pRealloc;
+}
+
+static void appendMemoryMapXmlHeader(MemorySim* pThis, SizedBuffer* pBuffer)
+{
+    assert (pBuffer->size >= sizeof(g_xmlHeader));
+    memcpy(pBuffer->pBuffer, g_xmlHeader, sizeof(g_xmlHeader) - 1);
+    pBuffer->pBuffer += sizeof(g_xmlHeader) - 1;
+    pBuffer->size -= sizeof(g_xmlHeader) - 1;
+}
+
+static void appendMemoryMapRegions(MemorySim* pThis, SizedBuffer* pBuffer)
+{
+    int           bytesUsed = 0;
+    MemoryRegion* pCurr = pThis->pHeadRegion;
+    
+    while (pCurr)
+    {
+        bytesUsed = snprintf(pBuffer->pBuffer, pBuffer->size, 
+                             "<memory type=\"%s\" start=\"0x%X\" length=\"0x%X\"> </memory>",
+                             pCurr->readOnly ? "flash" : "ram",
+                             pCurr->baseAddress,
+                             pCurr->size);
+        assert (bytesUsed < (int)pBuffer->size);
+        pBuffer->pBuffer += bytesUsed;
+        pBuffer->size -= bytesUsed;
+        
+        pCurr = pCurr->pNext;
+    }
+}
+
+static void appendMemoryMapXmlTrailer(MemorySim* pThis, SizedBuffer* pBuffer)
+{
+    assert (pBuffer->size >= sizeof(g_xmlTrailer));
+    memcpy(pBuffer->pBuffer, g_xmlTrailer, sizeof(g_xmlTrailer));
+    pBuffer->pBuffer += sizeof(g_xmlTrailer);
+    pBuffer->size -= sizeof(g_xmlTrailer);
 }
 
 

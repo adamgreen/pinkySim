@@ -41,7 +41,7 @@ protected:
     IMemory*         m_pMemory;
     PinkySimContext* m_pContext;
     uint32_t         m_emitAddress;
-    char             m_buffer[256];
+    char             m_buffer[2048];
     char*            m_pBufferCurr;
     
     void setup()

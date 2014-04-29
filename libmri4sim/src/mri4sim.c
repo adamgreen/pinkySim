@@ -25,6 +25,63 @@
 #define FALSE 0
 #define TRUE  1
 
+
+/* NOTE: This is the original version of the following XML which has had things stripped to reduce the amount of
+         FLASH consumed by the debug monitor.  This includes the removal of the copyright comment.
+<?xml version="1.0"?>
+<!-- Copyright (C) 2010, 2011 Free Software Foundation, Inc.
+
+     Copying and distribution of this file, with or without modification,
+     are permitted in any medium without royalty provided the copyright
+     notice and this notice are preserved.  -->
+
+<!DOCTYPE feature SYSTEM "gdb-target.dtd">
+<feature name="org.gnu.gdb.arm.m-profile">
+  <reg name="r0" bitsize="32"/>
+  <reg name="r1" bitsize="32"/>
+  <reg name="r2" bitsize="32"/>
+  <reg name="r3" bitsize="32"/>
+  <reg name="r4" bitsize="32"/>
+  <reg name="r5" bitsize="32"/>
+  <reg name="r6" bitsize="32"/>
+  <reg name="r7" bitsize="32"/>
+  <reg name="r8" bitsize="32"/>
+  <reg name="r9" bitsize="32"/>
+  <reg name="r10" bitsize="32"/>
+  <reg name="r11" bitsize="32"/>
+  <reg name="r12" bitsize="32"/>
+  <reg name="sp" bitsize="32" type="data_ptr"/>
+  <reg name="lr" bitsize="32"/>
+  <reg name="pc" bitsize="32" type="code_ptr"/>
+  <reg name="xpsr" bitsize="32" regnum="25"/>
+</feature>
+*/
+static const char g_targetXML[] = 
+    "<?xml version=\"1.0\"?>\n"
+    "<!DOCTYPE feature SYSTEM \"gdb-target.dtd\">\n"
+    "<target>\n"
+    "<feature name=\"org.gnu.gdb.arm.m-profile\">\n"
+    "<reg name=\"r0\" bitsize=\"32\"/>\n"
+    "<reg name=\"r1\" bitsize=\"32\"/>\n"
+    "<reg name=\"r2\" bitsize=\"32\"/>\n"
+    "<reg name=\"r3\" bitsize=\"32\"/>\n"
+    "<reg name=\"r4\" bitsize=\"32\"/>\n"
+    "<reg name=\"r5\" bitsize=\"32\"/>\n"
+    "<reg name=\"r6\" bitsize=\"32\"/>\n"
+    "<reg name=\"r7\" bitsize=\"32\"/>\n"
+    "<reg name=\"r8\" bitsize=\"32\"/>\n"
+    "<reg name=\"r9\" bitsize=\"32\"/>\n"
+    "<reg name=\"r10\" bitsize=\"32\"/>\n"
+    "<reg name=\"r11\" bitsize=\"32\"/>\n"
+    "<reg name=\"r12\" bitsize=\"32\"/>\n"
+    "<reg name=\"sp\" bitsize=\"32\" type=\"data_ptr\"/>\n"
+    "<reg name=\"lr\" bitsize=\"32\"/>\n"
+    "<reg name=\"pc\" bitsize=\"32\" type=\"code_ptr\"/>\n"
+    "<reg name=\"xpsr\" bitsize=\"32\" regnum=\"25\"/>\n"
+    "</feature>\n"
+    "</target>\n";
+
+
 static PinkySimContext g_context;
 static IComm*          g_pComm;
 static char            g_packetBuffer[64 * 1024];
@@ -428,22 +485,24 @@ static void readBytesFromBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteC
 
 uint32_t Platform_GetDeviceMemoryMapXmlSize(void)
 {
-    return 0;
+    return strlen(MemorySim_GetMemoryMapXML(g_context.pMemory));
 }
 
 const char* Platform_GetDeviceMemoryMapXml(void)
 {
-    return NULL;
+    return MemorySim_GetMemoryMapXML(g_context.pMemory);
 }
+
 
 uint32_t Platform_GetTargetXmlSize(void)
 {
-    return 0;
+    return sizeof(g_targetXML) - 1;
 }
+
 
 const char* Platform_GetTargetXml(void)
 {
-    return NULL;
+    return g_targetXML;
 }
 
 
