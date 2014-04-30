@@ -11,6 +11,7 @@
     GNU General Public License for more details.
 */
 #include <signal.h>
+#include <NewlibSemihost.h>
 #include "mri4simBaseTest.h"
 
 TEST_GROUP_BASE(mri4simRun, mri4simBase)
@@ -80,11 +81,10 @@ TEST(mri4simRun, BreakOnStart_SendContinueWithSpecificAddressToSkipSomeInstructi
 
 TEST(mri4simRun, IssueExitSemihostCall_ShouldExitRunLoopImmediately_NotEnterDebugger)
 {
-    emitMOVimmediate(R0, 0x18);
-    emitBKPT(0xab);
+    emitBKPT(NEWLIB_EXIT);
         mri4simRun(mockIComm_Get(), FALSE);
     STRCMP_EQUAL("", mockIComm_GetTransmittedData());
-    CHECK_EQUAL(INITIAL_PC + 2, m_pContext->pc);
+    CHECK_EQUAL(INITIAL_PC, m_pContext->pc);
 }
 
 TEST(mri4simRun, UnalignedAccess_WillHardfault_ShouldStopImmediately_DumpHardFaultMessage)

@@ -17,9 +17,11 @@
 #include <MemorySim.h>
 #include <mri.h>
 #include <mri4sim.h>
+#include <NewlibSemihost.h>
 #include <platforms.h>
 #include <printfSpy.h>
 #include <semihost.h>
+#include "NewlibPriv.h"
 
 
 #define FALSE 0
@@ -97,7 +99,6 @@ void __mriDebugException(void);
 /* Forward static function declarations. */
 static int shouldInterruptRun(PinkySimContext* pContext);
 static int isExitSemihost(void);
-static int isMbedSemihostCall(void);
 static void logMessageToLocalAndGdbConsoles(const char* pMessage);
 static int isInstruction32Bit(uint16_t firstWordOfInstruction);
 static void sendRegisterForTResponse(Buffer* pBuffer, uint8_t registerOffset, uint32_t registerValue);
@@ -105,7 +106,6 @@ static void writeBytesToBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCo
 static void readBytesFromBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCount);
 static uint32_t convertWatchpointTypeToMemorySimType(PlatformWatchpointType type);
 static uint16_t getFirstHalfWordOfCurrentInstruction(void);
-static int isInstructionMbedSemihostBreakpoint(uint16_t instruction);
 static int isInstructionNewlibSemihostBreakpoint(uint16_t instruction);
 static int isInstructionHardcodedBreakpoint(uint16_t instruction);
 
@@ -161,14 +161,24 @@ static int shouldInterruptRun(PinkySimContext* pContext)
 
 static int isExitSemihost(void)
 {
+    static const uint16_t newlibExitBreakpointMachineCode = 0xbeff;
+    uint16_t              currentInstruction;
+
     if (g_runResult != PINKYSIM_STEP_BKPT)
         return FALSE;
-    return isMbedSemihostCall() && g_context.R[0] == 0x18;
-}
+        
+    __try
+    {
+        currentInstruction = getFirstHalfWordOfCurrentInstruction();
+    }
+    __catch
+    {
+        /* Will get here if PC isn't pointing to valid memory so treat as not exit request. */
+        clearExceptionCode();
+        return FALSE;
+    }
 
-static int isMbedSemihostCall(void)
-{
-    return Platform_TypeOfCurrentInstruction() == MRI_PLATFORM_INSTRUCTION_MBED_SEMIHOST_CALL;
+    return currentInstruction == newlibExitBreakpointMachineCode;
 }
 
 PinkySimContext* mri4simGetContext(void)
@@ -608,9 +618,7 @@ PlatformInstructionType Platform_TypeOfCurrentInstruction(void)
         return MRI_PLATFORM_INSTRUCTION_OTHER;
     }
     
-    if (isInstructionMbedSemihostBreakpoint(currentInstruction))
-        return MRI_PLATFORM_INSTRUCTION_MBED_SEMIHOST_CALL;
-    else if (isInstructionNewlibSemihostBreakpoint(currentInstruction))
+    if (isInstructionNewlibSemihostBreakpoint(currentInstruction))
         return MRI_PLATFORM_INSTRUCTION_NEWLIB_SEMIHOST_CALL;
     else if (isInstructionHardcodedBreakpoint(currentInstruction))
         return MRI_PLATFORM_INSTRUCTION_HARDCODED_BREAKPOINT;
@@ -623,18 +631,19 @@ static uint16_t getFirstHalfWordOfCurrentInstruction(void)
     return IMemory_Read16(g_context.pMemory, g_context.pc);
 }
 
-static int isInstructionMbedSemihostBreakpoint(uint16_t instruction)
-{
-    static const uint16_t mbedSemihostBreakpointMachineCode = 0xbeab;
-
-    return mbedSemihostBreakpointMachineCode == instruction;
-}
-
 static int isInstructionNewlibSemihostBreakpoint(uint16_t instruction)
 {
-    static const uint16_t newlibSemihostBreakpointMachineCode = 0xbeff;
-
-    return (newlibSemihostBreakpointMachineCode == instruction);
+    static const uint16_t breakpointOpcode = 0xbe00;
+    static const uint16_t opcodeMask       = 0xff00;
+    static const uint16_t immediateMask    = 0x00ff;
+    
+    if ((instruction & opcodeMask) == breakpointOpcode)
+    {
+        uint16_t immediate = instruction & immediateMask;
+        
+        return immediate >= NEWLIB_MIN && immediate <= NEWLIB_MAX;
+    }
+    return FALSE;
 }
 
 static int isInstructionHardcodedBreakpoint(uint16_t instruction)
@@ -647,25 +656,68 @@ static int isInstructionHardcodedBreakpoint(uint16_t instruction)
 
 PlatformSemihostParameters Platform_GetSemihostCallParameters(void)
 {
-    PlatformSemihostParameters params;
+    PlatformSemihostParameters parameters;
     
-    memset(&params, 0, sizeof(params));
-    return params;
+    parameters.parameter1 = g_context.R[0];
+    parameters.parameter2 = g_context.R[1];
+    parameters.parameter3 = g_context.R[2];
+    parameters.parameter4 = g_context.R[3];
+    
+    return parameters;
 }
 
-void Platform_SetSemihostCallReturnValue(uint32_t returnValue)
+
+void Platform_SetSemihostCallReturnAndErrnoValues(int returnValue, int err)
 {
+    g_context.R[0] = returnValue;
+    g_context.R[1] = err;
 }
+
 
 int Semihost_IsDebuggeeMakingSemihostCall(void)
 {
-    return FALSE;
+    PlatformInstructionType instructionType = Platform_TypeOfCurrentInstruction();
+
+    return (instructionType == MRI_PLATFORM_INSTRUCTION_NEWLIB_SEMIHOST_CALL);
 }
+
 
 int Semihost_HandleSemihostRequest(void)
 {
-    return FALSE;
+    static const uint16_t      immediateMask    = 0x00ff;
+    PlatformSemihostParameters parameters = Platform_GetSemihostCallParameters();
+
+    __try
+    {
+        switch (getFirstHalfWordOfCurrentInstruction() & immediateMask)
+        {
+        case NEWLIB_WRITE:
+            return handleNewlibSemihostWriteRequest(&parameters);
+        case NEWLIB_READ:
+            return handleNewlibSemihostReadRequest(&parameters);
+        case NEWLIB_OPEN:
+            return handleNewlibSemihostOpenRequest(&parameters);
+        case NEWLIB_UNLINK:
+            return handleNewlibSemihostUnlinkRequest(&parameters);
+        case NEWLIB_LSEEK:
+            return handleNewlibSemihostLSeekRequest(&parameters);
+        case NEWLIB_CLOSE:
+            return handleNewlibSemihostCloseRequest(&parameters);
+        case NEWLIB_FSTAT:
+            return handleNewlibSemihostFStatRequest(&parameters);
+        case NEWLIB_STAT:
+            return handleNewlibSemihostStatRequest(&parameters);
+        case NEWLIB_RENAME:
+            return handleNewlibSemihostRenameRequest(&parameters);
+        }
+    }
+    __catch
+    {
+        return 0;
+    }
+    return 0;
 }
+
 
 void __mriPlatform_EnteringDebuggerHook(void)
 {
