@@ -310,10 +310,6 @@ void Platform_CommWaitForReceiveDataToStop(void)
 {
 }
 
-int Platform_CommUartIndex(void)
-{
-    return 0;
-}
 
 uint8_t Platform_DetermineCauseOfException(void)
 {
@@ -383,11 +379,6 @@ void Platform_DisableSingleStep(void)
 int Platform_IsSingleStepping(void)
 {
     return g_singleStepping > 0;
-}
-
-uint32_t Platform_GetProgramCounter(void)
-{
-    return g_context.pc;
 }
 
 void Platform_SetProgramCounter(uint32_t newPC)
