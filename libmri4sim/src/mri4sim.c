@@ -677,36 +677,39 @@ int Semihost_HandleSemihostRequest(void)
 {
     static const uint16_t      immediateMask    = 0x00ff;
     PlatformSemihostParameters parameters = Platform_GetSemihostCallParameters();
+    int                        result = 0;
 
-    __try
+    switch (getFirstHalfWordOfCurrentInstruction() & immediateMask)
     {
-        switch (getFirstHalfWordOfCurrentInstruction() & immediateMask)
-        {
-        case NEWLIB_WRITE:
-            return handleNewlibSemihostWriteRequest(&parameters);
-        case NEWLIB_READ:
-            return handleNewlibSemihostReadRequest(&parameters);
-        case NEWLIB_OPEN:
-            return handleNewlibSemihostOpenRequest(&parameters);
-        case NEWLIB_UNLINK:
-            return handleNewlibSemihostUnlinkRequest(&parameters);
-        case NEWLIB_LSEEK:
-            return handleNewlibSemihostLSeekRequest(&parameters);
-        case NEWLIB_CLOSE:
-            return handleNewlibSemihostCloseRequest(&parameters);
-        case NEWLIB_FSTAT:
-            return handleNewlibSemihostFStatRequest(&parameters);
-        case NEWLIB_STAT:
-            return handleNewlibSemihostStatRequest(&parameters);
-        case NEWLIB_RENAME:
-            return handleNewlibSemihostRenameRequest(&parameters);
-        }
+    case NEWLIB_WRITE:
+        result = handleNewlibSemihostWriteRequest(&parameters);
+        break;
+    case NEWLIB_READ:
+        result = handleNewlibSemihostReadRequest(&parameters);
+        break;
+    case NEWLIB_OPEN:
+        result = handleNewlibSemihostOpenRequest(&parameters);
+        break;
+    case NEWLIB_UNLINK:
+        result = handleNewlibSemihostUnlinkRequest(&parameters);
+        break;
+    case NEWLIB_LSEEK:
+        result = handleNewlibSemihostLSeekRequest(&parameters);
+        break;
+    case NEWLIB_CLOSE:
+        result = handleNewlibSemihostCloseRequest(&parameters);
+        break;
+    case NEWLIB_FSTAT:
+        result = handleNewlibSemihostFStatRequest(&parameters);
+        break;
+    case NEWLIB_STAT:
+        result = handleNewlibSemihostStatRequest(&parameters);
+        break;
+    case NEWLIB_RENAME:
+        result = handleNewlibSemihostRenameRequest(&parameters);
+        break;
     }
-    __catch
-    {
-        return 0;
-    }
-    return 0;
+    return result;
 }
 
 
