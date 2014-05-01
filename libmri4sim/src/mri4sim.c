@@ -553,7 +553,7 @@ __throws void Platform_ClearHardwareBreakpoint(uint32_t address, uint32_t kind)
     __try
         MemorySim_ClearHardwareBreakpoint(g_context.pMemory, address, size);
     __catch
-        __mriExceptionCode = memFaultException;
+        __mriExceptionCode = invalidArgumentException;
 }
 
 
