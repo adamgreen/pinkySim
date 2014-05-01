@@ -10,7 +10,12 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 */
-#include <signal.h>
+extern "C"
+{
+    #include <MallocFailureInject.h>
+    #include <mri.h>
+    #include <signal.h>
+}
 #include "mri4simBaseTest.h"
 
 TEST_GROUP_BASE(watchpointTests, mri4simBase)
@@ -23,6 +28,7 @@ TEST_GROUP_BASE(watchpointTests, mri4simBase)
     void teardown()
     {
         mri4simBase::teardown();
+        MallocFailureInject_Restore();
     }
 };
 
@@ -303,4 +309,34 @@ TEST(watchpointTests, Set8ByteReadWatchpoint_RunUntilSecondWordIsRead_ButHaltsOn
     appendExpectedString("+");
     STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
     CHECK_EQUAL(0xBAADF00D, m_pContext->R[0]);
+}
+
+TEST(watchpointTests, FailMemoryAllocation_AttemptToSet4ByteReadWatchpoint_ShouldReturnErrorMessage)
+{
+    char commands[64];
+    snprintf(commands, sizeof(commands), "+$Z3,%x,4#", INITIAL_SP - 4);
+    mockIComm_InitReceiveChecksummedData(commands, "+$c#");
+    MallocFailureInject_FailAllocation(1);
+        mri4simRun(mockIComm_Get(), TRUE);
+    appendExpectedTPacket(SIGTRAP, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);
+    appendExpectedString("+$" MRI_ERROR_NO_FREE_BREAKPOINT "#+");
+    STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
+}
+
+TEST(watchpointTests, AttemptToSet4ByteReadWatchpoint_AtInvalidAddress_ShouldReturnErrorMessage)
+{
+    mockIComm_InitReceiveChecksummedData("+$Z3,fffffffc,4#", "+$c#");
+        mri4simRun(mockIComm_Get(), TRUE);
+    appendExpectedTPacket(SIGTRAP, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);
+    appendExpectedString("+$" MRI_ERROR_NO_FREE_BREAKPOINT "#+");
+    STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
+}
+
+TEST(watchpointTests, AttemptToClear4ByteReadWatchpoint_AtInvalidAddress_ShouldReturnErrorMessage)
+{
+    mockIComm_InitReceiveChecksummedData("+$z3,fffffffc,4#", "+$c#");
+        mri4simRun(mockIComm_Get(), TRUE);
+    appendExpectedTPacket(SIGTRAP, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);
+    appendExpectedString("+$" MRI_ERROR_INVALID_ARGUMENT "#+");
+    STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
 }
