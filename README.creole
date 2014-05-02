@@ -11,11 +11,9 @@ TDD, on future projects where the code under test will be written in assembly la
 ** Contains >450 unit tests that run as part of the automated build process.
 ** Covers 100% of the code in pinkySim.c.
 ** A good proportion of the unit tests have been deployed and validated on actual ARM hardware.
-* Will integrate with arm-none-eabi-gdb to allow debugging of ARM code running in the simulator.  //This feature is
-  currently in the process of being developed.//
+* Supports arm-none-eabi-gdb debugging of Thumb code running in the simulator.
 * Will include code coverage abilities.  This will allow for the determination of the level of code coverage obtained
-  on assembly language code by its corresponding unit tests.  //This feature will be started in the near future once the
-  GDB integration is completed.//
+  on assembly language code by its corresponding unit tests.  //This feature will be started in the near future.//
 
 
 ==How to Clone
