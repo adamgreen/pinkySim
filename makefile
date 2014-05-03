@@ -214,6 +214,12 @@ $(eval $(call make_tests,LIBMRI4SIM, \
 $(eval $(call run_gcov,LIBMRI4SIM))
 
 #######################################
+# libcommsock.a
+$(eval $(call make_library,LIBCOMMSOCK,libcommsock/src,libcommsock.a,include libcommsock/mocks))
+$(eval $(call make_tests,LIBCOMMSOCK,libcommsock/tests libcommsock/mocks,include libcommsock/mocks,$(HOST_LIBCOMMON_LIB)))
+$(eval $(call run_gcov,LIBCOMMSOCK))
+
+#######################################
 # libgdbremote.a
 $(eval $(call make_library,LIBGDBREMOTE,libgdbremote/src,libgdbremote.a,include))
 $(eval $(call make_tests,LIBGDBREMOTE,\
