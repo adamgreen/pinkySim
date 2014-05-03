@@ -29,6 +29,7 @@
 #define serialException                     (mriMaxException + 8)
 #define hardwareBreakpointException         (mriMaxException + 9)
 #define hardwareWatchpointException         (mriMaxException + 10)
+#define socketException                     (mriMaxException + 11)
 
 
 #ifndef __debugbreak
