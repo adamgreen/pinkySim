@@ -30,6 +30,7 @@
 #define hardwareBreakpointException         (mriMaxException + 9)
 #define hardwareWatchpointException         (mriMaxException + 10)
 #define socketException                     (mriMaxException + 11)
+#define fileException                       (mriMaxException + 12)
 
 
 #ifndef __debugbreak

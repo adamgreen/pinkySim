@@ -189,16 +189,18 @@ $(eval $(call make_tests,LIBMOCKS,libmocks/tests,include,))
 $(eval $(call run_gcov,LIBMOCKS))
 
 #######################################
-# libpinkysim.a
-$(eval $(call make_library,LIBPINKYSIM,libpinkysim/src,libpinkysim.a,include))
-$(eval $(call make_tests,LIBPINKYSIM,libpinkysim/tests,include,$(HOST_LIBCOMMON_LIB)))
-$(eval $(call run_gcov,LIBPINKYSIM))
-
-#######################################
 # libmemsim.a
 $(eval $(call make_library,LIBMEMSIM,libmemsim/src,libmemsim.a,include))
 $(eval $(call make_tests,LIBMEMSIM,libmemsim/tests,include,$(HOST_LIBCOMMON_LIB) $(HOST_LIBMOCKS_LIB)))
 $(eval $(call run_gcov,LIBMEMSIM))
+
+#######################################
+# libpinkysim.a
+$(eval $(call make_library,LIBPINKYSIM,libpinkysim/src,libpinkysim.a,include))
+$(eval $(call make_tests,LIBPINKYSIM,libpinkysim/tests,include,$(HOST_LIBCOMMON_LIB) \
+                                                               $(HOST_LIBMOCKS_LIB) \
+                                                               $(HOST_LIBMEMSIM_LIB)))
+$(eval $(call run_gcov,LIBPINKYSIM))
 
 #######################################
 # libmri4sim.a
