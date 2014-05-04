@@ -54,7 +54,9 @@ static void freeRegion(MemoryRegion* pRegion);
 static void* throwingZeroedMalloc(size_t size);
 static void addRegionToTail(MemorySim* pThis, MemoryRegion* pRegion);
 static MemoryRegion* findMatchingRegion(MemorySim* pThis, uint32_t address, uint32_t size);
-static void copyImageToRegion(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize);
+static void load32(IMemory* pMemory, uint32_t address, uint32_t value);
+static void load8(IMemory* pMemory, uint32_t address, uint8_t value);
+static void* getLoadPointer(MemorySim* pThis, uint32_t address, uint32_t size);
 static void freeLastRegion(MemorySim* pThis);
 static size_t countRegions(MemorySim* pThis);
 static void allocateMemoryMapXML(MemorySim* pThis, size_t allocSize);
@@ -222,7 +224,7 @@ __throws void MemorySim_CreateRegionsFromFlashImage(IMemory* pMemory, const void
         __throw(bufferOverrunException);
 
     MemorySim_CreateRegion(pMemory, FLASH_BASE_ADDRESS, flashImageSize);
-    copyImageToRegion(pMemory, pFlashImage, flashImageSize);
+    MemorySim_LoadFromFlashImage(pMemory, pFlashImage, flashImageSize);
     MemorySim_MakeRegionReadOnly(pMemory, FLASH_BASE_ADDRESS);
 
     __try
@@ -238,7 +240,7 @@ __throws void MemorySim_CreateRegionsFromFlashImage(IMemory* pMemory, const void
     }
 }
 
-static void copyImageToRegion(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize)
+__throws void MemorySim_LoadFromFlashImage(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize)
 {
     const uint32_t* pSrcWord = (uint32_t*)pFlashImage;
     uint32_t        address = FLASH_BASE_ADDRESS;
@@ -246,14 +248,31 @@ static void copyImageToRegion(IMemory* pMemory, const void* pFlashImage, uint32_
 
     while (flashImageSize > sizeof(uint32_t))
     {
-        write32(pMemory, address, *pSrcWord++);
+        load32(pMemory, address, *pSrcWord++);
         address += sizeof(uint32_t);
         flashImageSize -= sizeof(uint32_t);
     }
     
     pSrcByte = (const uint8_t*)pSrcWord;
     while (flashImageSize--)
-        write8(pMemory, address++, *pSrcByte++);
+        load8(pMemory, address++, *pSrcByte++);
+}
+
+static void load32(IMemory* pMemory, uint32_t address, uint32_t value)
+{
+    *(uint32_t*)getLoadPointer((MemorySim*)pMemory, address, sizeof(uint32_t)) = value;
+}
+
+static void load8(IMemory* pMemory, uint32_t address, uint8_t value)
+{
+    *(uint8_t*)getLoadPointer((MemorySim*)pMemory, address, sizeof(uint8_t)) = value;
+}
+
+static void* getLoadPointer(MemorySim* pThis, uint32_t address, uint32_t size)
+{
+    MemoryRegion* pRegion = findMatchingRegion(pThis, address, size);
+    uint32_t regionOffset = address - pRegion->baseAddress;
+    return pRegion->pData + regionOffset;
 }
 
 static void freeLastRegion(MemorySim* pThis)
