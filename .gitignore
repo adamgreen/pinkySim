@@ -9,10 +9,12 @@
 *.a
 *.gcda
 *.gcno
-debug
+*.gcov
+*.bin
+*.elf
+*.map
+*.disasm
+libthunk2real/realarm/debug
 libthunk2real/serial.log
-gcov/
-Debug/
-Release/
 /pinkySim
 /pinkySim.exe
