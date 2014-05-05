@@ -156,6 +156,15 @@ define make_tests # ,LIB2TEST,test_src_dirs,includes,other_libs
 		@echo Runnning $$^
 		$Q $$^
 endef
+define make_app # ,APP2BUILD,app_src_dirs,includes,other_libs
+    HOST_$1_APP_OBJ        := $(foreach i,$2,$(call host_objs,$i))
+    HOST_$1_APP_EXE        := $1
+    DEPS                   += $$(call add_deps,$1_APP)
+    ALL_TARGETS += $$(HOST_$1_APP_EXE)
+    $$(HOST_$1_APP_EXE) : INCLUDES := $3
+    $$(HOST_$1_APP_EXE) : $$(HOST_$1_APP_OBJ) $4
+		$$(call link_exe,HOST)
+endef
 
 #######################################
 # libCppUtest.a
@@ -222,6 +231,15 @@ $(eval $(call make_tests,LIBCOMMSOCK,libcommsock/tests libcommsock/mocks,include
 $(eval $(call run_gcov,LIBCOMMSOCK))
 
 #######################################
+# pinkSim Executable
+$(eval $(call make_app,pinkySim,main,include,$(HOST_LIBCOMMON_LIB) \
+                                             $(HOST_LIBMRICORE_LIB) \
+                                             $(HOST_LIBMEMSIM_LIB) \
+                                             $(HOST_LIBPINKYSIM_LIB) \
+                                             $(HOST_LIBMRI4SIM_LIB) \
+                                             $(HOST_LIBCOMMSOCK_LIB)))
+
+#######################################
 # libgdbremote.a
 $(eval $(call make_library,LIBGDBREMOTE,libgdbremote/src,libgdbremote.a,include))
 $(eval $(call make_tests,LIBGDBREMOTE,\
@@ -280,6 +298,7 @@ clean :
 	$Q $(REMOVE_DIR) $(GCOVDIR) $(QUIET)
 	$Q $(REMOVE) *_tests$(EXE) $(QUIET)
 	$Q $(REMOVE) *_tests_gcov$(EXE) $(QUIET)
+	$Q $(REMOVE) pinkySim$(EXE) $(QUIET)
 
 
 # *** Pattern Rules ***
