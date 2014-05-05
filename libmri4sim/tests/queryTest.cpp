@@ -28,12 +28,12 @@ TEST_GROUP_BASE(queryTests, mri4simBase)
 };
 
 
-TEST(queryTests, qSupported_ReturnsExpectedOptionsAndCorrectPacketSizeOf64k)
+TEST(queryTests, qSupported_ReturnsExpectedOptionsAndCorrectPacketSizeOf16k)
 {
     mockIComm_InitReceiveChecksummedData("+$qSupported#", "+$c#");
         mri4simRun(mockIComm_Get(), TRUE);
     appendExpectedTPacket(SIGTRAP, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);
-    appendExpectedString("+$qXfer:memory-map:read+;qXfer:features:read+;PacketSize=010000#+");
+    appendExpectedString("+$qXfer:memory-map:read+;qXfer:features:read+;PacketSize=4000#+");
     STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
 }
 
@@ -77,8 +77,8 @@ TEST(queryTests, qXfer_MemoryMap_ReturnsTwoRegions)
                          "<?xml version=\"1.0\"?>"
                          "<!DOCTYPE memory-map PUBLIC \"+//IDN gnu.org//DTD GDB Memory Map V1.0//EN\" \"http://sourceware.org/gdb/gdb-memory-map.dtd\">"
                          "<memory-map>"
-                         "<memory type=\"flash\" start=\"0x0\" length=\"0x8\"> </memory>"
-                         "<memory type=\"ram\" start=\"0x10000000\" length=\"0x8000\"> </memory>"
+                         "<memory type=\"flash\" start=\"0x0\" length=\"0x8\"> <property name=\"blocksize\">1</property></memory>"
+                         "<memory type=\"ram\" start=\"0x10000000\" length=\"0x8000\"></memory>"
                          "</memory-map>"
                          "#+");
     STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());

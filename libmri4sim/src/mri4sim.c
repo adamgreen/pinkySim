@@ -86,7 +86,7 @@ static const char g_targetXML[] =
 
 static PinkySimContext g_context;
 static IComm*          g_pComm;
-static char            g_packetBuffer[64 * 1024];
+static char            g_packetBuffer[16 * 1024];
 static int             g_runResult;
 static uint32_t        g_pcOrig;
 static int             g_singleStepping;
@@ -154,7 +154,7 @@ static int shouldInterruptRun(PinkySimContext* pContext)
     if (MemorySim_WasWatchpointEncountered(g_context.pMemory))
         return PINKYSIM_RUN_WATCHPOINT;
 
-    if (IComm_HasReceiveData(g_pComm))
+    if (IComm_IsGdbConnected(g_pComm) && IComm_HasReceiveData(g_pComm))
         return PINKYSIM_RUN_INTERRUPT;
     return PINKYSIM_STEP_OK;
 }
@@ -303,7 +303,7 @@ void Platform_CommPrepareToWaitForGdbConnection(void)
 
 int Platform_CommIsWaitingForGdbToConnect(void)
 {
-    return FALSE;
+    return !IComm_IsGdbConnected(g_pComm);
 }
 
 void Platform_CommWaitForReceiveDataToStop(void)
@@ -720,4 +720,3 @@ void __mriPlatform_EnteringDebuggerHook(void)
 void __mriPlatform_LeavingDebuggerHook(void)
 {
 }
-
