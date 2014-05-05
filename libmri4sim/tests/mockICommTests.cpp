@@ -292,3 +292,8 @@ TEST(mockIComm, ShouldStopRun_SetToReturnTrue)
     mockIComm_SetShouldStopRunFlag(1);
     CHECK_TRUE(IComm_ShouldStopRun(mockIComm_Get()));
 }
+
+TEST(mockIComm, IsGdbConnected_ShouldAlwaysReturnTrue)
+{
+    CHECK_TRUE(IComm_IsGdbConnected(mockIComm_Get()));
+}

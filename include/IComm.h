@@ -22,6 +22,7 @@ typedef struct ICommVTable
     int  (*receiveChar)(IComm* pComm);
     void (*sendChar)(IComm* pComm, int character);
     int  (*shouldStopRun)(IComm* pThis);
+    int  (*isGdbConnected)(IComm* pComm);
 } ICommVTable;
 
 struct IComm
@@ -48,6 +49,11 @@ static inline void IComm_SendChar(IComm* pThis, int character)
 static inline int IComm_ShouldStopRun(IComm* pThis)
 {
     return pThis->pVTable->shouldStopRun(pThis);
+}
+
+static inline int IComm_IsGdbConnected(IComm* pThis)
+{
+    return pThis->pVTable->isGdbConnected(pThis);
 }
 
 

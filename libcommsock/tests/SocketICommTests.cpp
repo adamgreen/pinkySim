@@ -105,7 +105,7 @@ TEST(SockIComm, HasReceiveData_SelectReturn1_ShouldReturnTrue)
     CHECK_TRUE(IComm_HasReceiveData(m_pComm));
 }
 
-TEST(SockIComm, HasReceiveData_SelectReturn0_ShouldReturnTrue)
+TEST(SockIComm, HasReceiveData_SelectReturn0_ShouldReturnFalse)
 {
     m_pComm = SocketIComm_Init(SOCKET_ICOMM_DEFAULT_PORT, NULL);
     mockSock_selectSetReturn(0);
@@ -217,4 +217,27 @@ TEST(SockIComm, SendChar_ShouldCallWaitingCallback)
     g_waitingCallbackCalled = 0;
         IComm_SendChar(m_pComm, 'z');
     CHECK_TRUE(g_waitingCallbackCalled);
+}
+
+TEST(SockIComm, IsGdbConnected_SelectReturns0ForListenSocket_ShouldReturnFalse)
+{
+    m_pComm = SocketIComm_Init(SOCKET_ICOMM_DEFAULT_PORT, NULL);
+    mockSock_selectSetReturn(0);
+    CHECK_FALSE(IComm_IsGdbConnected(m_pComm));
+}
+
+TEST(SockIComm, IsGdbConnected_SelectReturns1ForListenSocket_ShouldReturnTrue)
+{
+    m_pComm = SocketIComm_Init(SOCKET_ICOMM_DEFAULT_PORT, NULL);
+    mockSock_selectSetReturn(1);
+    CHECK_TRUE(IComm_IsGdbConnected(m_pComm));
+}
+
+TEST(SockIComm, IsGdbConnected_CallApiWhichWaitsForConnection_ShouldReturnTrueAfter)
+{
+    m_pComm = SocketIComm_Init(SOCKET_ICOMM_DEFAULT_PORT, NULL);
+    mockSock_selectSetReturn(1);
+    CHECK_TRUE(IComm_HasReceiveData(m_pComm));
+    mockSock_selectSetReturn(0);
+    CHECK_TRUE(IComm_IsGdbConnected(m_pComm));
 }

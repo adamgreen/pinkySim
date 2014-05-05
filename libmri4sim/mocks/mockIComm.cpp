@@ -92,8 +92,9 @@ static int  hasReceiveData(IComm* pComm);
 static int  receiveChar(IComm* pComm);
 static void sendChar(IComm* pComm, int character);
 static int  shouldStopRun(IComm* pComm);
+static int  isGdbConnected(IComm* pComm);
 
-ICommVTable g_icommVTable = {hasReceiveData, receiveChar, sendChar, shouldStopRun};
+ICommVTable g_icommVTable = {hasReceiveData, receiveChar, sendChar, shouldStopRun, isGdbConnected};
 
 struct TestIComm
 {
@@ -153,6 +154,11 @@ static void sendChar(IComm* pComm, int character)
 static int shouldStopRun(IComm* pComm)
 {
     return g_shouldStopRun;
+}
+
+static int isGdbConnected(IComm* pComm)
+{
+    return TRUE;
 }
 
 

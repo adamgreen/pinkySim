@@ -28,8 +28,9 @@ static int  hasReceiveData(IComm* pComm);
 static int  receiveChar(IComm* pComm);
 static void sendChar(IComm* pComm, int character);
 static int  shouldStopRun(IComm* pComm);
+static int  isGdbConnected(IComm* pComm);
 
-ICommVTable g_icommVTable = {hasReceiveData, receiveChar, sendChar, shouldStopRun};
+ICommVTable g_icommVTable = {hasReceiveData, receiveChar, sendChar, shouldStopRun, isGdbConnected};
 
 struct SocketIComm
 {
@@ -45,7 +46,7 @@ static void bindListenSocket(SocketIComm* pThis, uint16_t gdbPort);
 static void allowBindToReuseAddress(SocketIComm* pThis);
 static void listenOnSocket(SocketIComm* pThis);
 static void waitForGdbConnectIfNecessary(SocketIComm* pThis);
-static int socketHasRecvData(int socket);
+static int socketHasDataToRead(int socket);
 static int receiveNextCharFromGdb(SocketIComm* pThis);
 
 
@@ -128,6 +129,7 @@ void SocketIComm_Uninit(IComm* pComm)
 
 
 
+/* IComm Interface Implementation. */
 static int hasReceiveData(IComm* pComm)
 {
     int            hasData = FALSE;
@@ -136,7 +138,7 @@ static int hasReceiveData(IComm* pComm)
     __try
     {
         waitForGdbConnectIfNecessary(pThis);
-        hasData = socketHasRecvData(pThis->gdbSocket);
+        hasData = socketHasDataToRead(pThis->gdbSocket);
     }
     __catch
     {
@@ -160,7 +162,7 @@ static void waitForGdbConnectIfNecessary(SocketIComm* pThis)
         __throw(socketException);
 }
 
-static int socketHasRecvData(int socket)
+static int socketHasDataToRead(int socket)
 {
     int            result = -1;
     struct timeval zeroTimeout = {0, 0};
@@ -215,4 +217,14 @@ static void sendChar(IComm* pComm, int character)
 static int shouldStopRun(IComm* pComm)
 {
     return FALSE;
+}
+
+static int  isGdbConnected(IComm* pComm)
+{
+    SocketIComm*   pThis = (SocketIComm*)pComm;
+    
+    if (pThis->gdbSocket != -1)
+        return TRUE;
+        
+    return socketHasDataToRead(pThis->listenSocket);
 }
