@@ -296,7 +296,7 @@ static void freeLastRegion(MemorySim* pThis)
 
 const char* MemorySim_GetMemoryMapXML(IMemory* pMemory)
 {
-    static const char xmlExampleLine[] = "<memory type=\"flash\" start=\"0x00000000\" length=\"0xFFFFFFFF\"> </memory>";
+    static const char xmlExampleLine[] = "<memory type=\"flash\" start=\"0x00000000\" length=\"0xFFFFFFFF\"> <property name=\"blocksize\">1</property></memory>";
     MemorySim*        pThis = (MemorySim*)pMemory;
     size_t            regionCount = countRegions(pThis);
     size_t            allocSize = sizeof(g_xmlHeader) + sizeof(g_xmlTrailer) + regionCount * sizeof(xmlExampleLine);
@@ -350,10 +350,11 @@ static void appendMemoryMapRegions(MemorySim* pThis, SizedBuffer* pBuffer)
     while (pCurr)
     {
         bytesUsed = snprintf(pBuffer->pBuffer, pBuffer->size, 
-                             "<memory type=\"%s\" start=\"0x%X\" length=\"0x%X\"> </memory>",
+                             "<memory type=\"%s\" start=\"0x%X\" length=\"0x%X\">%s</memory>",
                              pCurr->readOnly ? "flash" : "ram",
                              pCurr->baseAddress,
-                             pCurr->size);
+                             pCurr->size,
+                             pCurr->readOnly ? " <property name=\"blocksize\">1</property>" : "");
         assert (bytesUsed < (int)pBuffer->size);
         pBuffer->pBuffer += bytesUsed;
         pBuffer->size -= bytesUsed;

@@ -825,7 +825,7 @@ TEST(MemorySim, GetMemoryMapXML_OneFlashRegion)
     STRCMP_EQUAL(pText, "<?xml version=\"1.0\"?>"
                         "<!DOCTYPE memory-map PUBLIC \"+//IDN gnu.org//DTD GDB Memory Map V1.0//EN\" \"http://sourceware.org/gdb/gdb-memory-map.dtd\">"
                         "<memory-map>"
-                        "<memory type=\"flash\" start=\"0x0\" length=\"0x100\"> </memory>"
+                        "<memory type=\"flash\" start=\"0x0\" length=\"0x100\"> <property name=\"blocksize\">1</property></memory>"
                         "</memory-map>");
 }
 
@@ -837,7 +837,7 @@ TEST(MemorySim, GetMemoryMapXML_OneRamRegion)
     STRCMP_EQUAL(pText, "<?xml version=\"1.0\"?>"
                         "<!DOCTYPE memory-map PUBLIC \"+//IDN gnu.org//DTD GDB Memory Map V1.0//EN\" \"http://sourceware.org/gdb/gdb-memory-map.dtd\">"
                         "<memory-map>"
-                        "<memory type=\"ram\" start=\"0x10000000\" length=\"0x100\"> </memory>"
+                        "<memory type=\"ram\" start=\"0x10000000\" length=\"0x100\"></memory>"
                         "</memory-map>");
 }
 
@@ -851,7 +851,7 @@ TEST(MemorySim, GetMemoryMapXML_OneFlashAndOneRamRegion)
     STRCMP_EQUAL(pText, "<?xml version=\"1.0\"?>"
                         "<!DOCTYPE memory-map PUBLIC \"+//IDN gnu.org//DTD GDB Memory Map V1.0//EN\" \"http://sourceware.org/gdb/gdb-memory-map.dtd\">"
                         "<memory-map>"
-                        "<memory type=\"flash\" start=\"0x0\" length=\"0x8\"> </memory>"
-                        "<memory type=\"ram\" start=\"0x10000000\" length=\"0x8000\"> </memory>"
+                        "<memory type=\"flash\" start=\"0x0\" length=\"0x8\"> <property name=\"blocksize\">1</property></memory>"
+                        "<memory type=\"ram\" start=\"0x10000000\" length=\"0x8000\"></memory>"
                         "</memory-map>");
 }
