@@ -10,26 +10,18 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 */
-#ifndef _PINKSIM_COMMANDLINE_H_
-#define _PINKSIM_COMMANDLINE_H_
-
-#include <try_catch.h>
-#include <IMemory.h>
+#include <stdio.h>
 
 
-typedef struct pinkySimCommandLine
+int main(int argc, const char** argv)
 {
-    const char* pImageFilename;
-    IMemory*    pMemory;
-    int         breakOnStart;
-    int         manualMemoryRegions;
-    int         argIndexOfImageFilename;
-    uint16_t    gdbPort;
-} pinkySimCommandLine;
+    int i;
 
+    printf("Dumping %d command line arguments\n", argc);
+    for (i = 0 ; i < argc ; i++)
+    {
+        printf("  %s\n", argv[i]);
+    }
 
-__throws void pinkySimCommandLine_Init(pinkySimCommandLine* pThis, int argc, const char** argv);
-         void pinkySimCommandLine_Uninit(pinkySimCommandLine* pThis);
-
-
-#endif /* _PINKSIM_COMMANDLINE_H_ */
+    return argc;
+}

@@ -133,13 +133,17 @@ $(eval $(call make_library,LIBSTARTUP,libstartup,libstartup.a,../include))
 # FileTest_Sample
 $(eval $(call make_sample,FileTest_Sample,FileTest,include,$(ARMV6M_LIBSTARTUP_LIB)))
 
+#######################################
+# CommandLine_Sample
+$(eval $(call make_sample,CommandLine_Sample,CommandLine,include,$(ARMV6M_LIBSTARTUP_LIB)))
+
 
 #######################################
 #  Actual Definition of Main Rules
 #######################################
 all : $(ALL_TARGETS)
 
-clean : 
+clean :
 	@echo Cleaning samples
 	$Q $(REMOVE_DIR) $(OBJDIR) $(QUIET)
 	$Q $(REMOVE_DIR) $(LIBDIR) $(QUIET)

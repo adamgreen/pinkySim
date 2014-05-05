@@ -35,25 +35,26 @@ static void displayCopyrightNotice(void)
 static void displayUsage(void)
 {
     printf("Usage: pinkySim [--ram baseAddress size] [--flash baseAddress size] [--gdbPort tcpPortNumber]\n"
-           "                [--breakOnStart] imageFilename.bin\n"
-           "Where: imageFilename.bin is the required name of the image to be loaded into memory starting at address\n"
+           "                [--breakOnStart] imageFilename.bin [args]\n"
+           "Where: --ram is used to specify an address range that should be treated as read-write.  More than one of\n"
+           "         these can be specified on the command line to create multiple read-write memory regions.\n"
+           "       --flash is used to specify and address range that should be treated as read-only.  More than one of\n"
+           "         these can be specified on the command line to create multiple read-only memory regions.\n"
+           "       --gdbPort can be used to override the default TCP/IP port of 3333 for listening to GDB connections.\n"
+           "       --breakOnStart can be used to have the simulator halt at the beginning of the reset handler and\n"
+           "         wait for GDB to connect.\n"
+           "       imageFilename.bin is the required name of the image to be loaded into memory starting at address\n"
            "         0x00000000.  By default a read-only memory region is created starting at address 0x00000000 and\n"
            "         extends large enough to contain the whole image file.  A read-write section will be created\n"
            "         based on the initial stack pointer found in the first word of the image file.  This section will\n"
            "         start at the nearest 256MB page below this initial SP value and extend to the address just below\n"
            "         this initial SP value. This behaviour can be overridden by specifying --ram and --flash options\n"
            "         on the command line.  Execution will start at the address found in the second word of this image.\n"
-           "       --ram is used to specify an address range that should be treated as read-write.  More than one of\n"
-           "         these can be specified on the command line to create multiple read-write memory regions.\n"
-           "       --flash is used to specify and address range that should be treated as read-only.  More than one of\n"
-           "         these can be specified on the command line to create multiple read-only memory regions.\n"
-           "       --gdbPort can be used to override the default TCP/IP port of 3333 for listening to GDB connections.\n"
-           "       --breakOnStart can be used to have the simulator halt at the beginning of the reset handler and\n"
-           "         wait for GDB to connect.\n");
+           "       [args] are optional arguments to be passed into program running under simulation.\n");
 }
 
 
-static int parseArgument(pinkySimCommandLine* pThis, int argc, const char** ppArgs);
+static int parseArgument(pinkySimCommandLine* pThis, int index, int argc, const char** ppArgs);
 static int hasDoubleDashPrefix(const char* pArgument);
 static int parseFlagArgument(pinkySimCommandLine* pThis, int argc, const char** ppArgs);
 static int parseFlashOption(pinkySimCommandLine* pThis, int argc, const char** ppArgs);
@@ -61,7 +62,7 @@ static int parseRegionOption(pinkySimCommandLine* pThis, int argc, const char** 
 static int parseRamOption(pinkySimCommandLine* pThis, int argc, const char** ppArgs);
 static int parseBreakOnStartOption(pinkySimCommandLine* pThis);
 static int parseGdbPortOption(pinkySimCommandLine* pThis, int argc, const char** ppArgs);
-static int parseFilenameArgument(pinkySimCommandLine* pThis, int argc, const char* pArgument);
+static int parseFilenameArgument(pinkySimCommandLine* pThis, int index, int argc, const char* pArgument);
 static void throwIfRequiredArgumentNotSpecified(pinkySimCommandLine* pThis);
 static void loadImageFile(pinkySimCommandLine* pThis);
 static long getFileSize(FILE* pFile);
@@ -71,14 +72,17 @@ __throws void pinkySimCommandLine_Init(pinkySimCommandLine* pThis, int argc, con
 {
     __try
     {
+        int index = 0;
+
         memset(pThis, 0, sizeof(*pThis));
         pThis->pMemory = MemorySim_Init();
         pThis->gdbPort = SOCKET_ICOMM_DEFAULT_PORT;
         while (argc)
         {
-            int argumentsUsed = parseArgument(pThis, argc, argv);
+            int argumentsUsed = parseArgument(pThis, index, argc, argv);
             argc -= argumentsUsed;
             argv += argumentsUsed;
+            index += argumentsUsed;
         }
         throwIfRequiredArgumentNotSpecified(pThis);
         loadImageFile(pThis);
@@ -93,12 +97,12 @@ __throws void pinkySimCommandLine_Init(pinkySimCommandLine* pThis, int argc, con
     }
 }
 
-static int parseArgument(pinkySimCommandLine* pThis, int argc, const char** ppArgs)
+static int parseArgument(pinkySimCommandLine* pThis, int index, int argc, const char** ppArgs)
 {
     if (hasDoubleDashPrefix(*ppArgs))
         return parseFlagArgument(pThis, argc, ppArgs);
     else
-        return parseFilenameArgument(pThis, argc, *ppArgs);
+        return parseFilenameArgument(pThis, index, argc, *ppArgs);
 }
 
 static int hasDoubleDashPrefix(const char* pArgument)
@@ -167,17 +171,11 @@ static int parseGdbPortOption(pinkySimCommandLine* pThis, int argc, const char**
     return 2;
 }
 
-static int parseFilenameArgument(pinkySimCommandLine* pThis, int argc, const char* pArgument)
+static int parseFilenameArgument(pinkySimCommandLine* pThis, int index, int argc, const char* pArgument)
 {
-    if (!pThis->pImageFilename)
-    {
-        pThis->pImageFilename = pArgument;
-        return 1;
-    }
-    else
-    {
-        __throw(invalidArgumentException);
-    }
+    pThis->pImageFilename = pArgument;
+    pThis->argIndexOfImageFilename = index;
+    return argc;
 }
 
 static void throwIfRequiredArgumentNotSpecified(pinkySimCommandLine* pThis)

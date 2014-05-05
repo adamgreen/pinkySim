@@ -70,12 +70,14 @@ TEST_GROUP(pinkySimCommandLine)
     }
     
     void validateParamsAndNoErrorMessage(const char* pImageFilename,
+                                         int argIndexOfImageFilename = 0,
                                          int breakOnStart = 0,
                                          uint16_t gdbPort = SOCKET_ICOMM_DEFAULT_PORT)
     {
         STRCMP_EQUAL("", printfSpy_GetLastOutput());
         STRCMP_EQUAL(pImageFilename, m_commandLine.pImageFilename);
         CHECK(m_commandLine.pMemory != NULL);
+        CHECK_EQUAL(argIndexOfImageFilename, m_commandLine.argIndexOfImageFilename);
         CHECK_EQUAL(breakOnStart, m_commandLine.breakOnStart);
         CHECK_EQUAL(gdbPort, m_commandLine.gdbPort);
     }
@@ -111,7 +113,7 @@ TEST(pinkySimCommandLine, OneImageFilename_CheckRegions)
     addArg(g_imageFilename);
     createTestImageFile();
         pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv);
-    validateParamsAndNoErrorMessage(g_imageFilename);
+    CHECK_EQUAL(0, m_commandLine.argIndexOfImageFilename);
     CHECK_EQUAL(g_imageData[0], IMemory_Read32(m_commandLine.pMemory, 0x00000000));
     CHECK_EQUAL(g_imageData[1], IMemory_Read32(m_commandLine.pMemory, 0x00000004));
     CHECK_EQUAL(0, IMemory_Read32(m_commandLine.pMemory, 0x10000000));
@@ -158,7 +160,7 @@ TEST(pinkySimCommandLine, FailImageFileBufferAllocation)
 {
     addArg(g_imageFilename);
     createTestImageFile();
-    MallocFailureInject_FailAllocation(1);    
+    MallocFailureInject_FailAllocation(1);
         __try_and_catch( pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv) );
     validateExceptionThrownAndUsageStringDisplayed(outOfMemoryException);
 }
@@ -206,7 +208,7 @@ TEST(pinkySimCommandLine, FlashOptionValid_ButNoImageFilename_ShouldCleanupMemor
     CHECK(NULL == m_commandLine.pMemory);
 }
 
-TEST(pinkySimCommandLine, FlashOption_ShouldCreateValidReadOnlyMemoryRegion)
+TEST(pinkySimCommandLine, FlashOption_ShouldCreateValidReadOnlyMemoryRegion_ValidateImageFilenameIndex)
 {
     addArg("--flash");
     addArg("0x00000000");
@@ -214,7 +216,7 @@ TEST(pinkySimCommandLine, FlashOption_ShouldCreateValidReadOnlyMemoryRegion)
     addArg(g_imageFilename);
     createTestImageFile();
         pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv);
-    validateParamsAndNoErrorMessage(g_imageFilename);
+    validateParamsAndNoErrorMessage(g_imageFilename, 3);
     IMemory_Read32(m_commandLine.pMemory, 0);
     IMemory_Read32(m_commandLine.pMemory, 4);
     __try_and_catch( IMemory_Read32(m_commandLine.pMemory, 8) );
@@ -246,7 +248,7 @@ TEST(pinkySimCommandLine, RamOption_ShouldCreateValidReadWriteMemoryRegion)
     addArg(g_imageFilename);
     createTestImageFile();
         pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv);
-    validateParamsAndNoErrorMessage(g_imageFilename);
+    validateParamsAndNoErrorMessage(g_imageFilename, 6);
 
     CHECK_EQUAL(0, IMemory_Read32(m_commandLine.pMemory, 0x10000000));
     __try_and_catch( IMemory_Read32(m_commandLine.pMemory, 0x10000004) );
@@ -297,7 +299,7 @@ TEST(pinkySimCommandLine, SetBreakOnStartFlag)
     addArg(g_imageFilename);
     createTestImageFile();
         pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv);
-    validateParamsAndNoErrorMessage(g_imageFilename, 1);
+    validateParamsAndNoErrorMessage(g_imageFilename, 1, 1);
 }
 
 TEST(pinkySimCommandLine, SetGdbPort)
@@ -307,7 +309,7 @@ TEST(pinkySimCommandLine, SetGdbPort)
     addArg(g_imageFilename);
     createTestImageFile();
         pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv);
-    validateParamsAndNoErrorMessage(g_imageFilename, 0, 6666);
+    validateParamsAndNoErrorMessage(g_imageFilename, 2, 0, 6666);
 }
 
 TEST(pinkySimCommandLine, SetGdbPort_FailWithTooFewParams)
@@ -334,11 +336,12 @@ TEST(pinkySimCommandLine, InvalidOption_ShouldThrow)
     validateExceptionThrownAndUsageStringDisplayed();
 }
 
-TEST(pinkySimCommandLine, AttemptToSpecifyImageFilenameTwice_ShouldThrow)
+TEST(pinkySimCommandLine, SpecifyOptionalArgumentsAfterImageFilename)
 {
     addArg(g_imageFilename);
-    addArg(g_imageFilename);
+    addArg("--arg1");
+    addArg("--arg2");
     createTestImageFile();
-        __try_and_catch( pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv) );
-    validateExceptionThrownAndUsageStringDisplayed();
+        pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv);
+    validateParamsAndNoErrorMessage(g_imageFilename, 0);
 }

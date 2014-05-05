@@ -10,12 +10,20 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 */
+#include <assert.h>
 #include <mri4sim.h>
+#include <pinkySimCommandLine.h>
 #include <SocketIComm.h>
 #include <stdio.h>
-#include <pinkySimCommandLine.h>
+#include <string.h>
 
 
+static void copyCommandLineArgumentsToStack(PinkySimContext* pContext,
+                                           int               argc,
+                                           const char**      argv,
+                                           int               argIndexOfImageFilename);
+static void copyStringToIMemory(IMemory* pMem, uint32_t destAddress, const char* pSrc);
+static uint32_t roundDownToNearestDoubleWord(uint32_t value);
 static void waitingForGdbToConnect(void);
 
 
@@ -30,19 +38,73 @@ int main(int argc, const char** argv)
         pinkySimCommandLine_Init(&commandLine, argc-1, argv+1);
         pComm = SocketIComm_Init(commandLine.gdbPort, waitingForGdbToConnect);
         mri4simInit(commandLine.pMemory);
+        copyCommandLineArgumentsToStack(mri4simGetContext(), argc-1, argv+1, commandLine.argIndexOfImageFilename);
         mri4simRun(pComm, commandLine.breakOnStart);
+        returnValue = mri4simGetContext()->R[0];
     }
     __catch
     {
         if (getExceptionCode() == fileException)
             fprintf(stderr, "Failed to open %s\n", commandLine.pImageFilename);
-        returnValue = 1;
+        returnValue = 255;
     }
-    
+
     SocketIComm_Uninit(pComm);
     pinkySimCommandLine_Uninit(&commandLine);
-    
+
     return returnValue;
+}
+
+static void copyCommandLineArgumentsToStack(PinkySimContext* pContext,
+                                           int               argc,
+                                           const char**      argv,
+                                           int               argIndexOfImageFilename)
+{
+    uint32_t ptrsBase;
+    uint32_t ptrsCurr;
+    uint32_t dataCurr;
+    int      i;
+
+    argc -= argIndexOfImageFilename;
+    argv += argIndexOfImageFilename;
+    ptrsBase = pContext->spMain - argc * sizeof(uint32_t);
+    ptrsCurr = ptrsBase;
+    dataCurr = ptrsBase;
+    __try
+    {
+        for (i = 0 ; i < argc ; i++)
+        {
+            size_t len = strlen(argv[i]) + 1;
+            dataCurr -= len;
+            IMemory_Write32(pContext->pMemory, ptrsCurr, dataCurr);
+            copyStringToIMemory(pContext->pMemory, dataCurr, argv[i]);
+            ptrsCurr += sizeof(uint32_t);
+        }
+        assert( ptrsCurr == pContext->spMain );
+        pContext->spMain = roundDownToNearestDoubleWord(dataCurr);
+        pContext->R[0] = argc;
+        pContext->R[1] = ptrsBase;
+
+    }
+    __catch
+    {
+        fprintf(stderr, "Failed to copy command line arguments to top of stack.\n");
+        __rethrow;
+    }
+}
+
+static void copyStringToIMemory(IMemory* pMem, uint32_t destAddress, const char* pSrc)
+{
+    do
+    {
+        IMemory_Write8(pMem, destAddress, *pSrc);
+        destAddress++;
+    } while (*pSrc++);
+}
+
+static uint32_t roundDownToNearestDoubleWord(uint32_t value)
+{
+    return value & ~(8 - 1);
 }
 
 static void waitingForGdbToConnect(void)
