@@ -12,7 +12,7 @@
 */
 #include "pinkySimBaseTest.h"
 
-TEST_GROUP_BASE(pinkySimStep, pinkySimBase)
+TEST_GROUP_BASE(undefined, pinkySimBase)
 {
     void setup()
     {
@@ -26,34 +26,34 @@ TEST_GROUP_BASE(pinkySimStep, pinkySimBase)
 };
 
 
-TEST(pinkySimStep, Encoding1ThatShouldProduceUnpredictableError)
+TEST(undefined, Undedfined16BitWithAllZeroesForImmedaite)
 {
-    emitInstruction16("0100010100000000");
-    setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    emitInstruction16("11011110iiiiiiii", 0);
+    setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
     setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
 
-TEST(pinkySimStep, Encoding2ThatShouldProduceUnpredictableError)
+TEST(undefined, Undedfined16BitWithAllOnesForImmedaite)
 {
-    emitInstruction16("0100010100111111");
-    setExpectedStepReturn(PINKYSIM_STEP_UNPREDICTABLE);
+    emitInstruction16("11011110iiiiiiii", -1);
+    setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
     setExpectedRegisterValue(PC, INITIAL_PC);
     pinkySimStep(&m_context);
 }
 
-TEST(pinkySimStep, HintEncodingsThatShouldProduceUndefinedError)
+TEST(undefined, Undefined32BitWithAllZeroesForImmediate)
 {
-    // opA = XXXX opB != 0
-    for (uint32_t opA = 0 ; opA < 16 ; opA++)
-    {
-        for (uint32_t opB = 1 ; opB < 16 ; opB++)
-        {
-            emitInstruction16("10111111aaaabbbb", opA, opB);
-            setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
-            setExpectedRegisterValue(PC, INITIAL_PC);
-            pinkySimStep(&m_context);
-            initContext();
-        }
-    }
+    emitInstruction32("111101111111iiii", "1010iiiiiiiiiiii", 0, 0);
+    setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
+    setExpectedRegisterValue(PC, INITIAL_PC);
+    pinkySimStep(&m_context);
+}
+
+TEST(undefined, Undefined32BitWithAllOnesForImmediate)
+{
+    emitInstruction32("111101111111iiii", "1010iiiiiiiiiiii", -1, -1);
+    setExpectedStepReturn(PINKYSIM_STEP_UNDEFINED);
+    setExpectedRegisterValue(PC, INITIAL_PC);
+    pinkySimStep(&m_context);
 }

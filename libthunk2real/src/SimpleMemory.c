@@ -10,10 +10,10 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 */
-#include <commSerial.h>
 #include <gdbRemote.h>
 #include <SimpleMemory.h>
 #include <string.h>
+#include "commSerial.h"
 
 
 /* Forward Declarations */

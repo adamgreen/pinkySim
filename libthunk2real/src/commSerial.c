@@ -10,7 +10,6 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 */
-#include <commSerial.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -18,6 +17,7 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include "commSerial.h"
 
 
 /* Set SERIAL_LOG to 1 to have all serial I/O logged to serial.log file and set to 0 otherwise. */

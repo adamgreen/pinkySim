@@ -56,7 +56,7 @@ TEST_GROUP_BASE(pinkySimRun, pinkySimBase)
 };
 
 
-TEST_SIM_ONLY(pinkySimRun, ShouldStopImmediatelyOnBreakpoint)
+TEST(pinkySimRun, ShouldStopImmediatelyOnBreakpoint)
 {
     emitBKPT(0);
     setExpectedRegisterValue(PC, INITIAL_PC);
@@ -66,7 +66,7 @@ TEST_SIM_ONLY(pinkySimRun, ShouldStopImmediatelyOnBreakpoint)
     validateRegisters();
 }
 
-TEST_SIM_ONLY(pinkySimRun, ExecuteNOPAndThenStopAtBreakpoint)
+TEST(pinkySimRun, ExecuteNOPAndThenStopAtBreakpoint)
 {
     emitNOP();
     emitBKPT(0);
@@ -77,7 +77,7 @@ TEST_SIM_ONLY(pinkySimRun, ExecuteNOPAndThenStopAtBreakpoint)
     validateRegisters();
 }
 
-TEST_SIM_ONLY(pinkySimRun, ShouldAdvanceAndStopOnSVC)
+TEST(pinkySimRun, ShouldAdvanceAndStopOnSVC)
 {
     emitSVC(0);
     setExpectedRegisterValue(PC, INITIAL_PC + 2);
@@ -87,7 +87,7 @@ TEST_SIM_ONLY(pinkySimRun, ShouldAdvanceAndStopOnSVC)
     validateRegisters();
 }
 
-TEST_SIM_ONLY(pinkySimRun, ShouldStopImmediatelyOnUnalignedHardfault)
+TEST(pinkySimRun, ShouldStopImmediatelyOnUnalignedHardfault)
 {
     emitLDRImmediate(R2, R3, 0);
     setRegisterValue(R3, INITIAL_PC + 2);
@@ -98,7 +98,7 @@ TEST_SIM_ONLY(pinkySimRun, ShouldStopImmediatelyOnUnalignedHardfault)
     validateRegisters();
 }
 
-TEST_SIM_ONLY(pinkySimRun, ShouldStopImmediatelyOnUndefinedInstruction)
+TEST(pinkySimRun, ShouldStopImmediatelyOnUndefinedInstruction)
 {
     emitUND(0);
     setExpectedRegisterValue(PC, INITIAL_PC);
@@ -108,7 +108,7 @@ TEST_SIM_ONLY(pinkySimRun, ShouldStopImmediatelyOnUndefinedInstruction)
     validateRegisters();
 }
 
-TEST_SIM_ONLY(pinkySimRun, ShouldStopImmediatelyOnUnpredictableInstructionEncoding)
+TEST(pinkySimRun, ShouldStopImmediatelyOnUnpredictableInstructionEncoding)
 {
     emitInstruction16("0100010100000000");
     setExpectedRegisterValue(PC, INITIAL_PC);
@@ -118,7 +118,7 @@ TEST_SIM_ONLY(pinkySimRun, ShouldStopImmediatelyOnUnpredictableInstructionEncodi
     validateRegisters();
 }
 
-TEST_SIM_ONLY(pinkySimRun, ShouldAdvanceAndThenStopForUnsupportedInstruction)
+TEST(pinkySimRun, ShouldAdvanceAndThenStopForUnsupportedInstruction)
 {
     emitYIELD();
     setExpectedRegisterValue(PC, INITIAL_PC + 2);
@@ -128,7 +128,7 @@ TEST_SIM_ONLY(pinkySimRun, ShouldAdvanceAndThenStopForUnsupportedInstruction)
     validateRegisters();
 }
 
-TEST_SIM_ONLY(pinkySimRun, HaveCallbackReturnOkAndStopAtSecondBreakpoint)
+TEST(pinkySimRun, HaveCallbackReturnOkAndStopAtSecondBreakpoint)
 {
     emitNOP();
     emitBKPT(0);
@@ -144,7 +144,7 @@ int interruptCallback(PinkySimContext* pContext)
     return PINKYSIM_RUN_INTERRUPT;
 }
 
-TEST_SIM_ONLY(pinkySimRun, HaveCallbackReturnInterruptResponseToStopImmediately)
+TEST(pinkySimRun, HaveCallbackReturnInterruptResponseToStopImmediately)
 {
     emitNOP();
     setExpectedRegisterValue(PC, INITIAL_PC);
@@ -159,7 +159,7 @@ int watchpointCallback(PinkySimContext* pContext)
     return PINKYSIM_RUN_WATCHPOINT;
 }
 
-TEST_SIM_ONLY(pinkySimRun, HaveCallbackReturnWatchpointResponseToStopImmediately)
+TEST(pinkySimRun, HaveCallbackReturnWatchpointResponseToStopImmediately)
 {
     emitNOP();
     setExpectedRegisterValue(PC, INITIAL_PC);
@@ -174,7 +174,7 @@ int nullCallback(PinkySimContext* pContext)
     return PINKYSIM_STEP_OK;
 }
 
-TEST_SIM_ONLY(pinkySimRun, HaveCallbackReturnOkToContinueToSVC)
+TEST(pinkySimRun, HaveCallbackReturnOkToContinueToSVC)
 {
     emitNOP();
     emitSVC(0);

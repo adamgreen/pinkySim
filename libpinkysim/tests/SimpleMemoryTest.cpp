@@ -36,12 +36,12 @@ TEST_GROUP(SimpleMemory)
     }
 };
 
-TEST_SIM_ONLY(SimpleMemory, BasicInit)
+TEST(SimpleMemory, BasicInit)
 {
     CHECK(m_pMemory != NULL);
 }
 
-TEST_SIM_ONLY(SimpleMemory, TooManySetMemoryCalls)
+TEST(SimpleMemory, TooManySetMemoryCalls)
 {
     for (int i = 0 ; i < SIMPLE_MEMORY_REGION_COUNT ; i++)
         SimpleMemory_SetMemory(m_pMemory, i*4, i, READ_WRITE);
@@ -51,13 +51,13 @@ TEST_SIM_ONLY(SimpleMemory, TooManySetMemoryCalls)
     CHECK_EQUAL(outOfMemoryException, getExceptionCode());
 }
 
-TEST_SIM_ONLY(SimpleMemory, AttemptToRead32UnsetMemory)
+TEST(SimpleMemory, AttemptToRead32UnsetMemory)
 {
     __try_and_catch(IMemory_Read32(m_pMemory, 0x10000000));
     CHECK_EQUAL(busErrorException, getExceptionCode());
 }
 
-TEST_SIM_ONLY(SimpleMemory, ValidRead32Calls)
+TEST(SimpleMemory, ValidRead32Calls)
 {
     SimpleMemory_SetMemory(m_pMemory, 0x0, 0x11111111, READ_WRITE);
     SimpleMemory_SetMemory(m_pMemory, 0x4, 0x22222222, READ_WRITE);
@@ -72,13 +72,13 @@ TEST_SIM_ONLY(SimpleMemory, ValidRead32Calls)
     CHECK_EQUAL(0x55555555, IMemory_Read32(m_pMemory, 0x10000008));
 }
 
-TEST_SIM_ONLY(SimpleMemory, AttemptToRead16UnsetMemory)
+TEST(SimpleMemory, AttemptToRead16UnsetMemory)
 {
     __try_and_catch(IMemory_Read16(m_pMemory, 0x10000000));
     CHECK_EQUAL(busErrorException, getExceptionCode());
 }
 
-TEST_SIM_ONLY(SimpleMemory, ValidRead16Calls)
+TEST(SimpleMemory, ValidRead16Calls)
 {
     SimpleMemory_SetMemory(m_pMemory, 0x10000000, 0x12345678, READ_WRITE);
     
@@ -86,13 +86,13 @@ TEST_SIM_ONLY(SimpleMemory, ValidRead16Calls)
     CHECK_EQUAL(0x1234, IMemory_Read16(m_pMemory, 0x10000002));
 }
 
-TEST_SIM_ONLY(SimpleMemory, AttemptToRead8UnsetMemory)
+TEST(SimpleMemory, AttemptToRead8UnsetMemory)
 {
     __try_and_catch(IMemory_Read8(m_pMemory, 0x10000000));
     CHECK_EQUAL(busErrorException, getExceptionCode());
 }
 
-TEST_SIM_ONLY(SimpleMemory, ValidRead8Calls)
+TEST(SimpleMemory, ValidRead8Calls)
 {
     SimpleMemory_SetMemory(m_pMemory, 0x10000000, 0x12345678, READ_WRITE);
     
@@ -102,20 +102,20 @@ TEST_SIM_ONLY(SimpleMemory, ValidRead8Calls)
     CHECK_EQUAL(0x12, IMemory_Read8(m_pMemory, 0x10000003));
 }
 
-TEST_SIM_ONLY(SimpleMemory, AttemptToWrite32UnsetMemory)
+TEST(SimpleMemory, AttemptToWrite32UnsetMemory)
 {
     __try_and_catch(IMemory_Write32(m_pMemory, 0x10000000, 0x12345678));
     CHECK_EQUAL(busErrorException, getExceptionCode());
 }
 
-TEST_SIM_ONLY(SimpleMemory, AttemptToWrite32ReadOnlyMemory)
+TEST(SimpleMemory, AttemptToWrite32ReadOnlyMemory)
 {
     SimpleMemory_SetMemory(m_pMemory, 0x10000000, 0xFFFFFFFF, READ_ONLY);
     __try_and_catch(IMemory_Write32(m_pMemory, 0x10000000, 0x12345678));
     CHECK_EQUAL(busErrorException, getExceptionCode());
 }
 
-TEST_SIM_ONLY(SimpleMemory, ValidWrite32Calls)
+TEST(SimpleMemory, ValidWrite32Calls)
 {
     SimpleMemory_SetMemory(m_pMemory, 0x0, 0x11111111, READ_WRITE);
     SimpleMemory_SetMemory(m_pMemory, 0x4, 0x22222222, READ_WRITE);
@@ -136,20 +136,20 @@ TEST_SIM_ONLY(SimpleMemory, ValidWrite32Calls)
     CHECK_EQUAL(0xBBBBBBBB, IMemory_Read32(m_pMemory, 0x10000008));
 }
 
-TEST_SIM_ONLY(SimpleMemory, AttemptToWrite16UnsetMemory)
+TEST(SimpleMemory, AttemptToWrite16UnsetMemory)
 {
     __try_and_catch(IMemory_Write16(m_pMemory, 0x10000000, 0x1234));
     CHECK_EQUAL(busErrorException, getExceptionCode());
 }
 
-TEST_SIM_ONLY(SimpleMemory, AttemptToWrite16ReadOnlyMemory)
+TEST(SimpleMemory, AttemptToWrite16ReadOnlyMemory)
 {
     SimpleMemory_SetMemory(m_pMemory, 0x10000000, 0xFFFFFFFF, READ_ONLY);
     __try_and_catch(IMemory_Write16(m_pMemory, 0x10000000, 0x1234));
     CHECK_EQUAL(busErrorException, getExceptionCode());
 }
 
-TEST_SIM_ONLY(SimpleMemory, ValidWrite16Calls)
+TEST(SimpleMemory, ValidWrite16Calls)
 {
     SimpleMemory_SetMemory(m_pMemory, 0x10000000, 0xFFFFFFFF, READ_WRITE);
     
@@ -159,20 +159,20 @@ TEST_SIM_ONLY(SimpleMemory, ValidWrite16Calls)
     CHECK_EQUAL(0x56781234, IMemory_Read32(m_pMemory, 0x10000000));
 }
 
-TEST_SIM_ONLY(SimpleMemory, AttemptToWrite8UnsetMemory)
+TEST(SimpleMemory, AttemptToWrite8UnsetMemory)
 {
     __try_and_catch(IMemory_Write8(m_pMemory, 0x10000000, 0x12));
     CHECK_EQUAL(busErrorException, getExceptionCode());
 }
 
-TEST_SIM_ONLY(SimpleMemory, AttemptToWrite8ReadOnlyMemory)
+TEST(SimpleMemory, AttemptToWrite8ReadOnlyMemory)
 {
     SimpleMemory_SetMemory(m_pMemory, 0x10000000, 0xFFFFFFFF, READ_ONLY);
     __try_and_catch(IMemory_Write8(m_pMemory, 0x10000000, 0x12));
     CHECK_EQUAL(busErrorException, getExceptionCode());
 }
 
-TEST_SIM_ONLY(SimpleMemory, ValidWrite8Calls)
+TEST(SimpleMemory, ValidWrite8Calls)
 {
     SimpleMemory_SetMemory(m_pMemory, 0x10000000, 0xFFFFFFFF, READ_WRITE);
     

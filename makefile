@@ -249,24 +249,18 @@ $(eval $(call make_tests,LIBGDBREMOTE,\
 $(eval $(call run_gcov,LIBGDBREMOTE))
 
 #######################################
-# libcommserial.a
-$(eval $(call make_library,LIBCOMMSERIAL,libcommserial/src,libcommserial.a,include))
-
-
-#######################################
 # libthunk2real.a
 $(eval $(call make_library,LIBTHUNK2REAL,libthunk2real/src libthunk2real/mocks,libthunk2real.a,include))
 
 # Unit tests
 # Note: The actual tests here come from libpinkysim/tests
-HOST_LIBTHUNK2REAL_TESTS_OBJ := $(addprefix $(HOST_OBJDIR)/libthunk2real/,$(addsuffix .o,$(basename $(wildcard libpinkysim/tests/*.cpp))))
+HOST_LIBTHUNK2REAL_TESTS_OBJ := $(addprefix $(HOST_OBJDIR)/libthunk2real/,$(addsuffix .o,$(basename libpinkysim/tests/AllTests.cpp $(wildcard libpinkysim/tests/*InstrTest.cpp))))
 HOST_LIBTHUNK2REAL_TESTS_EXE := libthunk2real_tests$(GCOV)
 $(HOST_LIBTHUNK2REAL_TESTS_EXE) : INCLUDES := include mri/CppUTest/include
 $(HOST_LIBTHUNK2REAL_TESTS_EXE) : $(HOST_LIBTHUNK2REAL_TESTS_OBJ) \
                                   $(HOST_LIBTHUNK2REAL_LIB) \
                                   $(HOST_LIBCOMMON_LIB) \
                                   $(HOST_LIBGDBREMOTE_LIB) \
-                                  $(HOST_LIBCOMMSERIAL_LIB) \
                                   $(HOST_CPPUTEST_LIB)
 	$(call link_exe,HOST)
 .PHONY : RUN_LIBTHUNK2REAL_TESTS
