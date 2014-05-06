@@ -293,7 +293,19 @@ TEST(mockIComm, ShouldStopRun_SetToReturnTrue)
     CHECK_TRUE(IComm_ShouldStopRun(mockIComm_Get()));
 }
 
-TEST(mockIComm, IsGdbConnected_ShouldAlwaysReturnTrue)
+TEST(mockIComm, IsGdbConnected_ShouldDefaultToReturnTrue)
 {
+    CHECK_TRUE(IComm_IsGdbConnected(mockIComm_Get()));
+}
+
+TEST(mockIComm, IsGdbConnected_SetToReturnFalse)
+{
+    mockIComm_SetIsGdbConnectedFlag(0);
+    CHECK_FALSE(IComm_IsGdbConnected(mockIComm_Get()));
+}
+
+TEST(mockIComm, IsGdbConnected_SetToReturnTrue)
+{
+    mockIComm_SetIsGdbConnectedFlag(1);
     CHECK_TRUE(IComm_IsGdbConnected(mockIComm_Get()));
 }

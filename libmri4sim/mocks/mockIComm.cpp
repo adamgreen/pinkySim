@@ -76,6 +76,7 @@ static int         g_delayReceiveCount;
 static char*       g_pTransmitDataBufferStart;
 static char*       g_pTransmitDataBufferEnd;
 static char*       g_pTransmitDataBufferCurr;
+static int         g_isGdbConnected = TRUE;
 
 
 static void waitForReceiveData(IComm* pComm);
@@ -158,7 +159,7 @@ static int shouldStopRun(IComm* pComm)
 
 static int isGdbConnected(IComm* pComm)
 {
-    return TRUE;
+    return g_isGdbConnected;
 }
 
 
@@ -280,6 +281,12 @@ const char* mockIComm_ChecksumData(const char* pData)
 }
 
 
+void mockIComm_SetIsGdbConnectedFlag(int isGdbConnected)
+{
+    g_isGdbConnected = isGdbConnected;
+}
+
+
 void mockIComm_Uninit(void)
 {
     free(g_pAlloc1);
@@ -291,6 +298,7 @@ void mockIComm_Uninit(void)
     g_receiveBuffers[0].init("");
     g_receiveBuffers[1].init("");
     commUninitTransmitDataBuffer();
+    g_isGdbConnected = TRUE;
 }
 
 static void commUninitTransmitDataBuffer()

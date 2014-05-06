@@ -24,6 +24,7 @@ void        mockIComm_DelayReceiveData(int delayCount);
 void        mockIComm_InitTransmitDataBuffer(size_t Size);
 const char* mockIComm_GetTransmittedData();
 const char* mockIComm_ChecksumData(const char* pData);
+void        mockIComm_SetIsGdbConnectedFlag(int isGdbConnected);
 void        mockIComm_Uninit(void);
 
 
