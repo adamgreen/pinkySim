@@ -137,6 +137,10 @@ $(eval $(call make_sample,FileTest_Sample,FileTest,include,$(ARMV6M_LIBSTARTUP_L
 # CommandLine_Sample
 $(eval $(call make_sample,CommandLine_Sample,CommandLine,include,$(ARMV6M_LIBSTARTUP_LIB)))
 
+#######################################
+# StdIO_Sample
+$(eval $(call make_sample,StdIO_Sample,StdIO,include,$(ARMV6M_LIBSTARTUP_LIB)))
+
 
 #######################################
 #  Actual Definition of Main Rules
