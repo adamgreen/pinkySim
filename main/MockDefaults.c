@@ -28,6 +28,9 @@ long   (*hook_ftell)(FILE* stream) = ftell;
 size_t (*hook_fwrite)(const void* ptr, size_t size, size_t nitems, FILE* stream) = fwrite;
 size_t (*hook_fread)(void* ptr, size_t size, size_t nitems, FILE* stream) = fread;
 
+ssize_t (*hook_read)(int fildes, void *buf, size_t nbyte) = read;
+ssize_t (*hook_write)(int fildes, const void *buf, size_t nbyte) = write;
+
 int (*hook_socket)(int domain, int type, int protocol) = socket;
 int (*hook_setsockopt)(int socket,
                        int level,
