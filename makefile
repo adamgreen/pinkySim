@@ -213,7 +213,7 @@ $(eval $(call run_gcov,LIBPINKYSIM))
 
 #######################################
 # libmri4sim.a
-$(eval $(call make_library,LIBMRI4SIM,libmri4sim/src,libmri4sim.a,include mri/include))
+$(eval $(call make_library,LIBMRI4SIM,libmri4sim/src,libmri4sim.a,include mri/include libmri4sim/mocks))
 $(eval $(call make_tests,LIBMRI4SIM, \
                          libmri4sim/tests libmri4sim/mocks, \
                          include libmri4sim/mocks mri/include, \
