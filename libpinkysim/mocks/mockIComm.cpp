@@ -95,9 +95,9 @@ static void sendChar(IComm* pComm, int character);
 static int  shouldStopRun(IComm* pComm);
 static int  isGdbConnected(IComm* pComm);
 
-ICommVTable g_icommVTable = {hasReceiveData, receiveChar, sendChar, shouldStopRun, isGdbConnected};
+static ICommVTable g_icommVTable = {hasReceiveData, receiveChar, sendChar, shouldStopRun, isGdbConnected};
 
-struct TestIComm
+static struct TestIComm
 {
     ICommVTable* pVTable;
 } g_icomm = {&g_icommVTable};

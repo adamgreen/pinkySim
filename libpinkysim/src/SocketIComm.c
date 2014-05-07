@@ -30,9 +30,9 @@ static void sendChar(IComm* pComm, int character);
 static int  shouldStopRun(IComm* pComm);
 static int  isGdbConnected(IComm* pComm);
 
-ICommVTable g_icommVTable = {hasReceiveData, receiveChar, sendChar, shouldStopRun, isGdbConnected};
+static ICommVTable g_icommVTable = {hasReceiveData, receiveChar, sendChar, shouldStopRun, isGdbConnected};
 
-struct SocketIComm
+static struct SocketIComm
 {
     ICommVTable* pVTable;
     void         (*waitingConnectCallback)(void);

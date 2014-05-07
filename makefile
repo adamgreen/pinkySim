@@ -198,37 +198,15 @@ $(eval $(call make_tests,LIBMOCKS,libmocks/tests,include,))
 $(eval $(call run_gcov,LIBMOCKS))
 
 #######################################
-# libmemsim.a
-$(eval $(call make_library,LIBMEMSIM,libmemsim/src,libmemsim.a,include))
-$(eval $(call make_tests,LIBMEMSIM,libmemsim/tests,include,$(HOST_LIBCOMMON_LIB) $(HOST_LIBMOCKS_LIB)))
-$(eval $(call run_gcov,LIBMEMSIM))
-
-#######################################
 # libpinkysim.a
-$(eval $(call make_library,LIBPINKYSIM,libpinkysim/src,libpinkysim.a,include))
-$(eval $(call make_tests,LIBPINKYSIM,libpinkysim/tests,include,$(HOST_LIBCOMMON_LIB) \
-                                                               $(HOST_LIBMOCKS_LIB) \
-                                                               $(HOST_LIBMEMSIM_LIB)))
+$(eval $(call make_library,LIBPINKYSIM,libpinkysim/src,libpinkysim.a,include mri/include libpinkysim/mocks))
+$(eval $(call make_tests,LIBPINKYSIM, \
+                         libpinkysim/tests libpinkysim/mocks,include mri/include libpinkysim/mocks, \
+                         $(HOST_LIBCOMMON_LIB) \
+                         $(HOST_LIBMOCKS_LIB) \
+                         $(HOST_LIBMRICORE_LIB) \
+                         $(HOST_LIBMEMSIM_LIB)))
 $(eval $(call run_gcov,LIBPINKYSIM))
-
-#######################################
-# libmri4sim.a
-$(eval $(call make_library,LIBMRI4SIM,libmri4sim/src,libmri4sim.a,include mri/include libmri4sim/mocks))
-$(eval $(call make_tests,LIBMRI4SIM, \
-                         libmri4sim/tests libmri4sim/mocks, \
-                         include libmri4sim/mocks mri/include, \
-                             $(HOST_LIBCOMMON_LIB) \
-                             $(HOST_LIBMOCKS_LIB) \
-                             $(HOST_LIBPINKYSIM_LIB) \
-                             $(HOST_LIBMEMSIM_LIB) \
-                             $(HOST_LIBMRICORE_LIB) ))
-$(eval $(call run_gcov,LIBMRI4SIM))
-
-#######################################
-# libcommsock.a
-$(eval $(call make_library,LIBCOMMSOCK,libcommsock/src,libcommsock.a,include libcommsock/mocks))
-$(eval $(call make_tests,LIBCOMMSOCK,libcommsock/tests libcommsock/mocks,include libcommsock/mocks,$(HOST_LIBCOMMON_LIB)))
-$(eval $(call run_gcov,LIBCOMMSOCK))
 
 #######################################
 # pinkSim Executable
@@ -250,13 +228,13 @@ $(eval $(call run_gcov,LIBGDBREMOTE))
 
 #######################################
 # libthunk2real.a
-$(eval $(call make_library,LIBTHUNK2REAL,libthunk2real/src libthunk2real/mocks,libthunk2real.a,include))
+$(eval $(call make_library,LIBTHUNK2REAL,libthunk2real/src libthunk2real/mocks,libthunk2real.a,include libpinkysim/mocks))
 
 # Unit tests
 # Note: The actual tests here come from libpinkysim/tests
 HOST_LIBTHUNK2REAL_TESTS_OBJ := $(addprefix $(HOST_OBJDIR)/libthunk2real/,$(addsuffix .o,$(basename libpinkysim/tests/AllTests.cpp $(wildcard libpinkysim/tests/*InstrTest.cpp))))
 HOST_LIBTHUNK2REAL_TESTS_EXE := libthunk2real_tests$(GCOV)
-$(HOST_LIBTHUNK2REAL_TESTS_EXE) : INCLUDES := include mri/CppUTest/include
+$(HOST_LIBTHUNK2REAL_TESTS_EXE) : INCLUDES := include libpinkysim/mocks mri/CppUTest/include
 $(HOST_LIBTHUNK2REAL_TESTS_EXE) : $(HOST_LIBTHUNK2REAL_TESTS_OBJ) \
                                   $(HOST_LIBTHUNK2REAL_LIB) \
                                   $(HOST_LIBCOMMON_LIB) \
