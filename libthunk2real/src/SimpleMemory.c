@@ -48,7 +48,7 @@ IMemory* SimpleMemory_Init(void)
         commSendChar('+');
         g_initComplete = 1;
     }
-    
+
     return (IMemory*)&g_object;
 }
 
@@ -63,7 +63,7 @@ void SimpleMemory_SetMemory(IMemory* pMem, uint32_t address, uint32_t value, int
 static uint32_t read32(IMemory* pMem, uint32_t address)
 {
     uint32_t value;
-    
+
     gdbRemoteReadMemory(address, &value, sizeof(value));
     return value;
 }
@@ -71,7 +71,7 @@ static uint32_t read32(IMemory* pMem, uint32_t address)
 static uint16_t read16(IMemory* pMem, uint32_t address)
 {
     uint16_t value;
-    
+
     gdbRemoteReadMemory(address, &value, sizeof(value));
     return value;
 }
@@ -79,7 +79,7 @@ static uint16_t read16(IMemory* pMem, uint32_t address)
 static uint8_t read8(IMemory* pMem, uint32_t address)
 {
     uint8_t value;
-    
+
     gdbRemoteReadMemory(address, &value, sizeof(value));
     return value;
 }

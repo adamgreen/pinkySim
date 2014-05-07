@@ -58,7 +58,7 @@ static void _FreeBuffer(void)
 static int mock_common(FILE* pFile, const char* pFormat, va_list valist)
 {
     int     WrittenSize = -1;
-    
+
     strcpy(g_pPreviousOutput, g_pLastOutput);
     WrittenSize = vsnprintf(g_pLastOutput,
                             g_bufferSize,

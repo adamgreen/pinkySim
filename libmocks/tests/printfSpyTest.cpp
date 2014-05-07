@@ -28,7 +28,7 @@ const char g_HelloWorld[] = "Hello World!\n";
 TEST_GROUP(printfSpy)
 {
     int m_Result;
-    
+
     void setup()
     {
         m_Result = -1;
@@ -38,7 +38,7 @@ TEST_GROUP(printfSpy)
     {
         printfSpy_Unhook();
     }
-  
+
     void printfCheck(int ExpectedLength, const char* pExpectedString)
     {
         LONGS_EQUAL(ExpectedLength, m_Result);
@@ -51,13 +51,13 @@ TEST_GROUP(printfSpy)
     char* CreateCheckBuffer(size_t BufferSize)
     {
         char* pCheckString = NULL;
-    
+
         pCheckString = (char*)malloc(BufferSize + 1);
         CHECK(NULL != pCheckString);
-    
+
         strncpy(pCheckString, g_HelloWorld, BufferSize);
         pCheckString[BufferSize] = '\0';
-    
+
         return pCheckString;
     }
 

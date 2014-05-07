@@ -29,7 +29,7 @@ TEST_GROUP(Packet)
     char*             m_pCharacterArray;
     int               m_exceptionThrown;
     static const char m_fillChar = 0xFF;
-    
+
     void setup()
     {
         m_pCharacterArray = NULL;
@@ -44,13 +44,13 @@ TEST_GROUP(Packet)
         mockCommUninitTransmitDataBuffer();
         free(m_pCharacterArray);
     }
-    
+
     void validateNoExceptionThrown()
     {
         CHECK_FALSE ( m_exceptionThrown );
         LONGS_EQUAL ( 0, getExceptionCode() );
     }
-    
+
     void allocateBuffer(size_t sizeOfBuffer)
     {
         free(m_pCharacterArray);
@@ -58,7 +58,7 @@ TEST_GROUP(Packet)
         memset(m_pCharacterArray, m_fillChar, sizeOfBuffer);
         bufferInit(&m_buffer, m_pCharacterArray, sizeOfBuffer);
     }
-    
+
     void allocateBuffer(const char* pBufferString)
     {
         free(m_pCharacterArray);
@@ -73,7 +73,7 @@ TEST_GROUP(Packet)
         __catch
             m_exceptionThrown = 1;
     }
-    
+
     void tryPacketSend()
     {
         __try
@@ -81,12 +81,12 @@ TEST_GROUP(Packet)
         __catch
             m_exceptionThrown = 1;
     }
-    
+
     void validateThatEmptyGdbPacketWasRead()
     {
         LONGS_EQUAL( 0, bufferGetLength(&m_buffer) );
     }
-    
+
     void validateBufferMatches(const char* pExpectedOutput)
     {
         CHECK_TRUE( bufferMatchesString(&m_buffer, pExpectedOutput, strlen(pExpectedOutput)) );
@@ -122,7 +122,7 @@ TEST(Packet, PacketGetFromGDB_BadChecksum)
     mockCommInitReceiveData("$?#f3");
     tryPacketGet();
     validateThatEmptyGdbPacketWasRead();
-    CHECK_TRUE( mockCommDoesTransmittedDataEqual("-+") ); 
+    CHECK_TRUE( mockCommDoesTransmittedDataEqual("-+") );
 }
 
 TEST(Packet, PacketGetFromGDB_BadHexDigitInChecksum)
@@ -130,7 +130,7 @@ TEST(Packet, PacketGetFromGDB_BadHexDigitInChecksum)
     mockCommInitReceiveData("$?#g3");
     tryPacketGet();
     validateThatEmptyGdbPacketWasRead();
-    CHECK_TRUE( mockCommDoesTransmittedDataEqual("-+") ); 
+    CHECK_TRUE( mockCommDoesTransmittedDataEqual("-+") );
 }
 
 TEST(Packet, PacketGetFromGDB_TwoPackets)
@@ -197,4 +197,4 @@ TEST(Packet, PacketSendToGDB_OkWithCancelForNewPacket)
     tryPacketSend();
     CHECK_TRUE( mockCommDoesTransmittedDataEqual("$OK#9a") );
 }
-   
+

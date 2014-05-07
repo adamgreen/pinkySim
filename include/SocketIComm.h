@@ -23,6 +23,6 @@
 
 __throws IComm* SocketIComm_Init(uint16_t gdbPort, void (*waitingConnectCallback)(void));
          void   SocketIComm_Uninit(IComm* pComm);
-         
+
 
 #endif /* _SOCKET_ICOMM_H_ */

@@ -46,7 +46,7 @@ __throws void commSerialInit(const char* pDevicePath, uint32_t baudRate, uint32_
 {
     int            result = -1;
     struct termios newTerm;
-    
+
     memset(&g_serial, 0, sizeof(g_serial));
 
     if (SERIAL_LOG)
@@ -54,7 +54,7 @@ __throws void commSerialInit(const char* pDevicePath, uint32_t baudRate, uint32_
         g_serial.pLogFile = fopen("serial.log", "w");
         g_serial.writeLast = 0;
     }
-    
+
     if (pDevicePath)
         g_serial.file = open(pDevicePath, O_RDWR | O_NONBLOCK);
     else
@@ -69,14 +69,14 @@ __throws void commSerialInit(const char* pDevicePath, uint32_t baudRate, uint32_
     g_serial.secTimeout = msecTimeout / 1000;
     msecTimeout = msecTimeout % 1000;
     g_serial.usecTimeout = msecTimeout * 1000;
-    
+
     /* Configure serial port settings. */
     result = tcgetattr(g_serial.file, &g_serial.origTerm);
     if (result == -1)
         __throw(serialException);
     g_serial.origTermValid = 1;
     newTerm = g_serial.origTerm;
-    
+
     /* Set the baud rate. */
     result = cfsetspeed(&newTerm, baudRate);
     if (result == -1)
@@ -84,10 +84,10 @@ __throws void commSerialInit(const char* pDevicePath, uint32_t baudRate, uint32_
         perror("error: Failed to set baud rate");
         __throw(serialException);
     }
-    
+
     /* Use Non-canonical mode. */
     cfmakeraw(&newTerm);
-    
+
     /* No input or output mapping. */
     newTerm.c_iflag = 0;
     newTerm.c_oflag = 0;
@@ -95,11 +95,11 @@ __throws void commSerialInit(const char* pDevicePath, uint32_t baudRate, uint32_
 
     /* Configure for 8n1 format and disable modem flow control. */
     newTerm.c_cflag = CS8 | CREAD | CLOCAL;
-    
+
     /* Set MIN characters and TIMEout for non-canonical mode. */
     newTerm.c_cc[VMIN] = 0;
     newTerm.c_cc[VTIME] = 0;
-    
+
     result = tcflush(g_serial.file, TCIOFLUSH);
     if (result != 0)
         __throw(serialException);
@@ -110,7 +110,7 @@ __throws void commSerialInit(const char* pDevicePath, uint32_t baudRate, uint32_
         perror("error: Failed to configure serial port");
         __throw(serialException);
     }
-    
+
     /* This might only be required due to the mbed CDC firmware. */
     usleep(100000);
 }
@@ -121,23 +121,23 @@ static int openMbedSerial(void)
     int            serialFile = -1;
     DIR*           pDir = NULL;
     struct dirent* pDirEntry = NULL;
-    
+
     pDir = opendir("/dev");
     if (!pDir)
         __throw(serialException);
-    
+
     while (NULL != (pDirEntry = readdir(pDir)))
     {
         if (pDirEntry->d_name == strcasestr(pDirEntry->d_name, "tty.usbmodem"))
         {
             char pathname[128];
-            
+
             snprintf(pathname, sizeof(pathname), "/dev/%s", pDirEntry->d_name);
             serialFile = open(pathname, O_RDWR | O_NONBLOCK);
             break;
         }
     }
-    
+
     if (pDir)
         closedir(pDir);
 
@@ -168,11 +168,11 @@ uint32_t commHasReceiveData(void)
     fd_set         readfds;
     fd_set         errorfds;
     struct timeval timeOut = {0, 0};
-    
+
     FD_ZERO(&readfds);
     FD_ZERO(&errorfds);
     FD_SET(g_serial.file, &readfds);
-    
+
     selectResult = select(g_serial.file+1, &readfds, NULL, &errorfds, &timeOut);
     if (selectResult == -1)
         __throws(serialException);
@@ -192,17 +192,17 @@ int commReceiveChar(void)
     fd_set         readfds;
     fd_set         errorfds;
     struct timeval timeOut = {g_serial.secTimeout, g_serial.usecTimeout};
-    
+
     FD_ZERO(&readfds);
     FD_ZERO(&errorfds);
     FD_SET(g_serial.file, &readfds);
-    
+
     selectResult = select(g_serial.file+1, &readfds, NULL, &errorfds, &timeOut);
     if (selectResult == -1)
         __throw(serialException);
     if (selectResult == 0)
         __throw(timeoutException);
-    
+
     bytesRead = read(g_serial.file, &byte, sizeof(byte));
     if (bytesRead == -1)
         __throw(serialException);
@@ -229,17 +229,17 @@ void commSendChar(int character)
     fd_set         writefds;
     fd_set         errorfds;
     struct timeval timeOut = {g_serial.secTimeout, g_serial.usecTimeout};
-    
+
     FD_ZERO(&writefds);
     FD_ZERO(&errorfds);
     FD_SET(g_serial.file, &writefds);
-    
+
     selectResult = select(g_serial.file+1, NULL, &writefds, &errorfds, &timeOut);
     if (selectResult == -1)
         __throw(serialException);
     if (selectResult == 0)
         __throw(timeoutException);
-    
+
     bytesWritten = write(g_serial.file, &byte, sizeof(byte));
     if (bytesWritten != sizeof(byte))
         __throw(serialException);

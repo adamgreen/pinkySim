@@ -236,7 +236,7 @@ TEST(semihostTests, OpenCall_VerifyReturnCodeInR0)
 {
     emitBKPT(NEWLIB_OPEN);
     emitBKPT(0);
-    
+
     mockIComm_InitReceiveChecksummedData("+$F5#", "+$c#");
     mockIComm_DelayReceiveData(2);
         mri4simRun(mockIComm_Get(), FALSE);
@@ -249,7 +249,7 @@ TEST(semihostTests, RenameCall_VerifyReturnCodeInR0)
 {
     emitBKPT(NEWLIB_RENAME);
     emitBKPT(0);
-    
+
     mockIComm_InitReceiveChecksummedData("+$F5#", "+$c#");
     mockIComm_DelayReceiveData(2);
         mri4simRun(mockIComm_Get(), FALSE);
@@ -262,7 +262,7 @@ TEST(semihostTests, UnlinkCall_VerifyReturnCodeInR0)
 {
     emitBKPT(NEWLIB_UNLINK);
     emitBKPT(0);
-    
+
     mockIComm_InitReceiveChecksummedData("+$F5#", "+$c#");
     mockIComm_DelayReceiveData(2);
         mri4simRun(mockIComm_Get(), FALSE);
@@ -275,7 +275,7 @@ TEST(semihostTests, StatCall_VerifyReturnCodeInR0)
 {
     emitBKPT(NEWLIB_STAT);
     emitBKPT(0);
-    
+
     mockIComm_InitReceiveChecksummedData("+$F5#", "+$c#");
     mockIComm_DelayReceiveData(2);
         mri4simRun(mockIComm_Get(), FALSE);

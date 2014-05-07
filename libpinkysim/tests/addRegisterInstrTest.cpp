@@ -77,7 +77,7 @@ TEST(addRegister, T1ForceCarryAndOverflow)
 
 
 /* ADD - Register - Encoding T2
-   Encoding: 010001 00 DN:1 Rm:4 Rdn:3 
+   Encoding: 010001 00 DN:1 Rm:4 Rdn:3
    NOTE: Shouldn't modify any of the APSR flags.*/
 TEST(addRegister, T2UseR1ForAllArgs)
 {

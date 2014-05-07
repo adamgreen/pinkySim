@@ -25,56 +25,56 @@ extern uint32_t __end__[1];
 
 
 /* File system related syscalls. */
-int _open(const char *pFilename, int flags, int mode) 
+int _open(const char *pFilename, int flags, int mode)
 {
     return semihostOpen(pFilename, flags, mode);
 }
 
-int rename(const char *pOldFilename, const char *pNewFilename) 
+int rename(const char *pOldFilename, const char *pNewFilename)
 {
     return semihostRename(pOldFilename, pNewFilename);
 }
 
-int _unlink(const char *pFilename) 
+int _unlink(const char *pFilename)
 {
     return semihostUnlink(pFilename);
 }
 
-int _stat(const char *pFilename, struct stat *pStat) 
+int _stat(const char *pFilename, struct stat *pStat)
 {
     return semihostStat(pFilename, pStat);
 }
 
 
 /* File handle related syscalls. */
-int _read(int file, char *ptr, int len) 
+int _read(int file, char *ptr, int len)
 {
     return semihostRead(file, ptr, len);
 }
 
-int _write(int file, char *ptr, int len) 
+int _write(int file, char *ptr, int len)
 {
     return semihostWrite(file, ptr, len);
 }
 
-int _isatty(int file) 
+int _isatty(int file)
 {
     if (file >= 0 && file <= 2)
         return 1;
     return 0;
 }
 
-int _lseek(int file, int ptr, int dir) 
+int _lseek(int file, int ptr, int dir)
 {
-    return semihostLSeek(file, ptr, dir);    
+    return semihostLSeek(file, ptr, dir);
 }
 
-int _close(int file) 
+int _close(int file)
 {
     return semihostClose(file);
 }
 
-int _fstat(int file, struct stat *st) 
+int _fstat(int file, struct stat *st)
 {
     return semihostFStat(file, st);
 }
@@ -107,7 +107,7 @@ caddr_t _sbrk(int incr)
 
 
 /* Other syscalls. */
-void _exit(int code) 
+void _exit(int code)
 {
     semihostExit(code);
     for (;;)
@@ -115,31 +115,31 @@ void _exit(int code)
     }
 }
 
-int _getpid() 
+int _getpid()
 {
     return 1;
 }
 
-int _kill(int pid, int sig) 
+int _kill(int pid, int sig)
 {
     errno = EINVAL;
     return -1;
 }
 
-int _wait(int *status) 
+int _wait(int *status)
 {
     errno = ECHILD;
     return -1;
 }
 
-int _system(const char* pCommand) 
+int _system(const char* pCommand)
 {
-    if (NULL == pCommand) 
+    if (NULL == pCommand)
     {
         /* There is no command interpreter on the embedded device. */
         return 0;
     }
-    else 
+    else
     {
         /* Indicate that command couldn't be executed since there is no command interpreter. */
         errno = ENOENT;

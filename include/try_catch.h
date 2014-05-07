@@ -67,7 +67,7 @@ extern int               g_exceptionCode;
             \
             if (0 == setjmp(jumpBuffer)) \
             { \
-            
+
 #define __catch \
             } \
             g_pExceptionHandlers = exceptionHandler.pPrevious; \

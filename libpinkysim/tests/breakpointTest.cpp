@@ -40,7 +40,7 @@ TEST(breakpointTests, Set16bitBreakpointAndRunUntilHit)
     emitNOP();
     emitNOP();
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z1,%x,2#", INITIAL_PC + 6);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");
@@ -68,7 +68,7 @@ TEST(breakpointTests, Set32bitBreakpointAndRunUntilHit)
     /* This is a 32-bit BL instruction. */
     emitInstruction32("11110Siiiiiiiiii", "11j1kiiiiiiiiiii", 0, 0, 1, 1, 0);
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z1,%x,3#", INITIAL_PC + 6);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");
@@ -91,7 +91,7 @@ TEST(breakpointTests, Set32bitBreakpointAndRunUntilHit)
 TEST(breakpointTests, AttemptToSetInvalidBreakpoint_ShouldReturnErrorMessage)
 {
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z1,%x,1#", INITIAL_PC);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");
@@ -108,7 +108,7 @@ TEST(breakpointTests, FailMemoryAllocationOnBreakpointSet_ShouldReturnErrorMessa
     emitNOP();
     emitNOP();
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z1,%x,2#", INITIAL_PC + 6);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");
@@ -122,7 +122,7 @@ TEST(breakpointTests, FailMemoryAllocationOnBreakpointSet_ShouldReturnErrorMessa
 TEST(breakpointTests, AttemptToClearInvalidBreakpointType_ShouldReturnErrorMessage)
 {
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$z1,%x,1#", INITIAL_PC);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");
@@ -135,7 +135,7 @@ TEST(breakpointTests, AttemptToClearInvalidBreakpointType_ShouldReturnErrorMessa
 TEST(breakpointTests, AttemptToSetBreakpointAtInvalidAddress_ShouldReturnErrorMessage)
 {
     emitBKPT(0);
-    
+
     mockIComm_InitReceiveChecksummedData("+$Z1,fffffffe,2#", "+$c#");
         mri4simRun(mockIComm_Get(), TRUE);
     appendExpectedTPacket(SIGTRAP, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);
@@ -146,7 +146,7 @@ TEST(breakpointTests, AttemptToSetBreakpointAtInvalidAddress_ShouldReturnErrorMe
 TEST(breakpointTests, AttemptToClearBreakpointAtInvalidAddress_ShouldReturnErrorMessage)
 {
     emitBKPT(0);
-    
+
     mockIComm_InitReceiveChecksummedData("+$z1,fffffffe,2#", "+$c#");
         mri4simRun(mockIComm_Get(), TRUE);
     appendExpectedTPacket(SIGTRAP, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);
@@ -161,7 +161,7 @@ TEST(breakpointTests, SetBreakpointHit_LeaveBreakpointSet_ContinueAndHitAgain)
     emitNOP();
     emitNOP();
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z1,%x,2#", INITIAL_PC + 4);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");
@@ -197,7 +197,7 @@ TEST(breakpointTests, SetBreakpointHit_ClearBreakpoint_ContinueAndRunPast)
     emitNOP();
     emitNOP();
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z1,%x,2#", INITIAL_PC + 4);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");
@@ -235,7 +235,7 @@ TEST(breakpointTests, Set32bitBreakpoint_RunUntilHit_Clear32bitBreakpoint)
     /* This is a 32-bit BL instruction. */
     emitInstruction32("11110Siiiiiiiiii", "11j1kiiiiiiiiiii", 0, 0, 1, 1, 0);
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z1,%x,3#", INITIAL_PC + 6);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");

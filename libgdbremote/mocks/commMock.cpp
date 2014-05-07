@@ -83,7 +83,7 @@ uint32_t commHasReceiveData(void)
         g_pReceiveBuffer = &g_receiveBuffer2;
         return 0;
     }
-    
+
     return 1;
 }
 

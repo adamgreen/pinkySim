@@ -40,7 +40,7 @@ TEST_GROUP(commMock)
 TEST(commMock, commHasRecieveData_Empty)
 {
     static const char emptyData[] = "";
-    
+
     mockCommInitReceiveData(emptyData);
     CHECK_FALSE( commHasReceiveData() );
 }
@@ -48,7 +48,7 @@ TEST(commMock, commHasRecieveData_Empty)
 TEST(commMock, commHasRecieveData_NotEmpty)
 {
     static const char testData[] = "$";
-    
+
     mockCommInitReceiveData(testData);
     CHECK_TRUE( commHasReceiveData() );
 }
@@ -56,7 +56,7 @@ TEST(commMock, commHasRecieveData_NotEmpty)
 TEST(commMock, commRecieveChar_NotEmpty)
 {
     static const char testData[] = "$";
-    
+
     mockCommInitReceiveData(testData);
     LONGS_EQUAL( '$', commReceiveChar() );
 }
@@ -67,7 +67,7 @@ TEST(commMock, commHasReceiveData_SwitchToEmptyGdbPacket)
     static const char emptyGdbPacket[] = "$#00";
     char              buffer[16];
     char*             p = buffer;
-    
+
     mockCommInitReceiveData(emptyData);
     CHECK_FALSE( commHasReceiveData() );
     CHECK_TRUE( commHasReceiveData() );
@@ -86,7 +86,7 @@ TEST(commMock, commReceiveChar_SwitchToEmptyGdbPacket)
     static const char emptyGdbPacket[] = "$#00";
     char              buffer[16];
     char*             p = buffer;
-    
+
     mockCommInitReceiveData(emptyData);
 
     do
@@ -94,7 +94,7 @@ TEST(commMock, commReceiveChar_SwitchToEmptyGdbPacket)
         *p++ = (char)commReceiveChar();
     }
     while (commHasReceiveData());
-    
+
     LONGS_EQUAL ( strlen(emptyGdbPacket), (p - buffer) );
     CHECK( 0 == memcmp(emptyGdbPacket, buffer, strlen(emptyGdbPacket)) );
 }
@@ -104,9 +104,9 @@ TEST(commMock, mockCommReceiveEmptyGdbPacket)
     static const char emptyGdbPacket[] = "$#00";
     char              buffer[16];
     char*             p = buffer;
-    
+
     mockCommInitReceiveData(emptyGdbPacket);
-    
+
     while (commHasReceiveData())
     {
         *p++ = (char)commReceiveChar();
@@ -121,9 +121,9 @@ TEST(commMock, mockCommReceiveTwoGdbPacket)
     static const char packet2[] = "$packet2#ff";
     char              buffer[16];
     char*             p = buffer;
-    
+
     mockCommInitReceiveData(packet1, packet2);
-    
+
     while (commHasReceiveData())
     {
         *p++ = (char)commReceiveChar();

@@ -119,7 +119,7 @@ uint8_t bufferReadByteAsHex(Buffer* pBuffer)
     byte = HexCharToNibble(pBuffer->pCurrent[0]) << 4;
     byte |= HexCharToNibble(pBuffer->pCurrent[1]);
     pBuffer->pCurrent += 2;
-    
+
     return byte;
 }
 
@@ -133,7 +133,7 @@ void bufferWriteString(Buffer* pBuffer, const char* pString)
 void bufferWriteSizedString(Buffer* pBuffer, const char* pString, size_t length)
 {
     throwExceptionAndFlagBufferOverrunIfBufferLeftIsSmallerThan(pBuffer, length);
-    
+
     while (length--)
         *(pBuffer->pCurrent++) = *pString++;
 }
@@ -162,7 +162,7 @@ uint32_t bufferReadUIntegerAsHex(Buffer* pBuffer)
 
     if (hexDigitsParsed == 0)
         __throw(invalidValueException);
-    
+
     return value;
 }
 
@@ -170,7 +170,7 @@ static uint32_t parseNextHexDigitAndAddNibbleToValue(Buffer* pBuffer, uint32_t c
 {
     char     nextChar;
     uint32_t nibbleValue;
-    
+
     __try
         nextChar = bufferReadChar(pBuffer);
     __catch
@@ -208,13 +208,13 @@ void bufferWriteUIntegerAsHex(Buffer* pBuffer, uint32_t value)
 {
     int              leadingZeroBytes;
     int              currentByteIndex;
-    
+
     if (value == 0)
     {
         bufferWriteByteAsHex(pBuffer, 0);
         return;
     }
-    
+
     leadingZeroBytes = countLeadingZeroBytes(value);
     currentByteIndex = ((int)sizeof(value) - leadingZeroBytes) - 1;
     while (currentByteIndex >= 0)
@@ -225,13 +225,13 @@ static int countLeadingZeroBytes(uint32_t value)
 {
     uint32_t mask = 0xFF000000;
     int      count = 0;
-    
+
     while (mask && 0 == (value & mask))
     {
         count++;
         mask >>= 8;
     }
-    
+
     return count;
 }
 
@@ -239,7 +239,7 @@ static uint8_t extractByteAtIndex(uint32_t value, int index)
 {
     static const int bitsPerByte = 8;
     uint32_t         shiftAmount = index * bitsPerByte;
-    
+
     return (uint8_t)((value >> shiftAmount) & 0xff);
 }
 
@@ -249,7 +249,7 @@ int32_t bufferReadIntegerAsHex(Buffer* pBuffer)
 {
     uint32_t value = 0;
     int      isNegative = 0;
-    
+
     isNegative = bufferIsNextCharEqualTo(pBuffer, '-');
     value = bufferReadUIntegerAsHex(pBuffer);
     return convertToIntegerAndThrowIfOutOfRange(isNegative, value);
@@ -259,12 +259,12 @@ static int32_t convertToIntegerAndThrowIfOutOfRange(int isNegative, uint32_t val
 {
     if (!isNegative && value > INT_MAX)
         __throw(invalidValueException);
-        
+
     if (isNegative && value > ((uint32_t)INT_MAX + 1))
     {
         __throw(invalidValueException);
     }
-    
+
     return isNegative ? -(int)value : (int)value;
 }
 
@@ -283,7 +283,7 @@ static int32_t calculateAbsoluteValueAndWriteMinusSignForNegativeValue(Buffer* p
         value = -value;
         bufferWriteChar(pBuffer, '-');
     }
-    
+
     return value;
 }
 
@@ -294,7 +294,7 @@ static void advanceToNextChar(Buffer* pBuffer);
 int bufferIsNextCharEqualTo(Buffer* pBuffer, char thisChar)
 {
     throwExceptionIfBufferLeftIsSmallerThan(pBuffer, 1);
-        
+
     if (peekAtNextChar(pBuffer) == thisChar)
     {
         advanceToNextChar(pBuffer);
@@ -325,7 +325,7 @@ static int doesBufferContainThisString(Buffer* pBuffer, const char* pDesiredStri
 int bufferMatchesString(Buffer* pBuffer, const char* pString, size_t stringLength)
 {
     throwExceptionIfBufferLeftIsSmallerThan(pBuffer, stringLength);
-    
+
     if(doesBufferContainThisString(pBuffer, pString, stringLength))
     {
         pBuffer->pCurrent += stringLength;
@@ -338,8 +338,8 @@ int bufferMatchesString(Buffer* pBuffer, const char* pString, size_t stringLengt
 static int doesBufferContainThisString(Buffer* pBuffer, const char* pDesiredString, size_t stringLength)
 {
     const char* pBufferString = pBuffer->pCurrent;
-    
+
     return (strncmp(pBufferString, pDesiredString, stringLength) == 0) &&
-           (bufferBytesLeft(pBuffer) == stringLength || 
+           (bufferBytesLeft(pBuffer) == stringLength ||
             pBufferString[stringLength] == ':');
 }

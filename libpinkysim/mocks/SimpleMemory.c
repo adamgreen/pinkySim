@@ -49,17 +49,17 @@ IMemory* SimpleMemory_Init(void)
 {
     memset(&g_object, 0, sizeof(g_object));
     g_object.pVTable = &g_vTable;
-    
+
     return (IMemory*)&g_object;
 }
 
 void SimpleMemory_SetMemory(IMemory* pMem, uint32_t address, uint32_t value, int readOnly)
 {
     SimpleMemory* pThis = (SimpleMemory*)pMem;
-    
+
     if (pThis->entryCount >= sizeof(pThis->entries)/sizeof(pThis->entries[0]))
         __throw(outOfMemoryException);
-    
+
     pThis->entries[pThis->entryCount].address = address;
     pThis->entries[pThis->entryCount].value = value;
     pThis->entries[pThis->entryCount].readOnly = readOnly;
@@ -87,7 +87,7 @@ static uint32_t read(SimpleMemory* pThis, uint32_t address)
 {
     uint32_t alignedAddress = address & 0xFFFFFFFC;
     size_t   i;
-    
+
     for (i = 0 ; i < pThis->entryCount ; i++)
     {
         if (pThis->entries[i].address == alignedAddress)
@@ -118,7 +118,7 @@ static void write(SimpleMemory* pThis, uint32_t address, uint32_t value, uint32_
 {
     uint32_t      alignedAddress = address & 0xFFFFFFFC;
     size_t        i;
-    
+
     for (i = 0 ; i < pThis->entryCount ; i++)
     {
         if (pThis->entries[i].address == alignedAddress && !pThis->entries[i].readOnly)

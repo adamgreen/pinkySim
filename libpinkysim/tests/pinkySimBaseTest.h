@@ -47,7 +47,7 @@ protected:
     uint32_t        m_expectedIPSR;
     uint32_t        m_emitAddress;
     PinkySimContext m_context;
-    
+
     void setup()
     {
         m_expectedStepReturn = PINKYSIM_STEP_OK;
@@ -57,12 +57,12 @@ protected:
     void teardown()
     {
     }
-    
+
     void setExpectedStepReturn(int expectedStepReturn)
     {
         m_expectedStepReturn = expectedStepReturn;
     }
-    
+
     void setExpectedXPSRflags(const char* pExpectedFlags)
     {
         // Remember what expected APSR flags should be after instruction execution and flip initial flag state to make
@@ -110,16 +110,16 @@ protected:
                 m_expectedXPSRflags |= EPSR_T;
                 break;
             }
-            
+
             pExpectedFlags++;
         }
     }
-    
+
     void setExpectedIPSR(uint32_t expectedValue)
     {
         m_expectedIPSR = expectedValue;
     }
-    
+
     void setExpectedRegisterValue(int index, uint32_t expectedValue)
     {
         assert (index >= 0 && index <= PC);
@@ -133,7 +133,7 @@ protected:
         else
             m_expectedRegisterValues[index] = expectedValue;
     }
-    
+
     void setRegisterValue(int index, uint32_t value)
     {
         assert (index >= 0 && index <= PC);
@@ -157,22 +157,22 @@ protected:
             m_context.R[index] = value;
         }
     }
-    
+
     void initContext()
     {
         memset(&m_context, 0, sizeof(m_context));
-        
+
         m_context.pMemory = SimpleMemory_Init();
         SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC, 0x0, READ_WRITE);
 
         /* By default we will place the processor in Thumb mode. */
         m_context.xPSR = EPSR_T;
         m_expectedXPSRflags |= EPSR_T;
-        
+
         /* Expect the interrupt number to be 0 by default. */
         setExpectedIPSR(0);
-        
-        /* Randomly initialize each APSR flag to help verify that the simulator doesn't clear/set a bit that the 
+
+        /* Randomly initialize each APSR flag to help verify that the simulator doesn't clear/set a bit that the
            specification indicates shouldn't be modified by an instruction. */
         for (uint32_t bit = APSR_N ; bit >= APSR_V ; bit >>= 1)
         {
@@ -188,7 +188,7 @@ protected:
                 m_expectedXPSRflags &= ~bit;
             }
         }
- 
+
         /* Place 0x11111111 in R1, 0x22222222 in R2, etc. */
         uint32_t value = 0;
         assert ( 13 == sizeof(m_context.R) / sizeof(m_context.R[0]) );
@@ -203,10 +203,10 @@ protected:
         setRegisterValue(SP, INITIAL_SP);
         setRegisterValue(LR, INITIAL_LR);
         setRegisterValue(PC, INITIAL_PC);
-        
+
         m_emitAddress = INITIAL_PC;
     }
-    
+
     void emitInstruction16(const char* pEncoding, ...)
     {
         va_list     valist;
@@ -215,7 +215,7 @@ protected:
         emitInstruction16Varg(pEncoding, valist);
         va_end(valist);
     }
-    
+
     void emitInstruction32(const char* pEncoding1, const char* pEncoding2, ...)
     {
         va_list     valist;
@@ -224,10 +224,10 @@ protected:
         emitInstruction16Varg(pEncoding1, valist);
         emitInstruction16Varg(pEncoding2, valist);
         va_end(valist);
-        
+
         setExpectedRegisterValue(PC, INITIAL_PC + 4);
     }
-    
+
     void emitInstruction16Varg(const char* pEncoding, va_list valist)
     {
         uint16_t    instr = 0;
@@ -239,7 +239,7 @@ protected:
             uint32_t value;
             char     c;
         } fields[6];
-        
+
         assert (16 == strlen(pEncoding));
         memset(fields, 0, sizeof(fields));
 
@@ -248,7 +248,7 @@ protected:
         while (*p)
         {
             char c = *p++;
-            
+
             if (c != '1' && c != '0' && c != last)
             {
                 // Determine if we already saw this field earlier.
@@ -258,12 +258,12 @@ protected:
                     if (fields[j].c == c)
                         found = true;
                 }
-                
+
                 // If this is the first time we have seen the field, then save its value in fields array.
                 if (!found)
                 {
                     assert (i < sizeof(fields)/sizeof(fields[0]));
-                    
+
                     fields[i].value = va_arg(valist, uint32_t);
                     fields[i].c = c;
                     last = c;
@@ -271,15 +271,15 @@ protected:
                 }
             }
         }
-        
+
         // Go through pEncoding again from right to left and insert field bits.
         p = pEncoding + 15;
         while (p >= pEncoding)
         {
             char c = *p--;
-            
+
             instr >>= 1;
-            
+
             if (c == '1')
             {
                 instr |= (1 << 15);
@@ -297,16 +297,16 @@ protected:
                         break;
                 }
                 assert (j != i);
-                
+
                 instr |= (fields[j].value & 1) << 15;
                 fields[j].value >>= 1;
             }
         }
-        
+
         IMemory_Write16(m_context.pMemory, m_emitAddress, instr);
         m_emitAddress += 2;
     }
-    
+
     void pinkySimStep(PinkySimContext* pContext)
     {
         int result = ::pinkySimStep(pContext);
@@ -314,13 +314,13 @@ protected:
         validateXPSR();
         validateRegisters();
     }
-    
+
     void validateXPSR()
     {
         CHECK_EQUAL(m_expectedXPSRflags, m_context.xPSR & (APSR_NZCV | EPSR_T));
         CHECK_EQUAL(m_expectedIPSR, m_context.xPSR & IPSR_MASK);
     }
-    
+
     void validateRegisters()
     {
         for (int i = 0 ; i < 13 ; i++)
@@ -329,47 +329,47 @@ protected:
         CHECK_EQUAL(m_expectedLR, m_context.lr);
         CHECK_EQUAL(m_expectedPC, m_context.pc);
     }
-    
+
     void setCarry()
     {
         m_context.xPSR |= APSR_C;
     }
-    
+
     void clearCarry()
     {
         m_context.xPSR &= ~APSR_C;
     }
-    
+
     void setZero()
     {
         m_context.xPSR |= APSR_Z;
     }
-    
+
     void clearZero()
     {
         m_context.xPSR &= ~APSR_Z;
     }
-    
+
     void setNegative()
     {
         m_context.xPSR |= APSR_N;
     }
-    
+
     void clearNegative()
     {
         m_context.xPSR &= ~APSR_N;
     }
-    
+
     void setOverflow()
     {
         m_context.xPSR |= APSR_V;
     }
-    
+
     void clearOverflow()
     {
         m_context.xPSR &= ~APSR_V;
     }
-    
+
     void setIPSR(uint32_t ipsr)
     {
         m_context.xPSR = (m_context.xPSR & ~IPSR_MASK) | (ipsr & IPSR_MASK);

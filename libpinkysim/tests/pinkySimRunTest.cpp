@@ -23,32 +23,32 @@ TEST_GROUP_BASE(pinkySimRun, pinkySimBase)
     {
         pinkySimBase::teardown();
     }
-    
+
     void emitBKPT(uint32_t immediate)
     {
         emitInstruction16("10111110iiiiiiii", immediate);
     }
-    
+
     void emitNOP()
     {
         emitInstruction16("1011111100000000");
     }
-    
+
     void emitSVC(uint32_t immediate)
     {
         emitInstruction16("11011111iiiiiiii", immediate);
     }
-    
+
     void emitLDRImmediate(uint32_t Rt, uint32_t Rn, uint32_t immediate)
     {
         emitInstruction16("01101iiiiinnnttt", immediate, Rn, Rt);
     }
-    
+
     void emitUND(uint32_t immediate)
     {
         emitInstruction16("11011110iiiiiiii", immediate);
     }
-    
+
     void emitYIELD()
     {
         emitInstruction16("1011111100010000");

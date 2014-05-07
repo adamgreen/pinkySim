@@ -38,7 +38,7 @@ void packetGet(Packet* pPacket, Buffer* pBuffer)
     {
         getMostRecentPacket(pPacket);
     } while(!isChecksumValid(pPacket));
-    
+
     resetBufferToEnableFutureReadingOfValidPacketData(pPacket);
 }
 
@@ -54,7 +54,7 @@ static void getMostRecentPacket(Packet* pPacket)
     {
         getPacketDataAndExpectedChecksum(pPacket);
     } while (commHasReceiveData());
-    
+
     if (!isChecksumValid(pPacket))
     {
         sendNAKToGDB();
@@ -67,20 +67,20 @@ static void getMostRecentPacket(Packet* pPacket)
 static void getPacketDataAndExpectedChecksum(Packet* pPacket)
 {
     int completePacket;
-    
+
     do
     {
         waitForStartOfNextPacket(pPacket);
         completePacket = getPacketData(pPacket);
     } while (!completePacket);
-    
+
     extractExpectedChecksum(pPacket);
 }
 
 static void waitForStartOfNextPacket(Packet* pPacket)
 {
     char nextChar = pPacket->lastChar;
-    
+
     /* Wait for the packet start character, '$', and ignore all other characters. */
     while (nextChar != '$')
         nextChar = getNextCharFromGdb(pPacket);
@@ -96,7 +96,7 @@ static char getNextCharFromGdb(Packet* pPacket)
 static int getPacketData(Packet* pPacket)
 {
     char nextChar;
-    
+
     bufferReset(pPacket->pBuffer);
     clearChecksum(pPacket);
     nextChar = getNextCharFromGdb(pPacket);
@@ -106,7 +106,7 @@ static int getPacketData(Packet* pPacket)
         bufferWriteChar(pPacket->pBuffer, nextChar);
         nextChar = getNextCharFromGdb(pPacket);
     }
-    
+
     /* Return success if the expected end of packet character, '#', was received. */
     return (nextChar == '#');
 }
@@ -169,7 +169,7 @@ static int  receiveCharAfterSkippingControlC(Packet* pPacket);
 void packetSend(Packet* pPacket, Buffer* pBuffer)
 {
     char  charFromGdb;
-    
+
     /* Keeps looping until GDB sends back the '+' packet acknowledge character.  If GDB sends a '$' then it is trying
        to send a packet so cancel this send attempt. */
     initPacketStruct(pPacket, pBuffer);
@@ -222,12 +222,12 @@ static int receiveCharAfterSkippingControlC(Packet* pPacket)
 {
     static const int controlC = 0x03;
     int              nextChar;
-    
+
     do
     {
         nextChar = getNextCharFromGdb(pPacket);
     }
     while (nextChar == controlC);
-    
+
     return nextChar;
 }

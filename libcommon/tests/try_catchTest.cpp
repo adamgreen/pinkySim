@@ -21,7 +21,7 @@ extern "C"
 TEST_GROUP(TryCatch)
 {
     int m_exceptionThrown;
-    
+
     void setup()
     {
         m_exceptionThrown = 0;
@@ -30,16 +30,16 @@ TEST_GROUP(TryCatch)
     void teardown()
     {
     }
-    
+
     void flagExceptionHit()
     {
         m_exceptionThrown = 1;
     }
-    
+
     void throwNoException()
     {
     }
-    
+
     void throwUndefinedAndUnpredictableExceptions()
     {
         __try
@@ -47,7 +47,7 @@ TEST_GROUP(TryCatch)
         __catch
             throwUnpredictableException();
     }
-    
+
     void throwUnpredictableAndUndefinedExceptions()
     {
         __try
@@ -55,17 +55,17 @@ TEST_GROUP(TryCatch)
         __catch
             throwUndefinedException();
     }
-    
+
     int throwUndefinedException()
     {
         __throw(undefinedException);
     }
-    
+
     void throwUnpredictableException()
     {
         __throw(unpredictableException);
     }
-    
+
     int rethrowUndefinedException()
     {
         __try
@@ -74,7 +74,7 @@ TEST_GROUP(TryCatch)
             __rethrow;
         __throw(unpredictableException);
     }
-    
+
     void validateException(int expectedExceptionCode)
     {
         if (expectedExceptionCode == noException)
@@ -138,7 +138,7 @@ TEST(TryCatch, CatchFirstThrow)
     {
         flagExceptionHit();
     }
-    
+
     validateException(undefinedException);
 }
 
@@ -153,19 +153,19 @@ TEST(TryCatch, CatchSecondThrow)
     {
         flagExceptionHit();
     }
-    
+
     validateException(unpredictableException);
 }
 
 TEST(TryCatch, ThrowAndSkipAssignment)
 {
     int value = -2;
-    
+
     __try
         value = throwUndefinedException();
     __catch
         flagExceptionHit();
-        
+
     LONGS_EQUAL( -2, value );
     validateException(undefinedException);
 }
@@ -182,7 +182,7 @@ TEST(TryCatch, RethrowUndefinedException)
 TEST(TryCatch, RethrowUndefinedExceptionAndSkipAssignment)
 {
     int value = -2;
-    
+
     __try
         value = rethrowUndefinedException();
     __catch

@@ -34,7 +34,7 @@ TEST(registerTests, ReadRegisters)
     m_pContext->spMain = 0xDDDDDDDD;
     m_pContext->lr = 0xEEEEEEEE;
     m_pContext->pc = 0xFFFFFFFE;
-    
+
     mockIComm_InitReceiveChecksummedData("+$g#", "+$c#");
         mri4simRun(mockIComm_Get(), TRUE);
     appendExpectedTPacket(SIGTRAP, 0xCCCCCCCC, 0xDDDDDDDD, 0xEEEEEEEE, 0xFFFFFFFE);
@@ -48,7 +48,7 @@ TEST(registerTests, ReadRegisters)
 
 TEST(registerTests, WriteRegisters)
 {
-    
+
     mockIComm_InitReceiveChecksummedData("+$G00000000111111112222222233333333"
                                             "44444444555555556666666677777777"
                                             "8888888899999999aaaaaaaabbbbbbbb"

@@ -41,7 +41,7 @@ protected:
     uint32_t         m_emitAddress;
     char             m_buffer[2048];
     char*            m_pBufferCurr;
-    
+
     void setup()
     {
         /* Most of testing will happen in RAM but set first two words of FLASH with initial SP and reset vector. */
@@ -50,20 +50,20 @@ protected:
         MemorySim_CreateRegionsFromFlashImage(m_pMemory, flashImage, sizeof(flashImage));
         mri4simInit(m_pMemory);
         m_pContext = mri4simGetContext();
-        
+
         /* Setup to buffer a maximum of 1024 characters sent by MRI. */
         mockIComm_InitTransmitDataBuffer(1024);
-        
+
         /* Setup to buffer a maxmimum of 256 characters used with printf() calls. */
         printfSpy_Hook(256);
 
         /* Most of the times a test will want to only run the mri4simRun() loop once so set stop flag to 1. */
         mockIComm_SetShouldStopRunFlag(1);
         m_emitAddress = INITIAL_PC;
-        
+
         resetExpectedBuffer();
     }
-    
+
     void resetExpectedBuffer()
     {
         m_pBufferCurr = m_buffer;
@@ -75,7 +75,7 @@ protected:
         MemorySim_Uninit(m_pMemory);
         mockIComm_Uninit();
     }
-    
+
     void setXPSRflags(const char* pFlags)
     {
         while (*pFlags)
@@ -113,11 +113,11 @@ protected:
                 m_pContext->xPSR |= EPSR_T;
                 break;
             }
-            
+
             pFlags++;
         }
     }
-    
+
     void setRegisterValue(int index, uint32_t value)
     {
         assert (index >= 0 && index <= PC);
@@ -139,32 +139,32 @@ protected:
             m_pContext->R[index] = value;
         }
     }
-    
+
     void emitBKPT(uint32_t immediate)
     {
         emitInstruction16("10111110iiiiiiii", immediate);
     }
-    
+
     void emitSVC(uint32_t immediate)
     {
         emitInstruction16("11011111iiiiiiii", immediate);
     }
-    
+
     void emitNOP()
     {
         emitInstruction16("1011111100000000");
     }
-    
+
     void emitMOVimmediate(uint32_t Rd, uint32_t immediate)
     {
         emitInstruction16("00100dddiiiiiiii", Rd, immediate);
     }
-    
+
     void emitLDRImmediate(uint32_t Rt, uint32_t Rn, uint32_t immediate)
     {
         emitInstruction16("01101iiiiinnnttt", immediate, Rn, Rt);
     }
-    
+
     void emitLDRBImmediate(uint32_t Rt, uint32_t Rn, uint32_t immediate)
     {
         emitInstruction16("01111iiiiinnnttt", immediate, Rn, Rt);
@@ -179,17 +179,17 @@ protected:
     {
         emitInstruction16("10000iiiiinnnttt", immediate, Rn, Rt);
     }
-    
+
     void emitUND(uint32_t immediate)
     {
         emitInstruction16("11011110iiiiiiii", immediate);
     }
-    
+
     void emitYIELD()
     {
         emitInstruction16("1011111100010000");
     }
-    
+
     void emitInstruction16(const char* pEncoding, ...)
     {
         va_list     valist;
@@ -198,7 +198,7 @@ protected:
         emitInstruction16Varg(pEncoding, valist);
         va_end(valist);
     }
-    
+
     void emitInstruction32(const char* pEncoding1, const char* pEncoding2, ...)
     {
         va_list     valist;
@@ -208,7 +208,7 @@ protected:
         emitInstruction16Varg(pEncoding2, valist);
         va_end(valist);
     }
-    
+
     void emitInstruction16Varg(const char* pEncoding, va_list valist)
     {
         uint16_t    instr = 0;
@@ -220,7 +220,7 @@ protected:
             uint32_t value;
             char     c;
         } fields[6];
-        
+
         assert (16 == strlen(pEncoding));
         memset(fields, 0, sizeof(fields));
 
@@ -229,7 +229,7 @@ protected:
         while (*p)
         {
             char c = *p++;
-            
+
             if (c != '1' && c != '0' && c != last)
             {
                 // Determine if we already saw this field earlier.
@@ -239,12 +239,12 @@ protected:
                     if (fields[j].c == c)
                         found = true;
                 }
-                
+
                 // If this is the first time we have seen the field, then save its value in fields array.
                 if (!found)
                 {
                     assert (i < sizeof(fields)/sizeof(fields[0]));
-                    
+
                     fields[i].value = va_arg(valist, uint32_t);
                     fields[i].c = c;
                     last = c;
@@ -252,15 +252,15 @@ protected:
                 }
             }
         }
-        
+
         // Go through pEncoding again from right to left and insert field bits.
         p = pEncoding + 15;
         while (p >= pEncoding)
         {
             char c = *p--;
-            
+
             instr >>= 1;
-            
+
             if (c == '1')
             {
                 instr |= (1 << 15);
@@ -278,56 +278,56 @@ protected:
                         break;
                 }
                 assert (j != i);
-                
+
                 instr |= (fields[j].value & 1) << 15;
                 fields[j].value >>= 1;
             }
         }
-        
+
         IMemory_Write16(m_pMemory, m_emitAddress, instr);
         m_emitAddress += 2;
     }
-    
+
     void setCarry()
     {
         m_pContext->xPSR |= APSR_C;
     }
-    
+
     void clearCarry()
     {
         m_pContext->xPSR &= ~APSR_C;
     }
-    
+
     void setZero()
     {
         m_pContext->xPSR |= APSR_Z;
     }
-    
+
     void clearZero()
     {
         m_pContext->xPSR &= ~APSR_Z;
     }
-    
+
     void setNegative()
     {
         m_pContext->xPSR |= APSR_N;
     }
-    
+
     void clearNegative()
     {
         m_pContext->xPSR &= ~APSR_N;
     }
-    
+
     void setOverflow()
     {
         m_pContext->xPSR |= APSR_V;
     }
-    
+
     void clearOverflow()
     {
         m_pContext->xPSR &= ~APSR_V;
     }
-    
+
     void setIPSR(uint32_t ipsr)
     {
         m_pContext->xPSR = (m_pContext->xPSR & ~IPSR_MASK) | (ipsr & IPSR_MASK);
@@ -337,7 +337,7 @@ protected:
     {
         return (value >> 24) | ((value >> 8) & 0xFF00) | ((value << 8) & 0xFF0000) | (value << 24);
     }
-    
+
     void appendExpectedTPacket(uint32_t expectedSignal,
                                uint32_t expectedR12,
                                uint32_t expectedSP,
@@ -345,7 +345,7 @@ protected:
                                uint32_t expectedPC)
     {
         int   bytesLeft = bufferBytesLeft();
-        
+
         int result = snprintf(m_pBufferCurr, bytesLeft,
                              "$T%02x0c:%08x;0d:%08x;0e:%08x;0f:%08x;#",
                              expectedSignal,
@@ -356,7 +356,7 @@ protected:
         assert(result < bytesLeft);
         m_pBufferCurr += result;
     }
-    
+
     int bufferBytesLeft()
     {
         return (m_buffer + sizeof(m_buffer)) - m_pBufferCurr;
@@ -365,12 +365,12 @@ protected:
     void appendExpectedString(const char* pExpectedString)
     {
         int   bytesLeft = bufferBytesLeft();
-        
+
         int result = snprintf(m_pBufferCurr, bytesLeft, "%s", pExpectedString);
         assert(result < bytesLeft);
         m_pBufferCurr += result;
     }
-    
+
     void appendExpectedOPacket(const char* pExpectedString)
     {
         appendExpectedString("$O");
@@ -385,7 +385,7 @@ protected:
         }
         appendExpectedString("#");
     }
-    
+
     const char* checksumExpected()
     {
         return mockIComm_ChecksumData(m_buffer);

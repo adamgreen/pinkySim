@@ -54,7 +54,7 @@ TEST(lsrImmediate, R1by1toR7_CarryOut)
 {
     emitInstruction16("00001iiiiimmmddd", IMM_1, R1, R7);
     setExpectedXPSRflags("nzC");
-    setExpectedRegisterValue(R7, 0x11111111U >> 1); 
+    setExpectedRegisterValue(R7, 0x11111111U >> 1);
     pinkySimStep(&m_context);
 }
 

@@ -263,7 +263,7 @@ test : all $(TEST_TARGETS)
 
 gcov : RUN_CPPUTEST_TESTS $(GCOV_TARGETS)
 
-clean : 
+clean :
 	@echo Cleaning pinkysim
 	$Q $(REMOVE_DIR) $(OBJDIR) $(QUIET)
 	$Q $(REMOVE_DIR) $(LIBDIR) $(QUIET)

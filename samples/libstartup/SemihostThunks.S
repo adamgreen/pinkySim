@@ -13,7 +13,7 @@
 /* Implementation of semihost assembly language routines to be used to redirect I/O from the newlib library to the
    MRI debug monitor. */
     #include <NewlibSemihost.h>
-    
+
     .text
     .code 16
     .syntax unified
@@ -70,7 +70,7 @@ strlen_of_r4_result_in_r3:
     cmp     r5, #0
     bne     1$
     bx      lr
-    
+
 
     .global semihostRename
     .type semihostRename, function
@@ -87,7 +87,7 @@ semihostRename:
     bkpt    #NEWLIB_RENAME
     bl      handleError
     pop     {r4, r5, pc}
-    
+
     .global semihostUnlink
     .type semihostUnlink, function
     /* extern "C" int semihostUnlink(const char *pFilename);
@@ -101,8 +101,8 @@ semihostUnlink:
     bkpt    #NEWLIB_UNLINK
     bl      handleError
     pop     {r4, r5, pc}
-    
-    
+
+
     .global semihostStat
     .type semihostStat, function
     /* extern "C" int semihostStat(const char *pFilename, struct stat *pStat);
@@ -116,8 +116,8 @@ semihostStat:
     bkpt    #NEWLIB_STAT
     bl      handleError
     pop     {r4, r5, pc}
-    
-    
+
+
     .global semihostLSeek
     .type semihostLSeek, function
     /* extern "C" int semihostLSeek(int file, int offset, int whence);
@@ -126,8 +126,8 @@ semihostStat:
 semihostLSeek:
     bkpt    #NEWLIB_LSEEK
     b       handleError
-    
-    
+
+
     .global semihostClose
     .type semihostClose, function
     /* extern "C" int semihostClose(int file);
@@ -136,22 +136,22 @@ semihostLSeek:
 semihostClose:
     bkpt    #NEWLIB_CLOSE
     b       handleError
-    
-    
+
+
     .global semihostFStat
     .type semihostFStat, function
     /* extern "C" int semihostFStat(int file, struct stat *pStat);
-       Issues stat call to PC via GDB. 
+       Issues stat call to PC via GDB.
     */
 semihostFStat:
     bkpt    #NEWLIB_FSTAT
     b       handleError
-    
-    
+
+
     .global semihostExit
     .type semihostExit, function
     /* extern "C" void semihostExit(int code);
-       Sends an exit request to pinkySim. 
+       Sends an exit request to pinkySim.
     */
 semihostExit:
     bkpt    #NEWLIB_EXIT

@@ -31,13 +31,13 @@ TEST_GROUP(MallocFailureInject)
     {
         MallocFailureInject_Restore();
     }
-    
+
     void reallocShouldFail(void)
     {
         void* pTest = hook_realloc(NULL, 10);
         POINTERS_EQUAL(NULL, pTest);
     }
-    
+
     void reallocShouldPass(void)
     {
         void* pTest = hook_realloc(NULL, 10);
@@ -57,13 +57,13 @@ TEST(MallocFailureInject, FailFirstMalloc)
 TEST(MallocFailureInject, FailSecondMalloc)
 {
     MallocFailureInject_FailAllocation(2);
-    
+
     void* pFirstMalloc = hook_malloc(10);
     CHECK(NULL != pFirstMalloc);
-    
+
     void* pSecondMalloc = hook_malloc(20);
     POINTERS_EQUAL(NULL, pSecondMalloc);
-    
+
     free(pFirstMalloc);
 }
 

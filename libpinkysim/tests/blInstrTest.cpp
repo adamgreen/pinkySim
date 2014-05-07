@@ -29,7 +29,7 @@ TEST_GROUP_BASE(bl, pinkySimBase)
 
 /* BL (Branch with Link)
    Encoding: 11110 S Imm:10
-             11 J1:1 1 J2:1 Imm:11 
+             11 J1:1 1 J2:1 Imm:11
     Note: J1 and J2 are translated to immediate bits via I? = NOT(J? XOR S) */
 TEST(bl, OffsetOf0)
 {

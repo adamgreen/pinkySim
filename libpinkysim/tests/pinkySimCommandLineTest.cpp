@@ -37,7 +37,7 @@ TEST_GROUP(pinkySimCommandLine)
     const char*         m_argv[10];
     pinkySimCommandLine m_commandLine;
     int                 m_argc;
-    
+
     void setup()
     {
         memset(m_argv, 0, sizeof(m_argv));
@@ -66,7 +66,7 @@ TEST_GROUP(pinkySimCommandLine)
         CHECK(m_argc < (int)ARRAY_SIZE(m_argv));
         m_argv[m_argc++] = pArg;
     }
-    
+
     void validateParamsAndNoErrorMessage(const char* pImageFilename,
                                          int argIndexOfImageFilename = 0,
                                          int breakOnStart = 0,
@@ -86,7 +86,7 @@ TEST_GROUP(pinkySimCommandLine)
         STRCMP_EQUAL(g_usageString, printfSpy_GetLastOutput());
         clearExceptionCode();
     }
-    
+
     void createTestImageFile()
     {
         FILE* pFile = fopen(g_imageFilename, "w");

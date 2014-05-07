@@ -21,7 +21,7 @@ int main(void)
     unsigned char     TestBuffer[256];
     unsigned char     ReadBuffer[256];
     size_t            i;
-    
+
     printf("Hello World\n");
 
     // Fill in test buffer with every byte value possible.
@@ -30,7 +30,7 @@ int main(void)
         TestBuffer[i] = i;
     }
     memset(ReadBuffer, 0, sizeof(ReadBuffer));
-    
+
     // Create a file with this data.
     FILE* fp = fopen(Filename, "w");
     if (!fp)
@@ -38,17 +38,17 @@ int main(void)
         perror("Failed to open file for writing");
         return 1;
     }
-    
+
     int BytesWritten = fwrite(TestBuffer, 1, sizeof(TestBuffer), fp);
     if (BytesWritten != sizeof(TestBuffer))
     {
         perror("Failed to write all of the bytes to test file.");
         return 1;
     }
-    
+
     fclose(fp);
     fp = NULL;
-    
+
     // Now reopen the file and read in the data and make sure it matches.
     fp = fopen(Filename, "r");
     if (!fp)
@@ -56,7 +56,7 @@ int main(void)
         perror("Failed to open file for writing");
         return 1;
     }
-    
+
     int BytesRead = fread(ReadBuffer, 1, sizeof(ReadBuffer), fp);
     if (BytesRead != sizeof(ReadBuffer))
     {
@@ -68,7 +68,7 @@ int main(void)
         fprintf(stderr, "File data did match expected value.\n");
         return 1;
     }
-    
+
     fclose(fp);
     fp = NULL;
 

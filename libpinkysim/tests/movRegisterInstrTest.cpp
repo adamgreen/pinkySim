@@ -28,7 +28,7 @@ TEST_GROUP_BASE(movRegister, pinkySimBase)
 
 
 /* MOV - Register Encoding 1
-   Encoding: 010001 10 D:1 Rm:4 Rd:3 
+   Encoding: 010001 10 D:1 Rm:4 Rd:3
    NOTE: This encoding doesn't update the APSR flags. */
 TEST(movRegister, UseLowestRegisterForAllArgs)
 {

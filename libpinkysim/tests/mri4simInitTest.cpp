@@ -25,7 +25,7 @@ extern "C"
 TEST_GROUP(mri4simInit)
 {
     IMemory* m_pMem;
-    
+
     void setup()
     {
         m_pMem = MemorySim_Init();

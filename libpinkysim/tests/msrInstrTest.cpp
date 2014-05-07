@@ -146,7 +146,7 @@ TEST_SIM_ONLY(msr, UnpredictableSYSm)
 {
     uint32_t predictables[] = {0, 1, 2, 3, 5, 6, 7, 8, 9, 16, 20};
     size_t   nextSkip = 0;
-    
+
     for (uint32_t i = 0 ; i < 256 ; i++)
     {
         if (nextSkip < sizeof(predictables)/sizeof(predictables[0]) && i == predictables[nextSkip])

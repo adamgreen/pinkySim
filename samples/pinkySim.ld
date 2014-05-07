@@ -12,7 +12,7 @@ MEMORY
  * with other linker script that defines memory regions FLASH and RAM.
  * It references following symbols, which must be defined in code:
  *   Reset_Handler : Entry of reset handler
- * 
+ *
  * It defines following symbols, which code can use without definition:
  *   __exidx_start
  *   __exidx_end
@@ -42,7 +42,7 @@ SECTIONS
     {
         KEEP(*(*.isr_vector))
         *(.text.Reset_Handler)
-        
+
         *(.text*)
 
         KEEP(*(.init))
@@ -67,7 +67,7 @@ SECTIONS
         KEEP(*(.eh_frame*))
     } > FLASH
 
-    .ARM.extab : 
+    .ARM.extab :
     {
         *(.ARM.extab* .gnu.linkonce.armextab.*)
     } > FLASH
@@ -80,7 +80,7 @@ SECTIONS
     __exidx_end = .;
 
     __etext = .;
-        
+
     .data : AT (__etext)
     {
         __data_start__ = .;
@@ -121,7 +121,7 @@ SECTIONS
         *(COMMON)
         __bss_end__ = .;
     } > RAM
-    
+
     .heap :
     {
         __end__ = .;

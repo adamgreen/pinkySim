@@ -51,7 +51,7 @@ void Reset_Handler(int argc, const char** argv)
     software_init_hook();
     atexit(__libc_fini_array);
     __libc_init_array();
-    
+
     /* Call user's main and then pass the returned result to exit. */
     exit( main(argc, argv) );
 }

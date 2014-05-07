@@ -31,7 +31,7 @@ TEST(stepTests, StepOverNOP)
 {
     emitNOP();
     emitNOP();
-    
+
     mockIComm_InitReceiveChecksummedData("+$s#");
         mri4simRun(mockIComm_Get(), TRUE);
     appendExpectedTPacket(SIGTRAP, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);
@@ -53,7 +53,7 @@ TEST(stepTests, StepOverBKPT_JustAdvancesPCAndSendsTPacket)
 {
     emitBKPT(0);
     emitNOP();
-    
+
     mockIComm_InitReceiveChecksummedData("+$s#", "+$c#");
         mri4simRun(mockIComm_Get(), TRUE);
     appendExpectedTPacket(SIGTRAP, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);
@@ -69,7 +69,7 @@ TEST(stepTests, BreakOnStart_SendStepWithSpecificAddressToSkipSomeInstructions)
     emitNOP();
     emitNOP();
     emitNOP();
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$s%x#", INITIAL_PC + 4);
     mockIComm_InitReceiveChecksummedData(commands);
@@ -96,7 +96,7 @@ TEST(stepTests, StepOverNOPAndThenContinueToBKPT)
     emitNOP();
     emitNOP();
     emitBKPT(0);
-    
+
     mockIComm_InitReceiveChecksummedData("+$s#");
         mri4simRun(mockIComm_Get(), TRUE);
     appendExpectedTPacket(SIGTRAP, 0, INITIAL_SP, INITIAL_LR, INITIAL_PC);

@@ -133,10 +133,10 @@ static int parseRegionOption(pinkySimCommandLine* pThis, int argc, const char** 
 {
     uint32_t baseAddress = 0;
     uint32_t size = 0;
-    
+
     if (argc < 2)
         __throw(invalidArgumentException);
-    
+
     baseAddress = strtoul(ppArgs[0], NULL, 0);
     size = strtoul(ppArgs[1], NULL, 0);
     MemorySim_CreateRegion(pThis->pMemory, baseAddress, size);
@@ -160,10 +160,10 @@ static int parseBreakOnStartOption(pinkySimCommandLine* pThis)
 static int parseGdbPortOption(pinkySimCommandLine* pThis, int argc, const char** ppArgs)
 {
     uint32_t portNumber = 0;
-    
+
     if (argc < 1)
         __throw(invalidArgumentException);
-    
+
     portNumber = strtoul(ppArgs[0], NULL, 0);
     if (portNumber > 0xFFFF)
         __throw(invalidArgumentException);
@@ -188,12 +188,12 @@ static void loadImageFile(pinkySimCommandLine* pThis)
 {
     FILE* volatile pFile = NULL;
     char* volatile pBuffer = NULL;
-    
+
     __try
     {
         long   fileSize = 0;
         size_t bytesRead = 0;
-    
+
         pFile = fopen(pThis->pImageFilename, "r");
         if (!pFile)
             __throw(fileException);
@@ -202,11 +202,11 @@ static void loadImageFile(pinkySimCommandLine* pThis)
         pBuffer = malloc(fileSize);
         if (!pBuffer)
             __throw(outOfMemoryException);
-    
+
         bytesRead = fread(pBuffer, 1, fileSize, pFile);
         if ((long)bytesRead != fileSize)
             __throw(fileException);
-    
+
         if (pThis->manualMemoryRegions)
             MemorySim_LoadFromFlashImage(pThis->pMemory, pBuffer, fileSize);
         else
@@ -232,15 +232,15 @@ static long getFileSize(FILE* pFile)
     result = fseek(pFile, 0, SEEK_END);
     if (result == -1)
         __throw(fileException);
-    
+
     fileSize = ftell(pFile);
     if (fileSize < 0)
         __throw(fileException);
-    
+
     result = fseek(pFile, 0, SEEK_SET);
     if (result == -1)
         __throw(fileException);
-        
+
     return fileSize;
 }
 

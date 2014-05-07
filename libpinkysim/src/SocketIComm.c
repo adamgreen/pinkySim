@@ -50,7 +50,7 @@ static int receiveNextCharFromGdb(SocketIComm* pThis);
 __throws IComm* SocketIComm_Init(uint16_t gdbPort, void (*waitingConnectCallback)(void))
 {
     SocketIComm* pThis = &g_comm;
-    
+
     __try
     {
         createListenSocket(pThis);
@@ -63,7 +63,7 @@ __throws IComm* SocketIComm_Init(uint16_t gdbPort, void (*waitingConnectCallback
         SocketIComm_Uninit((IComm*)pThis);
         __rethrow;
     }
-    
+
     return (IComm*)pThis;
 }
 
@@ -80,7 +80,7 @@ static void bindListenSocket(SocketIComm* pThis, uint16_t gdbPort)
     struct sockaddr_in bindAddress;
 
     allowBindToReuseAddress(pThis);
-    
+
     memset(&bindAddress, 0, sizeof(bindAddress));
     bindAddress.sin_family = AF_INET;
     bindAddress.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -131,7 +131,7 @@ static int hasReceiveData(IComm* pComm)
 {
     int            hasData = FALSE;
     SocketIComm*   pThis = (SocketIComm*)pComm;
-    
+
     __try
     {
         waitForGdbConnectIfNecessary(pThis);
@@ -204,7 +204,7 @@ static void sendChar(IComm* pComm, int character)
     int          result = -1;
     SocketIComm* pThis = (SocketIComm*)pComm;
     char         c = (char)character;
-    
+
     waitForGdbConnectIfNecessary(pThis);
     result = send(pThis->gdbSocket, &c, sizeof(c), 0);
     if (result == -1)
@@ -219,9 +219,9 @@ static int shouldStopRun(IComm* pComm)
 static int  isGdbConnected(IComm* pComm)
 {
     SocketIComm*   pThis = (SocketIComm*)pComm;
-    
+
     if (pThis->gdbSocket != -1)
         return TRUE;
-        
+
     return socketHasDataToRead(pThis->listenSocket);
 }

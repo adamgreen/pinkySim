@@ -41,7 +41,7 @@ TEST(watchpointTests, Set4ByteReadWatchpoint_RunUntilThatAddressIsRead_ButHaltsO
     emitNOP();
     emitNOP();
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z3,%x,4#", INITIAL_SP - 4);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");
@@ -71,7 +71,7 @@ TEST(watchpointTests, Set4ByteWriteWatchpoint_RunUntilThatAddressIsWritten_ButHa
     emitNOP();
     emitNOP();
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z2,%x,4#", INITIAL_SP - 4);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");
@@ -101,7 +101,7 @@ TEST(watchpointTests, Set4ByteReadWriteWatchpoint_RunUntilThatAddressIsWritten_B
     emitNOP();
     emitNOP();
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z4,%x,4#", INITIAL_SP - 4);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");
@@ -131,7 +131,7 @@ TEST(watchpointTests, Set4ByteReadWriteWatchpoint_RunUntilThatAddressIsRead_ButH
     emitNOP();
     emitNOP();
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z4,%x,4#", INITIAL_SP - 4);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");
@@ -161,7 +161,7 @@ TEST(watchpointTests, Set4ByteReadWatchpoint_RunUntilThatAddressIsRead_ClearAndM
     emitLDRImmediate(R0, R1, 0);
     emitNOP();
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z3,%x,4#", INITIAL_SP - 4);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");
@@ -199,7 +199,7 @@ TEST(watchpointTests, Set1ByteReadWatchpoint_RunUntilThatAddressIsRead_ButHaltsO
     emitNOP();
     emitNOP();
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z3,%x,1#", INITIAL_SP - 4);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");
@@ -229,7 +229,7 @@ TEST(watchpointTests, Set2ByteWriteWatchpoint_RunUntilThatAddressIsWrite_ButHalt
     emitNOP();
     emitNOP();
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z2,%x,2#", INITIAL_SP - 4);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");
@@ -259,7 +259,7 @@ TEST(watchpointTests, Set8ByteWriteWatchpoint_RunUntilThatAddressIsWrite_ButHalt
     emitNOP();
     emitNOP();
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z2,%x,2#", INITIAL_SP - 4);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");
@@ -289,7 +289,7 @@ TEST(watchpointTests, Set8ByteReadWatchpoint_RunUntilSecondWordIsRead_ButHaltsOn
     emitNOP();
     emitNOP();
     emitBKPT(0);
-    
+
     char commands[64];
     snprintf(commands, sizeof(commands), "+$Z3,%x,8#", INITIAL_SP - 8);
     mockIComm_InitReceiveChecksummedData(commands, "+$c#");

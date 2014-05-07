@@ -1,17 +1,14 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/*  Copyright (C) 2014  Adam Green (https://github.com/adamgreen)
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Lesser General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Lesser General Public License for more details.
-
-   You should have received a copy of the GNU Lesser General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.   
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 */
 #include <string.h>
 
@@ -131,15 +128,15 @@ TEST(mockSock, recv_Return4DescendingValues)
     char buffer[3];
     mockSock_recvSetReturnValues(2, 1, 0, -1);
     mockSock_recvSetBuffer("abcd", 4);
-    
+
     CHECK_EQUAL(2, recv(-1, buffer, 2, 0));
     buffer[2] = '\0';
     STRCMP_EQUAL("ab", buffer);
-    
+
     CHECK_EQUAL(1, recv(-1, buffer, 1, 0));
     buffer[1] = '\0';
     STRCMP_EQUAL("c", buffer);
-    
+
     CHECK_EQUAL(0, recv(-1, buffer, 1, 0));
     CHECK_EQUAL(-1, recv(-1, buffer, 1, 0));
 }

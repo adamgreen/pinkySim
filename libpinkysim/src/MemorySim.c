@@ -42,7 +42,7 @@ typedef enum MatchResult
     FOUND,          /* Found requested value. */
     FOUND_HIGHER,   /* Found a value higher than requested but not exact value requested. */
     NOT_FOUND       /* Walked all entries and found no match or anything higher. */
-    
+
 } MatchResult;
 
 /* Forward Declarations */
@@ -70,7 +70,7 @@ static int watchpointsMatch(const Watchpoint* p1, const Watchpoint* p2);
 static void growWatchpointArrayIfNeeded(MemoryRegion* pRegion, uint32_t requiredSize);
 static void clearWatchpoint(IMemory* pMemory, uint32_t address, uint32_t size, WatchpointType type);
 static void* getDataPointer(MemorySim* pThis, uint32_t address, uint32_t size, AccessType type);
-static void checkForBreakWatchPoint(MemorySim* pThis, 
+static void checkForBreakWatchPoint(MemorySim* pThis,
                                     MemoryRegion* pRegion,
                                     uint32_t address, uint32_t size, AccessType type);
 static int accessInRange(Watchpoint* pWatchpoint, uint32_t startAddress, uint32_t endAddress);
@@ -89,7 +89,7 @@ struct Watchpoint
     WatchpointType type;
     uint32_t       startAddress;
     uint32_t       endAddress;
-    
+
 };
 
 struct MemoryRegion
@@ -128,7 +128,7 @@ void MemorySim_Uninit(IMemory* pMemory)
 {
     MemorySim*    pThis = (MemorySim*)pMemory;
     MemoryRegion* pCurr;
-    
+
     if (!pThis)
         return;
 
@@ -140,7 +140,7 @@ void MemorySim_Uninit(IMemory* pMemory)
         pCurr = pNext;
     }
     pThis->pHeadRegion = pThis->pTailRegion = NULL;
-    
+
     free(pThis->pMemoryMapXML);
     pThis->pMemoryMapXML = NULL;
 }
@@ -149,7 +149,7 @@ static void freeRegion(MemoryRegion* pRegion)
 {
     if (!pRegion)
         return;
-    
+
     free(pRegion->pWatchpoints);
     free(pRegion->pData);
     free(pRegion);
@@ -204,7 +204,7 @@ void MemorySim_MakeRegionReadOnly(IMemory* pMemory, uint32_t baseAddress)
 static MemoryRegion* findMatchingRegion(MemorySim* pThis, uint32_t address, uint32_t size)
 {
     MemoryRegion* pCurr = pThis->pHeadRegion;
-    
+
     while (pCurr)
     {
         MemoryRegion* pNext = pCurr->pNext;
@@ -219,7 +219,7 @@ static MemoryRegion* findMatchingRegion(MemorySim* pThis, uint32_t address, uint
 __throws void MemorySim_CreateRegionsFromFlashImage(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize)
 {
     MemorySim*      pThis = (MemorySim*)pMemory;
-    
+
     if (flashImageSize < sizeof(uint32_t))
         __throw(bufferOverrunException);
 
@@ -252,7 +252,7 @@ __throws void MemorySim_LoadFromFlashImage(IMemory* pMemory, const void* pFlashI
         address += sizeof(uint32_t);
         flashImageSize -= sizeof(uint32_t);
     }
-    
+
     pSrcByte = (const uint8_t*)pSrcWord;
     while (flashImageSize--)
         load8(pMemory, address++, *pSrcByte++);
@@ -279,7 +279,7 @@ static void freeLastRegion(MemorySim* pThis)
 {
     MemoryRegion* pPrev = NULL;
     MemoryRegion* pCurr = pThis->pHeadRegion;
-    
+
     while (pCurr && pCurr->pNext)
     {
         pPrev = pCurr;
@@ -301,15 +301,15 @@ const char* MemorySim_GetMemoryMapXML(IMemory* pMemory)
     size_t            regionCount = countRegions(pThis);
     size_t            allocSize = sizeof(g_xmlHeader) + sizeof(g_xmlTrailer) + regionCount * sizeof(xmlExampleLine);
     SizedBuffer       buffer;
-    
+
     allocateMemoryMapXML(pThis, allocSize);
     buffer.pBuffer = pThis->pMemoryMapXML;
     buffer.size = allocSize;
-    
+
     appendMemoryMapXmlHeader(pThis, &buffer);
     appendMemoryMapRegions(pThis, &buffer);
     appendMemoryMapXmlTrailer(pThis, &buffer);
-    
+
     return pThis->pMemoryMapXML;
 }
 
@@ -322,7 +322,7 @@ static size_t countRegions(MemorySim* pThis)
         count++;
         pCurr = pCurr->pNext;
     }
-    
+
     return count;
 }
 
@@ -346,10 +346,10 @@ static void appendMemoryMapRegions(MemorySim* pThis, SizedBuffer* pBuffer)
 {
     int           bytesUsed = 0;
     MemoryRegion* pCurr = pThis->pHeadRegion;
-    
+
     while (pCurr)
     {
-        bytesUsed = snprintf(pBuffer->pBuffer, pBuffer->size, 
+        bytesUsed = snprintf(pBuffer->pBuffer, pBuffer->size,
                              "<memory type=\"%s\" start=\"0x%X\" length=\"0x%X\">%s</memory>",
                              pCurr->readOnly ? "flash" : "ram",
                              pCurr->baseAddress,
@@ -358,7 +358,7 @@ static void appendMemoryMapRegions(MemorySim* pThis, SizedBuffer* pBuffer)
         assert (bytesUsed < (int)pBuffer->size);
         pBuffer->pBuffer += bytesUsed;
         pBuffer->size -= bytesUsed;
-        
+
         pCurr = pCurr->pNext;
     }
 }
@@ -399,7 +399,7 @@ static void setWatchpoint(IMemory* pMemory, uint32_t address, uint32_t size, Wat
 static MatchResult findMatchingOrHigherWatchpoint(MemoryRegion* pRegion, Watchpoint* pKey, uint32_t* pIndex)
 {
     uint32_t           i;
-    
+
     for (i = 0 ; i < pRegion->watchpointCount ; i++)
     {
         int result = compareWatchpoints(pKey, &pRegion->pWatchpoints[i]);
@@ -422,7 +422,7 @@ static int compareWatchpoints(const void* pvKey, const void* pvCurr)
 {
     const Watchpoint* pKey = (const Watchpoint*)pvKey;
     const Watchpoint* pCurr = (const Watchpoint*)pvCurr;
-    
+
     if (watchpointsMatch(pKey, pCurr))
         return 0;
     else if (pKey->startAddress < pCurr->startAddress)
@@ -487,7 +487,7 @@ int  MemorySim_WasWatchpointEncountered(IMemory* pMemory)
 {
     MemorySim* pThis = (MemorySim*)pMemory;
     int        wasEncountered = pThis->watchpointEncountered;
-    
+
     pThis->watchpointEncountered = 0;
     return wasEncountered;
 }
@@ -536,17 +536,17 @@ static void* getDataPointer(MemorySim* pThis, uint32_t address, uint32_t size, A
     return pRegion->pData + regionOffset;
 }
 
-static void checkForBreakWatchPoint(MemorySim* pThis, 
+static void checkForBreakWatchPoint(MemorySim* pThis,
                                     MemoryRegion* pRegion,
                                     uint32_t address, uint32_t size, AccessType type)
 {
     uint32_t endAddress = address + size;
     uint32_t i;
-    
+
     for (i = 0 ; i < pRegion->watchpointCount ; i++)
     {
         Watchpoint* pWatchpoint = &pRegion->pWatchpoints[i];
-        
+
         if ((type & pWatchpoint->type) == 0)
             continue;
         if (pWatchpoint->type == WATCHPOINT_BREAKPOINT)

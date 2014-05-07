@@ -26,7 +26,7 @@ TEST_GROUP(gdbRemote)
 {
     PinkySimContext m_context;
     char            m_checksummed[512];
-    
+
     void setup()
     {
         memset(&m_context, 0x5A, sizeof(m_context));
@@ -37,13 +37,13 @@ TEST_GROUP(gdbRemote)
     {
         mockCommUninitTransmitDataBuffer();
     }
-    
+
     char* appendChecksums(const char* pOrig)
     {
         const char* pSrc = pOrig;
         char*       pDest = m_checksummed;
         uint8_t     checksum;
-        
+
         while (*pSrc)
         {
             // Copy through to start of packet byte.
@@ -52,7 +52,7 @@ TEST_GROUP(gdbRemote)
             *pDest++ = *pSrc++;
             if (pSrc[-1] == '\0')
                 return m_checksummed;
-        
+
             // Copy and checksum data up to end of packet byte.
             checksum = 0;
             while (*pSrc && *pSrc != '#')
@@ -63,15 +63,15 @@ TEST_GROUP(gdbRemote)
             *pDest++ = *pSrc++;
             if (pSrc[-1] == '\0')
                 return m_checksummed;
-        
+
             // Append the checksum value.
             sprintf(pDest, "%02x", checksum);
             pDest += 2;
-        }        
+        }
         *pDest++ = *pSrc++;
         return m_checksummed;
     }
-    
+
     void fillContextRegistersWithAscendingValues()
     {
         for (size_t i = 0 ; i < sizeof(m_context.R)/sizeof(m_context.R[0]) ; i++)
@@ -272,7 +272,7 @@ TEST(gdbRemote, gdbRemoteSetRegisters_SendsSetRegistersCommandAndReceivesExpecte
     mockCommInitReceiveData(appendChecksums("+$OK#"));
     fillContextRegistersWithAscendingValues();
     m_context.xPSR = 0x12345678;
-    
+
     gdbRemoteSetRegisters(&m_context);
 
     CHECK( mockCommDoesTransmittedDataEqual(appendChecksums("$G"
@@ -300,7 +300,7 @@ TEST(gdbRemote, gdbRemoteSetRegisters_ThrowsExceptionIfResponseIsNotOk)
     mockCommInitReceiveData(appendChecksums("+$E01#"));
     fillContextRegistersWithAscendingValues();
     m_context.xPSR = 0x12345678;
-    
+
     __try_and_catch( gdbRemoteSetRegisters(&m_context) );
 
     CHECK_EQUAL(badResponseException, getExceptionCode());
@@ -330,7 +330,7 @@ TEST(gdbRemote, gdbRemoteReadMemory_SendsReadMemoryCommandAndParseOneByteRespons
 {
     uint8_t buffer[1] = { 0xff };
     mockCommInitReceiveData(appendChecksums("+$a5#"));
-    
+
     gdbRemoteReadMemory(0x10000000, buffer, 1);
 
     CHECK( mockCommDoesTransmittedDataEqual(appendChecksums("$m10000000,01#+")) );
@@ -341,7 +341,7 @@ TEST(gdbRemote, gdbRemoteReadMemory_SendsReadMemoryCommandAndParseFourByteRespon
 {
     uint32_t buffer = 0xFFFFFFFF;
     mockCommInitReceiveData(appendChecksums("+$78563412#"));
-    
+
     gdbRemoteReadMemory(0x10000004, &buffer, sizeof(buffer));
 
     CHECK( mockCommDoesTransmittedDataEqual(appendChecksums("$m10000004,04#+")) );
@@ -352,9 +352,9 @@ TEST(gdbRemote, gdbRemoteReadMemory_ThrowsExceptionIfResponseTooShort)
 {
     uint32_t buffer = 0xFFFFFFFF;
     mockCommInitReceiveData(appendChecksums("+$785634#"));
-    
+
     __try_and_catch( gdbRemoteReadMemory(0x10000004, &buffer, sizeof(buffer)) );
-    
+
     CHECK_EQUAL(bufferOverrunException, getExceptionCode());
 }
 
@@ -363,9 +363,9 @@ TEST(gdbRemote, gdbRemoteReadMemory_ThrowsExceptionIfResponseTooShort)
 TEST(gdbRemote, gdbRemoteWriteMemory_SendsWriteCommandAndReceivesExpectedOkResult)
 {
     uint8_t data = 0xa5;
-    
+
     mockCommInitReceiveData(appendChecksums("+$OK#"));
-    
+
     gdbRemoteWriteMemory(0x10000000, &data, sizeof(data));
 
     CHECK( mockCommDoesTransmittedDataEqual(appendChecksums("$M10000000,01:a5#+")) );
@@ -374,9 +374,9 @@ TEST(gdbRemote, gdbRemoteWriteMemory_SendsWriteCommandAndReceivesExpectedOkResul
 TEST(gdbRemote, gdbRemoteWriteMemory_Sends4ByteWriteCommandAndReceivesExpectedOkResult)
 {
     uint32_t data = 0x12345678;
-    
+
     mockCommInitReceiveData(appendChecksums("+$OK#"));
-    
+
     gdbRemoteWriteMemory(0x10000004, &data, sizeof(data));
 
     CHECK( mockCommDoesTransmittedDataEqual(appendChecksums("$M10000004,04:78563412#+")) );
@@ -385,9 +385,9 @@ TEST(gdbRemote, gdbRemoteWriteMemory_Sends4ByteWriteCommandAndReceivesExpectedOk
 TEST(gdbRemote, gdbRemoteWriteMemory_ThrowsExceptionIfResponseIsNotOk)
 {
     uint32_t data = 0x12345678;
-    
+
     mockCommInitReceiveData(appendChecksums("+$E01#"));
-    
+
     __try_and_catch( gdbRemoteWriteMemory(0x10000004, &data, sizeof(data)) );
 
     CHECK_EQUAL(badResponseException, getExceptionCode());
@@ -399,7 +399,7 @@ TEST(gdbRemote, gdbRemoteWriteMemory_ThrowsExceptionIfResponseIsNotOk)
 TEST(gdbRemote, gdbRemoteSingleStep_SendsStepCommandAndReceivesExpectedTResult)
 {
     mockCommInitReceiveData(appendChecksums("+$T05#"));
-    
+
     int signal = gdbRemoteSingleStep();
 
     CHECK( mockCommDoesTransmittedDataEqual(appendChecksums("$s#+")) );
@@ -409,10 +409,10 @@ TEST(gdbRemote, gdbRemoteSingleStep_SendsStepCommandAndReceivesExpectedTResult)
 TEST(gdbRemote, gdbRemoteSingleStep_SkipOutputResponses)
 {
     char outputPacket[16];
-    
+
     strcpy(outputPacket, appendChecksums("+$Off#"));
     mockCommInitReceiveData(outputPacket, appendChecksums("$T05#"));
-    
+
     int signal = gdbRemoteSingleStep();
 
     CHECK( mockCommDoesTransmittedDataEqual(appendChecksums("$s#++")) );
@@ -422,7 +422,7 @@ TEST(gdbRemote, gdbRemoteSingleStep_SkipOutputResponses)
 TEST(gdbRemote, gdbRemoteSingleStep_ThrowsExceptionIfResponseIsNotTPacket)
 {
     mockCommInitReceiveData(appendChecksums("+$S01#"));
-    
+
     __try_and_catch( gdbRemoteSingleStep() );
 
     CHECK_EQUAL(badResponseException, getExceptionCode());

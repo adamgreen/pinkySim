@@ -36,7 +36,7 @@ static inline int HexCharToNibble(unsigned char HexChar)
     {
         return HexChar - '0';
     }
-    
+
     __throw(invalidHexDigitException);
 }
 

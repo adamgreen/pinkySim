@@ -75,7 +75,7 @@ void mockSock_Init(size_t sendDataBufferSize)
     memset(g_recvReturnValues, 0, sizeof(g_recvReturnValues));
     g_pRecvCurr = g_pRecvEnd = NULL;
     g_sendCallToFail = 0;
-    
+
     g_pSendStart = malloc(sendDataBufferSize + 1);
     g_pSendCurr = g_pSendStart;
     g_pSendEnd = g_pSendStart + sendDataBufferSize;
@@ -186,7 +186,7 @@ static ssize_t mock_recv(int socket, void *buffer, size_t length, int flags)
 {
     ssize_t bytesLeft = g_pRecvEnd - g_pRecvCurr;
     ssize_t size = popRecvReturnValue();
-    
+
     assert (size <= bytesLeft && size <= (ssize_t)length);
     if (size > 0)
     {
@@ -209,7 +209,7 @@ static ssize_t mock_send(int socket, const void *buffer, size_t length, int flag
 {
     size_t bytesLeft = g_pSendEnd - g_pSendCurr;
     size_t bytesToCopy = length < bytesLeft ? length : bytesLeft;
-    
+
     if (g_sendCallToFail)
     {
         if (--g_sendCallToFail == 0)
@@ -217,6 +217,6 @@ static ssize_t mock_send(int socket, const void *buffer, size_t length, int flag
     }
     memcpy(g_pSendCurr, buffer, bytesToCopy);
     g_pSendCurr += bytesToCopy;
-    
+
     return (ssize_t)length;
 }

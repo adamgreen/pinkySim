@@ -23,7 +23,7 @@ typedef struct IMemoryVTable
     __throws uint32_t (* read32)(IMemory* pThis, uint32_t address);
     __throws uint16_t (* read16)(IMemory* pThis, uint32_t address);
     __throws uint8_t  (* read8)(IMemory* pThis, uint32_t address);
-    
+
     __throws void (* write32)(IMemory* pThis, uint32_t address, uint32_t value);
     __throws void (* write16)(IMemory* pThis, uint32_t address, uint16_t value);
     __throws void (* write8)(IMemory* pThis, uint32_t address, uint8_t value);

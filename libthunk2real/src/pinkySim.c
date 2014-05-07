@@ -24,11 +24,11 @@ static int wasBKPT(PinkySimContext* pContext);
 int pinkySimStep(PinkySimContext* pContext)
 {
     int signal;
-    
+
     gdbRemoteSetRegisters(pContext);
     signal = gdbRemoteSingleStep();
     gdbRemoteGetRegisters(pContext);
-    
+
     switch (signal)
     {
     case SIGSEGV:
@@ -51,7 +51,7 @@ static int wasUndefinedInstruction(PinkySimContext* pContext)
 {
     static const uint16_t undefinstrBit = (1 << 0);
     uint16_t              usageFaultStatusRegister;
-    
+
     gdbRemoteReadMemory(0xE000ED2A, &usageFaultStatusRegister, sizeof(usageFaultStatusRegister));
     if (usageFaultStatusRegister & undefinstrBit)
         return 1;
@@ -71,10 +71,10 @@ static int wasSVC(PinkySimContext* pContext)
 {
     uint32_t pc = pContext->pc;
     uint16_t svcHandlerAddress = IMemory_Read32(pContext->pMemory, 0x2c) & ~1;
-    
+
     if (pc != svcHandlerAddress)
         return 0;
-        
+
     /* Is SVC so step out of handler. */
     gdbRemoteSingleStep();
     gdbRemoteGetRegisters(pContext);
@@ -85,10 +85,10 @@ static int wasBKPT(PinkySimContext* pContext)
 {
     uint32_t pc = pContext->pc;
     uint16_t instr;
-    
+
     if (pc < 0x10000000 || pc >= 0x10008000)
         return 0;
-        
+
     instr = IMemory_Read16(pContext->pMemory, pc);
     if ((instr & 0xFF00) == 0xBE00)
         // BKPT call

@@ -21,7 +21,7 @@
     {
         uint32_t words[2] = { 0x01234567, 0x89abcdef };
         uint32_t word;
-    
+
         word = *(uint32_t*)((char*)words + 1);
         printf("word = %08lx\n", word);
     }
@@ -56,7 +56,7 @@ static void configureHighestMpuRegionToAccessAllMemoryWithNoCaching(void)
     static const uint32_t regionSizeAt4GB = 31 << MPU_RASR_SIZE_SHIFT; /* 4GB = 2^(31+1) */
     static const uint32_t regionEnable    = MPU_RASR_ENABLE;
     static const uint32_t regionSizeAndAttributes = regionReadWrite | regionSizeAt4GB | regionEnable;
-    
+
     prepareToAccessMPURegion(getHighestMPUDataRegionIndex());
     setMPURegionAddress(regionToStartAtAddress0);
     setMPURegionAttributeAndSize(regionSizeAndAttributes);
@@ -65,19 +65,19 @@ static void configureHighestMpuRegionToAccessAllMemoryWithNoCaching(void)
 static void disableWriteCaching()
 {
     disableMPU();
-    configureHighestMpuRegionToAccessAllMemoryWithNoCaching();    
+    configureHighestMpuRegionToAccessAllMemoryWithNoCaching();
     enableMPUWithHardAndNMIFaults();
 }
 
 
-int main() 
+int main()
 {
     disallowUnalignedAccesses();
     disableWriteCaching();
 
     attemptUnalignedAccess();
     attemptMemoryWriteFault();
-    
+
     for (;;)
     {
         __debugbreak();

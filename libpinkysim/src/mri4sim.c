@@ -55,7 +55,7 @@
   <reg name="xpsr" bitsize="32" regnum="25"/>
 </feature>
 */
-static const char g_targetXML[] = 
+static const char g_targetXML[] =
     "<?xml version=\"1.0\"?>\n"
     "<!DOCTYPE feature SYSTEM \"gdb-target.dtd\">\n"
     "<target>\n"
@@ -116,7 +116,7 @@ __throws void mri4simInit(IMemory* pMem)
     g_context.pMemory = pMem;
     g_singleStepping = 0;
     g_memoryFaultEncountered = 0;
-    
+
     __mriInit("");
 }
 
@@ -147,7 +147,7 @@ static int shouldInterruptRun(PinkySimContext* pContext)
         g_singleStepping--;
     else if (g_singleStepping == 1)
         return PINKYSIM_RUN_SINGLESTEP;
-    
+
     if (MemorySim_WasWatchpointEncountered(g_context.pMemory))
         return PINKYSIM_RUN_WATCHPOINT;
 
@@ -163,7 +163,7 @@ static int isExitSemihost(void)
 
     if (g_runResult != PINKYSIM_STEP_BKPT)
         return FALSE;
-        
+
     __try
     {
         currentInstruction = getFirstHalfWordOfCurrentInstruction();
@@ -311,7 +311,7 @@ void Platform_CommWaitForReceiveDataToStop(void)
 uint8_t Platform_DetermineCauseOfException(void)
 {
     uint8_t signal = SIGSTOP;
-    
+
     switch (g_runResult)
     {
     case PINKYSIM_STEP_UNDEFINED:
@@ -332,7 +332,7 @@ uint8_t Platform_DetermineCauseOfException(void)
         signal = SIGINT;
         break;
     }
-    
+
     return signal;
 }
 
@@ -386,7 +386,7 @@ void Platform_SetProgramCounter(uint32_t newPC)
 void Platform_AdvanceProgramCounterToNextInstruction(void)
 {
     uint16_t  firstWordOfCurrentInstruction;
-    
+
     __try
     {
         firstWordOfCurrentInstruction = getFirstHalfWordOfCurrentInstruction();
@@ -397,7 +397,7 @@ void Platform_AdvanceProgramCounterToNextInstruction(void)
         clearExceptionCode();
         return;
     }
-    
+
     if (isInstruction32Bit(firstWordOfCurrentInstruction))
     {
         /* 32-bit Instruction. */
@@ -413,8 +413,8 @@ void Platform_AdvanceProgramCounterToNextInstruction(void)
 static int isInstruction32Bit(uint16_t firstWordOfInstruction)
 {
     uint16_t maskedOffUpper5BitsOfWord = firstWordOfInstruction & 0xF800;
-    
-    /* 32-bit instructions start with 0b11101, 0b11110, 0b11111 according to page A5-152 of the 
+
+    /* 32-bit instructions start with 0b11101, 0b11110, 0b11111 according to page A5-152 of the
        ARMv7-M Architecture Manual. */
     return  (maskedOffUpper5BitsOfWord == 0xE800 ||
              maskedOffUpper5BitsOfWord == 0xF000 ||
@@ -454,7 +454,7 @@ static void writeBytesToBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteCo
 {
     uint8_t* pByte = (uint8_t*)pBytes;
     size_t   i;
-    
+
     for (i = 0 ; i < byteCount ; i++)
         Buffer_WriteByteAsHex(pBuffer, *pByte++);
 }
@@ -475,7 +475,7 @@ static void readBytesFromBufferAsHex(Buffer* pBuffer, void* pBytes, size_t byteC
 {
     uint8_t* pByte = (uint8_t*)pBytes;
     size_t   i;
-    
+
     for (i = 0 ; i < byteCount; i++)
         *pByte++ = Buffer_ReadByteAsHex(pBuffer);
 }
@@ -507,7 +507,7 @@ const char* Platform_GetTargetXml(void)
 __throws void Platform_SetHardwareBreakpoint(uint32_t address, uint32_t kind)
 {
     uint32_t size;
-    
+
     switch (kind)
     {
     case 2:
@@ -521,7 +521,7 @@ __throws void Platform_SetHardwareBreakpoint(uint32_t address, uint32_t kind)
         __mriExceptionCode = invalidArgumentException;
         return;
     }
-    
+
     __try
         MemorySim_SetHardwareBreakpoint(g_context.pMemory, address, size);
     __catch
@@ -532,7 +532,7 @@ __throws void Platform_SetHardwareBreakpoint(uint32_t address, uint32_t kind)
 __throws void Platform_ClearHardwareBreakpoint(uint32_t address, uint32_t kind)
 {
     uint32_t size;
-    
+
     switch (kind)
     {
     case 2:
@@ -546,7 +546,7 @@ __throws void Platform_ClearHardwareBreakpoint(uint32_t address, uint32_t kind)
         __mriExceptionCode = invalidArgumentException;
         return;
     }
-    
+
     __try
         MemorySim_ClearHardwareBreakpoint(g_context.pMemory, address, size);
     __catch
@@ -565,7 +565,7 @@ __throws void Platform_SetHardwareWatchpoint(uint32_t address, uint32_t size, Pl
 static WatchpointType convertWatchpointTypeToMemorySimType(PlatformWatchpointType type)
 {
     WatchpointType simType = 0;
-    
+
     switch (type)
     {
     case MRI_PLATFORM_WRITE_WATCHPOINT:
@@ -594,7 +594,7 @@ __throws void Platform_ClearHardwareWatchpoint(uint32_t address, uint32_t size, 
 PlatformInstructionType Platform_TypeOfCurrentInstruction(void)
 {
     uint16_t currentInstruction;
-    
+
     __try
     {
         currentInstruction = getFirstHalfWordOfCurrentInstruction();
@@ -605,7 +605,7 @@ PlatformInstructionType Platform_TypeOfCurrentInstruction(void)
         clearExceptionCode();
         return MRI_PLATFORM_INSTRUCTION_OTHER;
     }
-    
+
     if (isInstructionNewlibSemihostBreakpoint(currentInstruction))
         return MRI_PLATFORM_INSTRUCTION_NEWLIB_SEMIHOST_CALL;
     else if (isInstructionHardcodedBreakpoint(currentInstruction))
@@ -624,11 +624,11 @@ static int isInstructionNewlibSemihostBreakpoint(uint16_t instruction)
     static const uint16_t breakpointOpcode = 0xbe00;
     static const uint16_t opcodeMask       = 0xff00;
     static const uint16_t immediateMask    = 0x00ff;
-    
+
     if ((instruction & opcodeMask) == breakpointOpcode)
     {
         uint16_t immediate = instruction & immediateMask;
-        
+
         return immediate >= NEWLIB_MIN && immediate <= NEWLIB_MAX;
     }
     return FALSE;
@@ -645,12 +645,12 @@ static int isInstructionHardcodedBreakpoint(uint16_t instruction)
 PlatformSemihostParameters Platform_GetSemihostCallParameters(void)
 {
     PlatformSemihostParameters parameters;
-    
+
     parameters.parameter1 = g_context.R[0];
     parameters.parameter2 = g_context.R[1];
     parameters.parameter3 = g_context.R[2];
     parameters.parameter4 = g_context.R[3];
-    
+
     return parameters;
 }
 

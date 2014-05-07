@@ -68,7 +68,7 @@ static int mock_fseek(FILE* stream, long offset, int whence)
         g_fseekCallsToPass--;
         return fseek(stream, offset, whence);
     }
-    
+
     return g_fseekFailureReturn;
 }
 

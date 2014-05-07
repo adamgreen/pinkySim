@@ -25,7 +25,7 @@ static const char* testFilename = "FileFailureInjectTestCpp.S";
 TEST_GROUP(FileFailureInject)
 {
     FILE* m_pFile;
-    
+
     void setup()
     {
         m_pFile = NULL;
@@ -37,12 +37,12 @@ TEST_GROUP(FileFailureInject)
             fclose(m_pFile);
         remove(testFilename);
     }
-    
+
     void openFile()
     {
         m_pFile = hook_fopen(testFilename, "wb");
     }
-    
+
     void createSmallTestFile()
     {
         openFile();
@@ -124,7 +124,7 @@ TEST(FileFailureInject, FailFWrite)
 TEST(FileFailureInject, SuccessfulFRead)
 {
     char buffer[16];
-    
+
     createSmallTestFile();
     LONGS_EQUAL(1, hook_fread(buffer, 1, 1, m_pFile));
 }
@@ -132,7 +132,7 @@ TEST(FileFailureInject, SuccessfulFRead)
 TEST(FileFailureInject, FailFRead)
 {
     char buffer[16];
-    
+
     createSmallTestFile();
     freadFail(0);
     LONGS_EQUAL(0, hook_fread(buffer, 1, 1, m_pFile));
@@ -142,7 +142,7 @@ TEST(FileFailureInject, FailFRead)
 TEST(FileFailureInject, FailSecondOutOfThreeFReads)
 {
     char buffer[16];
-    
+
     createSmallTestFile();
     freadFail(0);
     freadToFail(2);

@@ -37,7 +37,7 @@ static void sendGetRegistersCommand(void)
     Buffer   buffer;
     Packet   packet;
     char     data[512];
-    
+
     bufferInit(&buffer, data, sizeof(data));
     bufferWriteString(&buffer, "g");
     bufferSetEndOfBuffer(&buffer);
@@ -115,7 +115,7 @@ static void sendReadMemoryCommand(uint32_t address, uint32_t readSize)
     Buffer   buffer;
     Packet   packet;
     char     data[512];
-    
+
     bufferInit(&buffer, data, sizeof(data));
     bufferWriteChar(&buffer, 'm');
     bufferWriteUIntegerAsHex(&buffer, address);
@@ -163,7 +163,7 @@ static void sendSingleStepCommand(void)
     Buffer   buffer;
     Packet   packet;
     char     data[512];
-    
+
     bufferInit(&buffer, data, sizeof(data));
     bufferWriteString(&buffer, "s");
     bufferSetEndOfBuffer(&buffer);
@@ -179,13 +179,13 @@ static int parseSingleStepResponse(void)
 
     bufferInit(&buffer, data, sizeof(data));
     packetGet(&packet, &buffer);
-    
+
     while ('O' == (packetType = bufferReadChar(&buffer)))
     {
         bufferInit(&buffer, data, sizeof(data));
         packetGet(&packet, &buffer);
     }
-    
+
     if (packetType == 'T')
         return (int)bufferReadByteAsHex(&buffer);
     else

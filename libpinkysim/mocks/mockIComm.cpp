@@ -33,29 +33,29 @@ public:
     {
         m_pStart = m_pEnd = m_pCurr = NULL;
     }
-    
+
     void init(const char* pString)
     {
         m_pStart = pString;
         m_pCurr = pString;
         m_pEnd = pString + strlen(pString);
     }
-    
+
     char getNextChar()
     {
         char nextChar = 0;
-        
+
         assert (m_pCurr < m_pEnd);
         if (m_pCurr < m_pEnd)
             nextChar = *m_pCurr++;
         return nextChar;
     }
-    
+
     int bytesLeft()
     {
         return m_pEnd - m_pCurr;
     }
-    
+
 protected:
     const char* m_pStart;
     const char* m_pEnd;
@@ -120,7 +120,7 @@ static int hasReceiveData(IComm* pComm)
             g_receiveIndex++;
         return FALSE;
     }
-    
+
     return TRUE;
 }
 
@@ -228,11 +228,11 @@ static size_t countPoundSigns(const char* p)
 static void copyChecksummedData(char* pDest, const char* pSrc)
 {
     char checksum;
-    
+
     while (*pSrc)
     {
         char curr = *pSrc++;
-        
+
         *pDest++ = curr;
         switch (curr)
         {

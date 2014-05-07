@@ -104,7 +104,7 @@ static __INLINE void setMPUControlValue(uint32_t newControlValue)
 {
     if (isMPUNotPresent())
         return;
-    
+
     MPU->CTRL = newControlValue;
     __DSB();
     __ISB();
@@ -114,7 +114,7 @@ static __INLINE void disableMPU(void)
 {
     if (isMPUNotPresent())
         return;
-    
+
     MPU->CTRL &= ~MPU_CTRL_ENABLE;
     __DSB();
     __ISB();
@@ -124,7 +124,7 @@ static __INLINE void enableMPU(void)
 {
     if (isMPUNotPresent())
         return;
-    
+
     MPU->CTRL |= MPU_CTRL_ENABLE;
     __DSB();
     __ISB();
@@ -134,7 +134,7 @@ static __INLINE void enableMPUWithHardAndNMIFaults(void)
 {
     if (isMPUNotPresent())
         return;
-    
+
     MPU->CTRL |= MPU_CTRL_ENABLE | MPU_CTRL_HFNMIENA;
     __DSB();
     __ISB();

@@ -37,7 +37,7 @@ TEST(blx, UseLowestRegisterToBranchToEvenAddressWhichClearsThumbModeToCauseHardF
     setExpectedRegisterValue(PC, INITIAL_PC + 16);
     setExpectedRegisterValue(LR, (INITIAL_PC + 2) | 1);
     pinkySimStep(&m_context);
-    
+
     const uint16_t NOP = 0xBF00;
     SimpleMemory_SetMemory(m_context.pMemory, INITIAL_PC + 16, NOP, READ_ONLY);
     setExpectedStepReturn(PINKYSIM_STEP_HARDFAULT);

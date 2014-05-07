@@ -1,17 +1,14 @@
-/* Copyright 2014 Adam Green (http://mbed.org/users/AdamGreen/)
+/*  Copyright (C) 2014  Adam Green (https://github.com/adamgreen)
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Lesser General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Lesser General Public License for more details.
-
-   You should have received a copy of the GNU Lesser General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.   
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 */
 #include <string.h>
 
@@ -38,7 +35,7 @@ TEST_GROUP(mockIComm)
 TEST(mockIComm, IComm_HasRecieveData_Empty)
 {
     static const char emptyData[] = "";
-    
+
     mockIComm_InitReceiveData(emptyData);
     CHECK_FALSE( IComm_HasReceiveData(mockIComm_Get()) );
 }
@@ -46,7 +43,7 @@ TEST(mockIComm, IComm_HasRecieveData_Empty)
 TEST(mockIComm, IComm_HasRecieveData_NotEmpty)
 {
     static const char testData[] = "$";
-    
+
     mockIComm_InitReceiveData(testData);
     CHECK_TRUE( IComm_HasReceiveData(mockIComm_Get()) );
 }
@@ -54,7 +51,7 @@ TEST(mockIComm, IComm_HasRecieveData_NotEmpty)
 TEST(mockIComm, IComm_HasRecieveData_NotEmpty_ButDelayResponseByTwoCalls)
 {
     static const char testData[] = "$";
-    
+
     mockIComm_InitReceiveData(testData);
     mockIComm_DelayReceiveData(2);
     CHECK_FALSE( IComm_HasReceiveData(mockIComm_Get()) );
@@ -65,7 +62,7 @@ TEST(mockIComm, IComm_HasRecieveData_NotEmpty_ButDelayResponseByTwoCalls)
 TEST(mockIComm, IComm_RecieveChar_NotEmpty)
 {
     static const char testData[] = "$";
-    
+
     mockIComm_InitReceiveData(testData);
     LONGS_EQUAL( '$', IComm_ReceiveChar(mockIComm_Get()) );
 }
@@ -76,7 +73,7 @@ TEST(mockIComm, IComm_HasReceiveData_SwitchToEmptyGdbPacket)
     static const char emptyGdbPacket[] = "$#00";
     char              buffer[16];
     char*             p = buffer;
-    
+
     mockIComm_InitReceiveData(emptyData);
     CHECK_FALSE( IComm_HasReceiveData(mockIComm_Get()) );
     CHECK_TRUE( IComm_HasReceiveData(mockIComm_Get()) );
@@ -95,7 +92,7 @@ TEST(mockIComm, IComm_ReceiveChar_SwitchToEmptyGdbPacket)
     static const char emptyGdbPacket[] = "$#00";
     char              buffer[16];
     char*             p = buffer;
-    
+
     mockIComm_InitReceiveData(emptyData);
 
     do
@@ -103,7 +100,7 @@ TEST(mockIComm, IComm_ReceiveChar_SwitchToEmptyGdbPacket)
         *p++ = (char)IComm_ReceiveChar(mockIComm_Get());
     }
     while (IComm_HasReceiveData(mockIComm_Get()));
-    
+
     LONGS_EQUAL ( strlen(emptyGdbPacket), (p - buffer) );
     CHECK( 0 == memcmp(emptyGdbPacket, buffer, strlen(emptyGdbPacket)) );
 }
@@ -113,9 +110,9 @@ TEST(mockIComm, mockIComm_ReceiveEmptyGdbPacket)
     static const char emptyGdbPacket[] = "$#00";
     char              buffer[16];
     char*             p = buffer;
-    
+
     mockIComm_InitReceiveData(emptyGdbPacket);
-    
+
     while (IComm_HasReceiveData(mockIComm_Get()))
     {
         *p++ = (char)IComm_ReceiveChar(mockIComm_Get());
@@ -130,9 +127,9 @@ TEST(mockIComm, mockIComm_Receive_OneGdbPacketAndSwitchToEmptyPacket)
     static const char emptyGdbPacket[] = "$#00";
     char              buffer[16];
     char*             p = buffer;
-    
+
     mockIComm_InitReceiveData(packet1);
-    
+
     while (IComm_HasReceiveData(mockIComm_Get()))
     {
         *p++ = (char)IComm_ReceiveChar(mockIComm_Get());
@@ -157,9 +154,9 @@ TEST(mockIComm, mockIComm_Receive_TwoGdbPackets)
     static const char packet2[] = "$packet2#ff";
     char              buffer[16];
     char*             p = buffer;
-    
+
     mockIComm_InitReceiveData(packet1, packet2);
-    
+
     while (IComm_HasReceiveData(mockIComm_Get()))
     {
         *p++ = (char)IComm_ReceiveChar(mockIComm_Get());
@@ -185,9 +182,9 @@ TEST(mockIComm, mockIComm_Receive_OneGdbPacketsWithCalculatedCRCAndSwitchToEmpty
     static const char checksummedPacket1[] = "$packet1#a9";
     char              buffer[16];
     char*             p = buffer;
-    
+
     mockIComm_InitReceiveChecksummedData(packet1);
-    
+
     while (IComm_HasReceiveData(mockIComm_Get()))
     {
         *p++ = (char)IComm_ReceiveChar(mockIComm_Get());
@@ -214,9 +211,9 @@ TEST(mockIComm, mockIComm_Receive_TwoGdbPacketsWithCalculatedCRC)
     static const char checksummedPacket2[] = "$packet2#aa";
     char              buffer[16];
     char*             p = buffer;
-    
+
     mockIComm_InitReceiveChecksummedData(packet1, packet2);
-    
+
     while (IComm_HasReceiveData(mockIComm_Get()))
     {
         *p++ = (char)IComm_ReceiveChar(mockIComm_Get());
