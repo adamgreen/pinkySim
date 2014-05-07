@@ -11,11 +11,9 @@
     GNU General Public License for more details.
 */
 #include <assert.h>
+#include <common.h>
 #include <string.h>
 #include "mockSock.h"
-
-
-#define ARRAY_SIZE(X) sizeof(X)/sizeof(X[0])
 
 
 int             g_sockReturn;

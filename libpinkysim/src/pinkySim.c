@@ -11,11 +11,8 @@
     GNU General Public License for more details.
 */
 #include <assert.h>
-#include "pinkySim.h"
-
-/* Boolean values */
-#define FALSE 0
-#define TRUE  1
+#include <common.h>
+#include <pinkySim.h>
 
 /* Fields decoded from instructions. */
 typedef struct Fields

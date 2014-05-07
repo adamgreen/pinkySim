@@ -14,6 +14,7 @@
 // Include headers from C modules under test.
 extern "C"
 {
+    #include <common.h>
     #include <MemorySim.h>
     #include <mri4sim.h>
     #include <pinkySim.h>
@@ -26,9 +27,6 @@ extern "C"
 // Include C++ headers for test harness.
 #include "CppUTest/TestHarness.h"
 #include <mockIComm.h>
-
-#define FALSE 0
-#define TRUE  1
 
 // Initial values for special registers.
 #define INITIAL_SP 0x10008000

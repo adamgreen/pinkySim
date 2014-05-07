@@ -15,6 +15,7 @@
 // Include headers from C modules under test.
 extern "C"
 {
+    #include <common.h>
     #include <FileFailureInject.h>
     #include <MallocFailureInject.h>
     #include <pinkySimCommandLine.h>
@@ -24,9 +25,6 @@ extern "C"
 
 // Include C++ headers for test harness.
 #include "CppUTest/TestHarness.h"
-
-
-#define ARRAY_SIZE(X) (sizeof(X)/sizeof(X[0]))
 
 
 static const char     g_usageString[] = "Usage:";

@@ -11,14 +11,11 @@
     GNU General Public License for more details.
 */
 #include <assert.h>
+#include <common.h>
 #include <mockSock.h>
 #include <netdb.h>
 #include <SocketIComm.h>
 #include <string.h>
-
-
-#define FALSE 0
-#define TRUE  1
 
 
 /* Implementation of IComm interface. */

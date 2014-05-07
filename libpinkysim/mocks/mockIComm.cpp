@@ -12,15 +12,13 @@
 */
 extern "C"
 {
+#include <common.h>
 #include <mri4sim.h>
 }
 #include <assert.h>
 #include "mockIComm.h"
 
 
-#define FALSE 0
-#define TRUE  1
-#define ARRAY_SIZE(X) (sizeof(X)/sizeof(X[0]))
 #define EXTRACT_HI_NIBBLE(X) (((X) >> 4) & 0xF)
 #define EXTRACT_LO_NIBBLE(X) ((X) & 0xF)
 

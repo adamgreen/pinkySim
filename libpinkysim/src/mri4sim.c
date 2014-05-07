@@ -10,6 +10,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 */
+#include <common.h>
 #include <gdb_console.h>
 #include <IMemory.h>
 #include <signal.h>
@@ -22,10 +23,6 @@
 #include <printfSpy.h>
 #include <semihost.h>
 #include "NewlibPriv.h"
-
-
-#define FALSE 0
-#define TRUE  1
 
 
 /* NOTE: This is the original version of the following XML which has had things stripped to reduce the amount of
