@@ -1,11 +1,12 @@
 /* Linker script for ARMv6-M binaries which can be executed by pinkySim. */
 
 /* Linker script to configure memory regions. */
-/* pinkySim can autodetect RAM size if top of stack is less than 256MB so make it 256MB - 1 word. */
+/* pinkySim can autodetect RAM size if top of stack is less than 256MB so make it 256MB - 32 bytes. */
+/* The 32 bytes is used since GDB prefers a 32-byte aligned top of stack when it attempts to backtrace. */
 MEMORY
 {
   FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 256M
-  RAM (rwx) : ORIGIN = 0x10000000, LENGTH = 256M - 4
+  RAM (rwx) : ORIGIN = 0x10000000, LENGTH = 256M - 32
 }
 
 /* Linker script to place sections and symbol values. Should be used together
