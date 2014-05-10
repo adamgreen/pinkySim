@@ -1,6 +1,14 @@
 ==Work in Progress!
 
 
+==Table of Contents
+[[https://github.com/adamgreen/pinkySim#overview | Overview]] \\
+[[https://github.com/adamgreen/pinkySim#how-to-clone | How to Clone]] \\
+[[https://github.com/adamgreen/pinkySim#how-to-build | How to Build]] \\
+[[https://github.com/adamgreen/pinkySim#unit-test-validation | Unit Test Validation]] \\
+[[https://github.com/adamgreen/pinkySim#important-notes | Important Notes]] \\
+
+
 ==Overview
 pinkySim is an ARMv6-M instruction set simulator. It was developed to facilitate the use of Test Driven Development,
 TDD, on future projects where the code under test will be written in assembly language.  With this goal in mind it has
