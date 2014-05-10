@@ -51,6 +51,9 @@ level targets:
   There is a [[https://github.com/adamgreen/pinkySim#unit-test-validation | section below]] related to the unit test
   validation suite run by specifying this target.
 
+Example:\\
+{{{make all}}} - Build pinkySim.
+
 The makefile is constructed in such a way that all dependencies for any single target within the build system are known
 by GNU Make, including header file dependencies.  This means that the user can specify a specific binary target on the
 make command line and it should successfully build it and all of its dependencies.
