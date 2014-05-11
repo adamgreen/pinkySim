@@ -5,6 +5,7 @@
 [[https://github.com/adamgreen/pinkySim#overview | Overview]] \\
 [[https://github.com/adamgreen/pinkySim#how-to-clone | How to Clone]] \\
 [[https://github.com/adamgreen/pinkySim#how-to-build | How to Build]] \\
+[[https://github.com/adamgreen/pinkySim#how-to-run | How to Run]] \\
 [[https://github.com/adamgreen/pinkySim#unit-test-validation | Unit Test Validation]] \\
 [[https://github.com/adamgreen/pinkySim#important-notes | Important Notes]] \\
 
@@ -91,6 +92,36 @@ for the **clean** target which shouldn't be combined with any others.
 All intermediate binaries (*.o and *.a) for code coverage runs are found in the gcov/obj and gcov/lib directories.  If
 you want to examine the line by line coverage results for a library like libpinkysim, you would find it in the
 gcov/LIBPINKYSIM_tests/ directory.
+
+
+
+==How to Run
+**Usage:**\\
+{{{pinkySim [--ram baseAddress size] [--flash baseAddress size] [--gdbPort tcpPortNumber] [--breakOnStart] imageFilename.bin [args]}}} \\
+
+
+{{{--ram}}} is used to specify an address range that should be treated as read-write.  More than one of these can be
+            specified on the command line to create multiple read-write memory regions.\\
+{{{--flash}}} is used to specify and address range that should be treated as read-only.  More than one of these can be
+              specified on the command line to create multiple read-only memory regions.\\
+{{{--gdbPort}}} can be used to override the default TCP/IP port of 3333 for listening to GDB connections.\\
+{{{--breakOnStart}}} can be used to have the simulator halt at the beginning of the reset handler and wait for GDB to
+                     connect.\\
+{{{imageFilename.bin}}} is the required name of the image to be loaded into memory starting at address 0x00000000.  By
+                        default a read-only memory region is created starting at address 0x00000000 and extends large
+                        enough to contain the whole image file.  A read-write section will be created based on the
+                        initial stack pointer found in the first word of the image file.  This section will start at the
+                        nearest 256MB page below this initial SP value and extend to the address just below this initial
+                        SP value. This behaviour can be overridden by specifying {{{--ram}}} and {{{--flash}}} options
+                        on the command line.  Execution will start at the address found in the second word of this
+                        image.\\
+{{{[args]}}} are optional arguments to be passed into program running under simulation.
+
+Examples:\\
+{{{pinkySim samples/CommandLine_Sample.bin arg1 arg2}}} - Simulates the CommandLine sample, passing in two arguments:
+                                                          arg1 and arg2.\\
+{{{pinkySim --breakOnStart samples/FileTest_Sample.bin}}} - Simulates the FileTest sample, halts at the beginning of
+                                                            Reset_Handler() and waits for GDB to be connected.
 
 
 
