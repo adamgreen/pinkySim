@@ -8,6 +8,7 @@
 [[https://github.com/adamgreen/pinkySim#how-to-run | How to Run]] \\
 [[https://github.com/adamgreen/pinkySim#unit-test-validation | Unit Test Validation]] \\
 [[https://github.com/adamgreen/pinkySim#important-notes | Important Notes]] \\
+[[https://github.com/adamgreen/pinkySim#samples | Samples]] \\
 
 
 ==Overview
@@ -160,3 +161,29 @@ Due to the intended use of this simulator, there are several ARMV6-M architectur
 * **Only runs in Privileged Thread mode:** The simulator doesn't support the switching of the processor into
   Unprivileged mode.  Since exceptions aren't supported, the processor can never enter Handler mode either.
 * **Main SP only:** The simulator doesn't support switching to the process stack pointer.
+
+
+
+==Samples
+The pinkySim project contains a few samples that can be built and executed on the simulator.
+
+|= Sample |= Description |
+|  CommandLine | Has a main() function which dumps the argv command line arguments passed into the sample via the pinkySim command line. Upon exit it returns argc, the command argument count, and this will be returned from pinkySim to the launching shell. |
+| StdIO | Writes text to stdout and reads input from stdin.  These reads and writes will be redirected to the GDB console if it is connected to pinkySim. Otherwise it uses the pinkySim console. |
+| FileTest | Performs file operations such as fopen(), fwrite(), fread(), etc. |
+
+The samples require that the [[https://launchpad.net/gcc-arm-embedded | GNU Tools for ARM Embedded Processors]] C/C++
+toolchain be installed and added to your PATH.  To build the samples, run the following commands from the Terminal /
+Command Prompt in the root directory of the pinkySim repository:
+{{{
+cd samples
+make all
+}}}
+
+The resulting binaries for simulation will be found in the samples directory.  The ELF, map, and disassembly for each sample can be found in the samples/obj directory.
+
+Key files used by the samples:
+| pinkySim.ld | Directs the linker to place code in a 256MB FLASH region starting at address 0x00000000 and variables in a 256MB (minus 32 bytes) RAM region staring at 0x10000000.  It also places the isr_vector array from libstartup/Reset.c at the beginning of FLASH where the simulator expects to find the initial stack pointer and reset address. |
+| libstartup/Reset.c | Contains the isr_vector array which contains the initial stack pointer value (pointing to the top of RAM) and the Reset_Handler function pointer.  It also contains the Reset_Handler() code which initializes the C runtime and then transfers control to the sample's main(). |
+| libstartup/NewlibRetarget.c | Contains the sys call implementations required by the newlib C standard library.  These sys calls are called from newlib when it needs to perform operations such as opening, reading, writing, and closing files on the target system. |
+| libstartup/SemihostThunks.s | These ARMV6-M assembly language thunks provide routines that can be called from the NewlibRetarget.c sys calls to transfer execution to pinkySim so that they can be performed on the host system.  A BKPT (breakpoint) instruction with a unique constant is used to signal pinkySim that a specific operation is being requested.  The include/NewlibSemihost.h header defines the BKPT operation constants supported by pinkySim. These thunks also take care of calculating the length of string arguments and setting {{{errno}}} upon return if an error was encountered by the host as it attempted to execute the sys call on behalf of the simulated program. |
