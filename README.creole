@@ -6,6 +6,7 @@
 [[https://github.com/adamgreen/pinkySim#how-to-clone | How to Clone]] \\
 [[https://github.com/adamgreen/pinkySim#how-to-build | How to Build]] \\
 [[https://github.com/adamgreen/pinkySim#how-to-run | How to Run]] \\
+[[https://github.com/adamgreen/pinkySim#how-to-debug | How to Debug]] \\
 [[https://github.com/adamgreen/pinkySim#unit-test-validation | Unit Test Validation]] \\
 [[https://github.com/adamgreen/pinkySim#important-notes | Important Notes]] \\
 [[https://github.com/adamgreen/pinkySim#samples | Samples]] \\
@@ -126,6 +127,85 @@ Examples:\\
 
 
 
+==How to Debug
+pinkySim has the ability to act as a GNU Debugger (GDB) remote target server.  By default pinkySim will listen on TCP/IP
+port 3333 for connections from GDB but the developer can override via the use of the {{{--gdbPort}}} command line option.
+Once GDB connects to pinkySim, it can debug ARMv6-M executables running in the simulator just like JTAG debugging on
+real hardware.  This includes debugging features like:
+* hardware breakpoints (PC memory is the only limit to number supported)
+* data watchpoints (PC memory is the only limit to number supported)
+* single stepping
+* halting of running/hung applications
+* accessing variables sitting in simulated memory
+* stdout/stderr/stdin redirection to/from the GDB console once attached
+* works with free [[https://launchpad.net/gcc-arm-embedded | GNU Tools for ARM Embedded Processors]]
+
+When launching a binary to run under the simulator, the {{{--breakOnStart}}} command line option can be specified to
+have the simulator halt execution at the very beginning of the Reset_Handler and wait for GDB to be attached.  This
+allows the developer to setup breakpoints and watchpoints before global constructors and main() are executed.  Here is
+an example of running pinkySim with the {{{--breakOnStart}}} option and the console output which results indicating that
+GDB needs to be attached:
+{{{
+/depots/pinkysim$ pinkySim --breakOnStart samples/FileTest_Sample.bin 
+
+Waiting for GDB to connect...
+}}}
+
+Now the developer can attach GDB to pinkySim by issuing a {{{target remote localhost:3333}}} command as seen in this
+example debug session:
+{{{
+/depots/pinkySim/samples$ arm-none-eabi-gdb obj/FileTest_Sample.elf
+GNU gdb (GNU Tools for ARM Embedded Processors) 7.6.0.20140228-cvs
+Copyright (C) 2013 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "--host=x86_64-apple-darwin --target=arm-none-eabi".
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>...
+Reading symbols from /depots/pinkySim/samples/obj/FileTest_Sample.elf...done.
+(gdb) target remote localhost:3333
+Remote debugging using localhost:3333
+Reset_Handler (argc=1, argv=0x1fffffdc) at libstartup/Reset.c:43
+43	{
+(gdb) list
+38	const uint32_t isr_vector[2] = { (uint32_t)__StackTop, (uint32_t)Reset_Handler };
+39	
+40	
+41	/* This function is the first thing executed after reset. It sets up the C runtime and then calls main(). */
+42	void Reset_Handler(int argc, const char** argv)
+43	{
+44	    int dataSize = (int)__data_end__ - (int)__data_start__;
+45	    int bssSize = (int)__bss_end__ - (int)__bss_start__;
+46	
+47	    memcpy(__data_start__, __etext, dataSize);
+(gdb) p argv[0]
+$1 = 0x1fffffc0 "samples/FileTest_Sample.bin"
+(gdb) break main
+Breakpoint 1 at 0xbc: file FileTest/main.c, line 19.
+(gdb) c
+Continuing.
+Note: automatically using hardware breakpoints for read-only addresses.
+
+Breakpoint 1, main () at FileTest/main.c:19
+19	{
+(gdb) list
+14	#include <stdio.h>
+15	#include <string.h>
+16	
+17	
+18	int main(void)
+19	{
+20	    static const char Filename[] = "foo.bar";
+21	    unsigned char     TestBuffer[256];
+22	    unsigned char     ReadBuffer[256];
+23	    size_t            i;
+(gdb) 
+}}}
+
+
+
 ==Unit Test Validation
 As pinkySim was developed, [[https://github.com/adamgreen/pinkySim/tree/master/libpinkysim/tests | corresponding unit tests]]
 were written as well.  However one major concern was that misinterpretations of the ARMv6-M instruction set description
@@ -146,6 +226,7 @@ GDB remote serial protocol.  To run this suite you must:
 * Build the tests.  This can be done by going to the root pinkySim directory on your machine and running
   {{{make test}}}.  This will not only build the tests but it will also detect your connected mbed device and
   automatically run the tests on it.
+
 
 
 ==Important Notes
