@@ -15,7 +15,7 @@
 #include <core.h>
 #include <errno.h>
 #include <MallocFailureInject.h>
-#include <mockReadWrite.h>
+#include <mockFileIo.h>
 #include <mri.h>
 #include <platforms.h>
 #include <semihost.h>

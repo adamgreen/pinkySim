@@ -88,19 +88,19 @@ static ssize_t mock_write(int fildes, const void *buf, size_t nbyte)
 }
 
 
-void mockReadWrite_SetReadData(const void* pvData, size_t dataSize)
+void mockFileIo_SetReadData(const void* pvData, size_t dataSize)
 {
     g_pReadStart = g_pReadCurr = (uint8_t*)pvData;
     g_pReadEnd = g_pReadStart + dataSize;
 }
 
-void mockReadWrite_SetReadToFail(int result, int err)
+void mockFileIo_SetReadToFail(int result, int err)
 {
     g_readResult = result;
     g_readError = err;
 }
 
-void mockReadWrite_CreateWriteBuffer(size_t bufferSize)
+void mockFileIo_CreateWriteBuffer(size_t bufferSize)
 {
     g_pStdOutStart = malloc(bufferSize + 1);
     g_pStdOutEnd = g_pStdOutStart + bufferSize;
@@ -110,19 +110,19 @@ void mockReadWrite_CreateWriteBuffer(size_t bufferSize)
     g_pStdErrCurr = g_pStdErrStart;
 }
 
-const char* mockReadWrite_GetStdOutData(void)
+const char* mockFileIo_GetStdOutData(void)
 {
     *g_pStdOutCurr = '\0';
     return g_pStdOutStart;
 }
 
-const char* mockReadWrite_GetStdErrData(void)
+const char* mockFileIo_GetStdErrData(void)
 {
     *g_pStdErrCurr = '\0';
     return g_pStdErrStart;
 }
 
-void mockReadWrite_Uninit(void)
+void mockFileIo_Uninit(void)
 {
     g_pReadStart = g_pReadCurr = g_pReadEnd = NULL;
     free(g_pStdOutStart);

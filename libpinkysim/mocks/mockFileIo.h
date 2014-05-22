@@ -11,8 +11,8 @@
     GNU General Public License for more details.
 */
 /* Module for spying on printf output from code under test. */
-#ifndef _MOCK_READ_WRITE_H
-#define _MOCK_READ_WRITE_H
+#ifndef _MOCK_FILE_IO_H
+#define _MOCK_FILE_IO_H
 
 #include <unistd.h>
 
@@ -28,12 +28,12 @@ extern ssize_t (*hook_write)(int fildes, const void *buf, size_t nbyte);
 #define write hook_write
 
 
-void        mockReadWrite_SetReadData(const void* pvData, size_t dataSize);
-void        mockReadWrite_SetReadToFail(int result, int err);
-void        mockReadWrite_CreateWriteBuffer(size_t bufferSize);
-const char* mockReadWrite_GetStdOutData(void);
-const char* mockReadWrite_GetStdErrData(void);
-void        mockReadWrite_Uninit(void);
+void        mockFileIo_SetReadData(const void* pvData, size_t dataSize);
+void        mockFileIo_SetReadToFail(int result, int err);
+void        mockFileIo_CreateWriteBuffer(size_t bufferSize);
+const char* mockFileIo_GetStdOutData(void);
+const char* mockFileIo_GetStdErrData(void);
+void        mockFileIo_Uninit(void);
 
 
-#endif /* _MOCK_READ_WRITE_H */
+#endif /* _MOCK_FILE_IO_H */

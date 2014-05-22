@@ -14,14 +14,14 @@
 // Include headers from C modules under test.
 extern "C"
 {
-    #include <mockReadWrite.h>
+    #include <mockFileIo.h>
 }
 
 // Include C++ headers for test harness.
 #include "CppUTest/TestHarness.h"
 
 
-TEST_GROUP(mockReadWrite)
+TEST_GROUP(mockFileIo)
 {
     void setup()
     {
@@ -29,19 +29,19 @@ TEST_GROUP(mockReadWrite)
 
     void teardown()
     {
-        mockReadWrite_Uninit();
+        mockFileIo_Uninit();
     }
 };
 
 
-TEST(mockReadWrite, ReadStdIn_SetupNoDataToRead_ShouldReturnZero)
+TEST(mockFileIo, ReadStdIn_SetupNoDataToRead_ShouldReturnZero)
 {
     char buffer[1];
     ssize_t result = read(STDIN_FILENO, buffer, sizeof(buffer));
     CHECK_EQUAL(0, result);
 }
 
-TEST(mockReadWrite, ReadRegularFile_ShouldReturnNegativeOne)
+TEST(mockFileIo, ReadRegularFile_ShouldReturnNegativeOne)
 {
     char buffer[1];
     ssize_t result = read(4, buffer, sizeof(buffer));
@@ -49,30 +49,30 @@ TEST(mockReadWrite, ReadRegularFile_ShouldReturnNegativeOne)
     CHECK_EQUAL(EBADF, errno);
 }
 
-TEST(mockReadWrite, ReadTwoBytes_SetupOneByteOfData_ShouldReturnOneByte)
+TEST(mockFileIo, ReadTwoBytes_SetupOneByteOfData_ShouldReturnOneByte)
 {
     char buffer[2] = {0xFF, 0xFF};
-    mockReadWrite_SetReadData("a", 1);
+    mockFileIo_SetReadData("a", 1);
     ssize_t result = read(STDIN_FILENO, buffer, sizeof(buffer));
     CHECK_EQUAL(1, result);
     CHECK_EQUAL('a', buffer[0]);
     CHECK_EQUAL((char)0xFF, buffer[1]);
 }
 
-TEST(mockReadWrite, ReadTwoBytes_SetupTwoBytesOfData_ShouldReturnTwoBytes)
+TEST(mockFileIo, ReadTwoBytes_SetupTwoBytesOfData_ShouldReturnTwoBytes)
 {
     char buffer[2];
-    mockReadWrite_SetReadData("xy", 2);
+    mockFileIo_SetReadData("xy", 2);
     ssize_t result = read(STDIN_FILENO, buffer, sizeof(buffer));
     CHECK_EQUAL(2, result);
     CHECK_EQUAL('x', buffer[0]);
     CHECK_EQUAL('y', buffer[1]);
 }
 
-TEST(mockReadWrite, Issue2Reads_FirstReadWillProcessOneByteOfData_SecondReadWillProcessRestOfData)
+TEST(mockFileIo, Issue2Reads_FirstReadWillProcessOneByteOfData_SecondReadWillProcessRestOfData)
 {
     char buffer[2] = {0, 0};
-    mockReadWrite_SetReadData("xy", 2);
+    mockFileIo_SetReadData("xy", 2);
     ssize_t result;
         result = read(STDIN_FILENO, buffer, 1);
     CHECK_EQUAL(1, result);
@@ -84,73 +84,73 @@ TEST(mockReadWrite, Issue2Reads_FirstReadWillProcessOneByteOfData_SecondReadWill
     CHECK_EQUAL('y', buffer[1]);
 }
 
-TEST(mockReadWrite, FailReadCall)
+TEST(mockFileIo, FailReadCall)
 {
     char buffer[2] = {0, 0};
-    mockReadWrite_SetReadToFail(-1, EFAULT);
+    mockFileIo_SetReadToFail(-1, EFAULT);
     ssize_t result = read(STDIN_FILENO, buffer, 1);
     CHECK_EQUAL(-1, result);
     CHECK_EQUAL(EFAULT, errno);
 }
 
-TEST(mockReadWrite, WriteStdOut_SetupNoOutputBuffer_ShouldReturnZero)
+TEST(mockFileIo, WriteStdOut_SetupNoOutputBuffer_ShouldReturnZero)
 {
     ssize_t result = write(STDOUT_FILENO, "a", 1);
     CHECK_EQUAL(0, result);
 }
 
-TEST(mockReadWrite, WriteRegularFile_ShouldReturnNegativeOne)
+TEST(mockFileIo, WriteRegularFile_ShouldReturnNegativeOne)
 {
     ssize_t result = write(4, "a", 1);
     CHECK_EQUAL(-1, result);
     CHECK_EQUAL(EBADF, errno);
 }
 
-TEST(mockReadWrite, WriteStdOut_SetupOneByteOutputBuffer_WriteOneByte)
+TEST(mockFileIo, WriteStdOut_SetupOneByteOutputBuffer_WriteOneByte)
 {
-    mockReadWrite_CreateWriteBuffer(1);
+    mockFileIo_CreateWriteBuffer(1);
     ssize_t result = write(STDOUT_FILENO, "a", 1);
     CHECK_EQUAL(1, result);
-    STRCMP_EQUAL("a", mockReadWrite_GetStdOutData());
+    STRCMP_EQUAL("a", mockFileIo_GetStdOutData());
 }
 
-TEST(mockReadWrite, WriteStdErr_SetupOneByteOutputBuffer_WriteOneByte)
+TEST(mockFileIo, WriteStdErr_SetupOneByteOutputBuffer_WriteOneByte)
 {
-    mockReadWrite_CreateWriteBuffer(1);
+    mockFileIo_CreateWriteBuffer(1);
     ssize_t result = write(STDERR_FILENO, "a", 1);
     CHECK_EQUAL(1, result);
-    STRCMP_EQUAL("a", mockReadWrite_GetStdErrData());
+    STRCMP_EQUAL("a", mockFileIo_GetStdErrData());
 }
 
-TEST(mockReadWrite, WriteStdOut_SetupOneByteOutputBuffer_AttemptToWriteTwoBytes)
+TEST(mockFileIo, WriteStdOut_SetupOneByteOutputBuffer_AttemptToWriteTwoBytes)
 {
-    mockReadWrite_CreateWriteBuffer(1);
+    mockFileIo_CreateWriteBuffer(1);
     ssize_t result = write(STDOUT_FILENO, "xy", 2);
     CHECK_EQUAL(1, result);
-    STRCMP_EQUAL("x", mockReadWrite_GetStdOutData());
+    STRCMP_EQUAL("x", mockFileIo_GetStdOutData());
 }
 
-TEST(mockReadWrite, WriteStdOut_SetupTwoByteOutputBuffer_WriteOneByteTwice)
+TEST(mockFileIo, WriteStdOut_SetupTwoByteOutputBuffer_WriteOneByteTwice)
 {
-    mockReadWrite_CreateWriteBuffer(2);
+    mockFileIo_CreateWriteBuffer(2);
     ssize_t result = write(STDOUT_FILENO, "y", 1);
     CHECK_EQUAL(1, result);
-    STRCMP_EQUAL("y", mockReadWrite_GetStdOutData());
+    STRCMP_EQUAL("y", mockFileIo_GetStdOutData());
 
     result = write(STDOUT_FILENO, "z", 1);
     CHECK_EQUAL(1, result);
-    STRCMP_EQUAL("yz", mockReadWrite_GetStdOutData());
+    STRCMP_EQUAL("yz", mockFileIo_GetStdOutData());
 }
 
-TEST(mockReadWrite, WriteToBothStdOutAndStdErr_ShouldLogSeparately)
+TEST(mockFileIo, WriteToBothStdOutAndStdErr_ShouldLogSeparately)
 {
-    mockReadWrite_CreateWriteBuffer(5);
+    mockFileIo_CreateWriteBuffer(5);
     ssize_t result = write(STDOUT_FILENO, "Test1", 5);
     CHECK_EQUAL(5, result);
-    STRCMP_EQUAL("Test1", mockReadWrite_GetStdOutData());
+    STRCMP_EQUAL("Test1", mockFileIo_GetStdOutData());
 
     result = write(STDERR_FILENO, "Test2", 5);
     CHECK_EQUAL(5, result);
-    STRCMP_EQUAL("Test1", mockReadWrite_GetStdOutData());
-    STRCMP_EQUAL("Test2", mockReadWrite_GetStdErrData());
+    STRCMP_EQUAL("Test1", mockFileIo_GetStdOutData());
+    STRCMP_EQUAL("Test2", mockFileIo_GetStdErrData());
 }

@@ -14,7 +14,7 @@ extern "C"
 {
     #include <MallocFailureInject.h>
     #include <mri.h>
-    #include <mockReadWrite.h>
+    #include <mockFileIo.h>
     #include <NewLibSemihost.h>
 }
 #include <errno.h>
@@ -27,7 +27,7 @@ TEST_GROUP_BASE(semihostTests, mri4simBase)
     void setup()
     {
         mri4simBase::setup();
-        mockReadWrite_CreateWriteBuffer(32);
+        mockFileIo_CreateWriteBuffer(32);
         m_pContext->R[0] = 1;
         m_pContext->R[1] = 2;
         m_pContext->R[2] = 3;
@@ -37,7 +37,7 @@ TEST_GROUP_BASE(semihostTests, mri4simBase)
     void teardown()
     {
         MallocFailureInject_Restore();
-        mockReadWrite_Uninit();
+        mockFileIo_Uninit();
         mri4simBase::teardown();
     }
 
@@ -110,7 +110,7 @@ TEST(semihostTests, WriteCall_StdOut_VerifyTextSentToConsoleAndGdb)
              sizeof(buffer) - 1);
     appendExpectedString(expectedResult);
     STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
-    STRCMP_EQUAL("Test\n", mockReadWrite_GetStdOutData());
+    STRCMP_EQUAL("Test\n", mockFileIo_GetStdOutData());
     CHECK_EQUAL(5, m_pContext->R[0]);
 }
 
@@ -135,7 +135,7 @@ TEST(semihostTests, WriteCall_StdErr_VerifyTextSentToConsoleAndGdb)
              sizeof(buffer) - 1);
     appendExpectedString(expectedResult);
     STRCMP_EQUAL(checksumExpected(), mockIComm_GetTransmittedData());
-    STRCMP_EQUAL("Test\n", mockReadWrite_GetStdErrData());
+    STRCMP_EQUAL("Test\n", mockFileIo_GetStdErrData());
     CHECK_EQUAL(5, m_pContext->R[0]);
 }
 
@@ -154,7 +154,7 @@ TEST(semihostTests, WriteCall_StdOut_GdbNotConnected_VerifyTextSentToConsoleOnly
     mockIComm_DelayReceiveData(2);
         mri4simRun(mockIComm_Get(), FALSE);
     STRCMP_EQUAL("", mockIComm_GetTransmittedData());
-    STRCMP_EQUAL("Test\n", mockReadWrite_GetStdOutData());
+    STRCMP_EQUAL("Test\n", mockFileIo_GetStdOutData());
     CHECK_EQUAL(5, m_pContext->R[0]);
 }
 
@@ -177,7 +177,7 @@ TEST(semihostTests, ReadCall_StdIn_GdbNotConnected_ReadFromConsoleInsteadOfGdb)
     m_pContext->R[0] = STDIN_FILENO;
     m_pContext->R[1] = INITIAL_SP - sizeof(testString) + 1;
     m_pContext->R[2] = sizeof(testString) - 1;
-    mockReadWrite_SetReadData(testString, sizeof(testString) - 1);
+    mockFileIo_SetReadData(testString, sizeof(testString) - 1);
     mockIComm_SetIsGdbConnectedFlag(0);
 
     emitBKPT(NEWLIB_READ);
@@ -196,7 +196,7 @@ TEST(semihostTests, ReadCall_StdIn_GdbNotConnected_FailMemoryAllocation_ShouldRe
     m_pContext->R[0] = STDIN_FILENO;
     m_pContext->R[1] = INITIAL_SP - sizeof(testString) + 1;
     m_pContext->R[2] = sizeof(testString) - 1;
-    mockReadWrite_SetReadData(testString, sizeof(testString) - 1);
+    mockFileIo_SetReadData(testString, sizeof(testString) - 1);
     mockIComm_SetIsGdbConnectedFlag(0);
     MallocFailureInject_FailAllocation(1);
 
@@ -217,9 +217,9 @@ TEST(semihostTests, ReadCall_StdIn_GdbNotConnected_FailReadCall_ShouldReturnErro
     m_pContext->R[0] = STDIN_FILENO;
     m_pContext->R[1] = INITIAL_SP - sizeof(testString) + 1;
     m_pContext->R[2] = sizeof(testString) - 1;
-    mockReadWrite_SetReadData(testString, sizeof(testString) - 1);
+    mockFileIo_SetReadData(testString, sizeof(testString) - 1);
     mockIComm_SetIsGdbConnectedFlag(0);
-    mockReadWrite_SetReadToFail(-1, EFAULT);
+    mockFileIo_SetReadToFail(-1, EFAULT);
 
 
     emitBKPT(NEWLIB_READ);
