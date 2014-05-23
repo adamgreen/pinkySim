@@ -14,12 +14,41 @@
 #include <string.h>
 #include <unistd.h>
 
+static int     mock_open(const char *path, int oflag, ...);
 static ssize_t mock_read(int fildes, void *buf, size_t nbyte);
 static ssize_t mock_write(int fildes, const void *buf, size_t nbyte);
+static off_t   mock_lseek(int fildes, off_t offset, int whence);
+static int     mock_close(int fildes);
+static int     mock_unlink(const char *path);
+static int     mock_rename(const char *oldPath, const char *newPath);
 
 
+int     (*hook_open)(const char *path, int oflag, ...) = mock_open;
 ssize_t (*hook_read)(int fildes, void *buf, size_t nbyte) = mock_read;
 ssize_t (*hook_write)(int fildes, const void *buf, size_t nbyte) = mock_write;
+off_t   (*hook_lseek)(int fildes, off_t offset, int whence) = mock_lseek;
+int     (*hook_close)(int fildes) = mock_close;
+int     (*hook_unlink)(const char *path) = mock_unlink;
+int     (*hook_rename)(const char *oldPath, const char *newPath) = mock_rename;
+
+
+typedef struct CallResult
+{
+    int result;
+    int error;
+} CallResult;
+
+#define CALL_GLOBAL(X) \
+   CallResult g_##X;
+
+#define CALL_MOCK(X) \
+    if (g_##X.result < 0) \
+        errno = g_##X.error; \
+    return g_##X.result;
+
+#define CALL_SET(X) \
+    g_##X.result = result; \
+    g_##X.error = err;
 
 
 static       int      g_readResult;
@@ -33,7 +62,17 @@ static char*          g_pStdOutCurr;
 static char*          g_pStdErrStart;
 static char*          g_pStdErrEnd;
 static char*          g_pStdErrCurr;
+CALL_GLOBAL(open)
+CALL_GLOBAL(lseek)
+CALL_GLOBAL(close)
+CALL_GLOBAL(unlink)
+CALL_GLOBAL(rename)
 
+
+static int mock_open(const char *path, int oflag, ...)
+{
+    CALL_MOCK(open)
+}
 
 static ssize_t mock_read(int fildes, void *buf, size_t nbyte)
 {
@@ -87,6 +126,31 @@ static ssize_t mock_write(int fildes, const void *buf, size_t nbyte)
     return nbyte;
 }
 
+static off_t mock_lseek(int fildes, off_t offset, int whence)
+{
+    CALL_MOCK(lseek)
+}
+
+static int mock_close(int fildes)
+{
+    CALL_MOCK(close)
+}
+
+static int mock_unlink(const char *path)
+{
+    CALL_MOCK(unlink)
+}
+
+static int mock_rename(const char *oldPath, const char *newPath)
+{
+    CALL_MOCK(rename)
+}
+
+
+void mockFileIo_SetOpenToFail(int result, int err)
+{
+    CALL_SET(open);
+}
 
 void mockFileIo_SetReadData(const void* pvData, size_t dataSize)
 {
@@ -122,6 +186,26 @@ const char* mockFileIo_GetStdErrData(void)
     return g_pStdErrStart;
 }
 
+void mockFileIo_SetLSeekToFail(int result, int err)
+{
+    CALL_SET(lseek);
+}
+
+void mockFileIo_SetCloseToFail(int result, int err)
+{
+    CALL_SET(close);
+}
+
+void mockFileIo_SetUnlinkToFail(int result, int err)
+{
+    CALL_SET(unlink);
+}
+
+void mockFileIo_SetRenameToFail(int result, int err)
+{
+    CALL_SET(rename);
+}
+
 void mockFileIo_Uninit(void)
 {
     g_pReadStart = g_pReadCurr = g_pReadEnd = NULL;
@@ -130,4 +214,5 @@ void mockFileIo_Uninit(void)
     free(g_pStdErrStart);
     g_pStdErrStart = g_pStdErrCurr = g_pStdErrEnd = NULL;
     g_readResult = 0;
+    mockFileIo_SetCloseToFail(0, 0);
 }

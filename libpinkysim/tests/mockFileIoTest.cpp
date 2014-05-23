@@ -154,3 +154,88 @@ TEST(mockFileIo, WriteToBothStdOutAndStdErr_ShouldLogSeparately)
     STRCMP_EQUAL("Test1", mockFileIo_GetStdOutData());
     STRCMP_EQUAL("Test2", mockFileIo_GetStdErrData());
 }
+
+TEST(mockFileIo, SetOpenCallToFail)
+{
+    mockFileIo_SetOpenToFail(-1, EIO);
+    int result = open("mockFileTest.tst", O_CREAT | O_TRUNC | O_RDWR);
+    CHECK_EQUAL(-1, result);
+    CHECK_EQUAL(EIO, errno);
+}
+
+TEST(mockFileIo, OpenCall_ReturnSuccess_ErrnoNotSet)
+{
+    mockFileIo_SetOpenToFail(3, EIO);
+    errno = 0;
+    int result = open("mockFileTest.tst", O_CREAT | O_TRUNC | O_RDWR);
+    CHECK_EQUAL(3, result);
+    CHECK_EQUAL(0, errno);
+}
+
+TEST(mockFileIo, SetLSeekCallToFail)
+{
+    mockFileIo_SetLSeekToFail(-1, EIO);
+    off_t result = lseek(3, 0, SEEK_SET);
+    CHECK_EQUAL(-1, (long)result);
+    CHECK_EQUAL(EIO, errno);
+}
+
+TEST(mockFileIo, LSeekCall_ReturnSuccess_ErrnoNotSet)
+{
+    mockFileIo_SetLSeekToFail(0, EIO);
+    errno = 0;
+    off_t result = lseek(3, 0, SEEK_SET);
+    CHECK_EQUAL(0, (long)result);
+    CHECK_EQUAL(0, errno);
+}
+
+TEST(mockFileIo, SetCloseCallToFail)
+{
+    mockFileIo_SetCloseToFail(-1, EIO);
+    int result = close(3);
+    CHECK_EQUAL(-1, result);
+    CHECK_EQUAL(EIO, errno);
+}
+
+TEST(mockFileIo, CloseCall_ReturnSuccess_ErrnoNotSet)
+{
+    mockFileIo_SetCloseToFail(0, EIO);
+    errno = 0;
+    int result = close(3);
+    CHECK_EQUAL(0, result);
+    CHECK_EQUAL(0, errno);
+}
+
+TEST(mockFileIo, SetUnlinkCallToFail)
+{
+    mockFileIo_SetUnlinkToFail(-1, EIO);
+    int result = unlink("");
+    CHECK_EQUAL(-1, result);
+    CHECK_EQUAL(EIO, errno);
+}
+
+TEST(mockFileIo, UnlinkCall_ReturnSuccess_ErrnoNotSet)
+{
+    mockFileIo_SetUnlinkToFail(0, EIO);
+    errno = 0;
+    int result = unlink("");
+    CHECK_EQUAL(0, result);
+    CHECK_EQUAL(0, errno);
+}
+
+TEST(mockFileIo, SetRenameCallToFail)
+{
+    mockFileIo_SetRenameToFail(-1, EIO);
+    int result = rename("foo", "bar");
+    CHECK_EQUAL(-1, result);
+    CHECK_EQUAL(EIO, errno);
+}
+
+TEST(mockFileIo, RenameCall_ReturnSuccess_ErrnoNotSet)
+{
+    mockFileIo_SetRenameToFail(0, EIO);
+    errno = 0;
+    int result = rename("foo", "bar");
+    CHECK_EQUAL(0, result);
+    CHECK_EQUAL(0, errno);
+}

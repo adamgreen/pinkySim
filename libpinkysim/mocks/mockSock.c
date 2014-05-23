@@ -40,7 +40,6 @@ static int mock_select(int nfds,
                        fd_set* writefds,
                        fd_set* errorfds,
                        struct timeval* timeout);
-static int mock_close(int fildes);
 static ssize_t mock_recv(int socket, void *buffer, size_t length, int flags);
 static ssize_t popRecvReturnValue(void);
 static ssize_t mock_send(int socket, const void *buffer, size_t length, int flags);
@@ -60,7 +59,6 @@ int (*hook_select)(int nfds,
                    fd_set* writefds,
                    fd_set* errorfds,
                    struct timeval* timeout) = mock_select;
-int (*hook_close)(int fildes) = mock_close;
 ssize_t (*hook_recv)(int socket, void *buffer, size_t length, int flags) = mock_recv;
 ssize_t (*hook_send)(int socket, const void *buffer, size_t length, int flags) = mock_send;
 
@@ -175,11 +173,6 @@ static int mock_select(int nfds,
                        struct timeval* timeout)
 {
     return g_selectReturn;
-}
-
-static int mock_close(int fildes)
-{
-    return 0;
 }
 
 static ssize_t mock_recv(int socket, void *buffer, size_t length, int flags)
