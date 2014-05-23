@@ -16,6 +16,7 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 
 /* Pointer to I/O routines which can intercepted by this module. */
@@ -26,6 +27,8 @@ extern off_t   (*hook_lseek)(int fildes, off_t offset, int whence);
 extern int     (*hook_close)(int fildes);
 extern int     (*hook_unlink)(const char *path);
 extern int     (*hook_rename)(const char *oldPath, const char *newPath);
+extern int     (*hook_fstat)(int fildes, struct stat *buf);
+extern int     (*hook_stat)(const char* path, struct stat* buf);
 
 
 #undef  open
@@ -42,6 +45,8 @@ extern int     (*hook_rename)(const char *oldPath, const char *newPath);
 #define unlink hook_unlink
 #undef  rename
 #define rename hook_rename
+#undef  fstat
+#define fstat hook_fstat
 
 
 void        mockFileIo_SetOpenToFail(int result, int err);
@@ -54,6 +59,8 @@ void        mockFileIo_SetLSeekToFail(int result, int err);
 void        mockFileIo_SetCloseToFail(int result, int err);
 void        mockFileIo_SetUnlinkToFail(int result, int err);
 void        mockFileIo_SetRenameToFail(int result, int err);
+void        mockFileIo_SetFStatCallResults(int result, int err, struct stat* pStat);
+void        mockFileIo_SetStatCallResults(int result, int err, struct stat* pStat);
 void        mockFileIo_Uninit(void);
 
 

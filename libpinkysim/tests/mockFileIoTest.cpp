@@ -239,3 +239,65 @@ TEST(mockFileIo, RenameCall_ReturnSuccess_ErrnoNotSet)
     CHECK_EQUAL(0, result);
     CHECK_EQUAL(0, errno);
 }
+
+TEST(mockFileIo, SetFStatCallResults_FailWitError_NoStatStructureResult)
+{
+    struct stat fstatExpected;
+    struct stat fstatActual;
+    memset(&fstatExpected, 0xff, sizeof(fstatExpected));
+    memset(&fstatActual, 0xff, sizeof(fstatActual));
+
+    mockFileIo_SetFStatCallResults(-1, EIO, NULL);
+    int result = fstat(3, &fstatActual);
+    CHECK_EQUAL(0, memcmp(&fstatExpected, &fstatActual, sizeof(fstatActual)));
+    CHECK_EQUAL(-1, result);
+    CHECK_EQUAL(EIO, errno);
+}
+
+TEST(mockFileIo, SetFStatCallResults_SucceedWithStatStructureWrite)
+{
+    struct stat fstatExpected;
+    struct stat fstatActual;
+    memset(&fstatExpected, 0xff, sizeof(fstatExpected));
+    memset(&fstatActual, 0x00, sizeof(fstatActual));
+
+    mockFileIo_SetFStatCallResults(0, EIO, &fstatExpected);
+    errno = 0;
+    int result = fstat(3, &fstatActual);
+    CHECK_EQUAL(0, memcmp(&fstatExpected, &fstatActual, sizeof(fstatActual)));
+    CHECK_EQUAL(0, result);
+    CHECK_EQUAL(0, errno);
+}
+
+TEST(mockFileIo, SetStatCallResults_FailWitError_NoStatStructureResult)
+{
+    struct stat statExpected;
+    struct stat statActual;
+    memset(&statExpected, 0xff, sizeof(statExpected));
+    memset(&statActual, 0xff, sizeof(statActual));
+
+    /* Must explicitly call hook_stat() since a macro to do this automatically would interfere with
+       struct stat usage. */
+    mockFileIo_SetStatCallResults(-1, EIO, NULL);
+    int result = hook_stat("foo", &statActual);
+    CHECK_EQUAL(0, memcmp(&statExpected, &statActual, sizeof(statActual)));
+    CHECK_EQUAL(-1, result);
+    CHECK_EQUAL(EIO, errno);
+}
+
+TEST(mockFileIo, SetStatCallResults_SucceedWithStatStructureWrite)
+{
+    struct stat statExpected;
+    struct stat statActual;
+    memset(&statExpected, 0xff, sizeof(statExpected));
+    memset(&statActual, 0x00, sizeof(statActual));
+
+    /* Must explicitly call hook_stat() since a macro to do this automatically would interfere with
+       struct stat usage. */
+    mockFileIo_SetStatCallResults(0, EIO, &statExpected);
+    errno = 0;
+    int result = hook_stat("foo", &statActual);
+    CHECK_EQUAL(0, memcmp(&statExpected, &statActual, sizeof(statActual)));
+    CHECK_EQUAL(0, result);
+    CHECK_EQUAL(0, errno);
+}

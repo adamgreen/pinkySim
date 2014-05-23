@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 static int     mock_open(const char *path, int oflag, ...);
 static ssize_t mock_read(int fildes, void *buf, size_t nbyte);
@@ -21,6 +22,8 @@ static off_t   mock_lseek(int fildes, off_t offset, int whence);
 static int     mock_close(int fildes);
 static int     mock_unlink(const char *path);
 static int     mock_rename(const char *oldPath, const char *newPath);
+static int     mock_fstat(int fildes, struct stat *buf);
+static int     mock_stat(const char* path, struct stat* buf);
 
 
 int     (*hook_open)(const char *path, int oflag, ...) = mock_open;
@@ -30,6 +33,8 @@ off_t   (*hook_lseek)(int fildes, off_t offset, int whence) = mock_lseek;
 int     (*hook_close)(int fildes) = mock_close;
 int     (*hook_unlink)(const char *path) = mock_unlink;
 int     (*hook_rename)(const char *oldPath, const char *newPath) = mock_rename;
+int     (*hook_fstat)(int fildes, struct stat *buf) = mock_fstat;
+int     (*hook_stat)(const char* path, struct stat* buf) = mock_stat;
 
 
 typedef struct CallResult
@@ -62,11 +67,15 @@ static char*          g_pStdOutCurr;
 static char*          g_pStdErrStart;
 static char*          g_pStdErrEnd;
 static char*          g_pStdErrCurr;
+static struct stat    g_fstatStructure;
+static struct stat    g_statStructure;
 CALL_GLOBAL(open)
 CALL_GLOBAL(lseek)
 CALL_GLOBAL(close)
 CALL_GLOBAL(unlink)
 CALL_GLOBAL(rename)
+CALL_GLOBAL(fstat)
+CALL_GLOBAL(stat)
 
 
 static int mock_open(const char *path, int oflag, ...)
@@ -146,6 +155,24 @@ static int mock_rename(const char *oldPath, const char *newPath)
     CALL_MOCK(rename)
 }
 
+static int mock_fstat(int fildes, struct stat *buf)
+{
+    if (g_fstat.result < 0)
+        errno = g_fstat.error;
+    if (g_fstat.result == 0)
+        *buf = g_fstatStructure;
+    return g_fstat.result;
+}
+
+static int mock_stat(const char* path, struct stat* buf)
+{
+    if (g_stat.result < 0)
+        errno = g_stat.error;
+    if (g_stat.result == 0)
+        *buf = g_statStructure;
+    return g_stat.result;
+}
+
 
 void mockFileIo_SetOpenToFail(int result, int err)
 {
@@ -204,6 +231,22 @@ void mockFileIo_SetUnlinkToFail(int result, int err)
 void mockFileIo_SetRenameToFail(int result, int err)
 {
     CALL_SET(rename);
+}
+
+void mockFileIo_SetFStatCallResults(int result, int err, struct stat* pStat)
+{
+    g_fstat.result = result;
+    g_fstat.error = err;
+    if (pStat)
+        g_fstatStructure = *pStat;
+}
+
+void mockFileIo_SetStatCallResults(int result, int err, struct stat* pStat)
+{
+    g_stat.result = result;
+    g_stat.error = err;
+    if (pStat)
+        g_statStructure = *pStat;
 }
 
 void mockFileIo_Uninit(void)
