@@ -61,12 +61,17 @@ static       int      g_readError;
 static const uint8_t* g_pReadStart;
 static const uint8_t* g_pReadEnd;
 static const uint8_t* g_pReadCurr;
+static       int      g_writeResult;
+static       int      g_writeError;
 static char*          g_pStdOutStart;
 static char*          g_pStdOutEnd;
 static char*          g_pStdOutCurr;
 static char*          g_pStdErrStart;
 static char*          g_pStdErrEnd;
 static char*          g_pStdErrCurr;
+static char*          g_pRegularStart;
+static char*          g_pRegularEnd;
+static char*          g_pRegularCurr;
 static struct stat    g_fstatStructure;
 static struct stat    g_statStructure;
 CALL_GLOBAL(open)
@@ -86,12 +91,6 @@ static int mock_open(const char *path, int oflag, ...)
 static ssize_t mock_read(int fildes, void *buf, size_t nbyte)
 {
     int bytesLeft = g_pReadEnd - g_pReadCurr;
-    if (fildes != STDIN_FILENO)
-    {
-        errno = EBADF;
-        return -1;
-    }
-
     if (g_readResult)
     {
         errno = g_readError;
@@ -112,6 +111,12 @@ static ssize_t mock_write(int fildes, const void *buf, size_t nbyte)
     char** ppCurr;
     int    bytesLeft;
 
+    if (g_writeResult)
+    {
+        errno = g_writeError;
+        return g_writeResult;
+    }
+
     switch (fildes)
     {
     case STDOUT_FILENO:
@@ -125,8 +130,10 @@ static ssize_t mock_write(int fildes, const void *buf, size_t nbyte)
         bytesLeft = g_pStdErrEnd - g_pStdErrCurr;
         break;
     default:
-        errno = EBADF;
-        return -1;
+        pBuffer = g_pRegularCurr;
+        ppCurr = &g_pRegularCurr;
+        bytesLeft = g_pRegularEnd - g_pRegularCurr;
+        break;
     }
 
     nbyte = nbyte > (size_t)bytesLeft ? bytesLeft : nbyte;
@@ -191,6 +198,12 @@ void mockFileIo_SetReadToFail(int result, int err)
     g_readError = err;
 }
 
+void mockFileIo_SetWriteToFail(int result, int err)
+{
+    g_writeResult = result;
+    g_writeError = err;
+}
+
 void mockFileIo_CreateWriteBuffer(size_t bufferSize)
 {
     g_pStdOutStart = malloc(bufferSize + 1);
@@ -199,6 +212,9 @@ void mockFileIo_CreateWriteBuffer(size_t bufferSize)
     g_pStdErrStart = malloc(bufferSize + 1);
     g_pStdErrEnd = g_pStdErrStart + bufferSize;
     g_pStdErrCurr = g_pStdErrStart;
+    g_pRegularStart = malloc(bufferSize + 1);
+    g_pRegularEnd = g_pRegularStart + bufferSize;
+    g_pRegularCurr = g_pRegularStart;
 }
 
 const char* mockFileIo_GetStdOutData(void)
@@ -211,6 +227,12 @@ const char* mockFileIo_GetStdErrData(void)
 {
     *g_pStdErrCurr = '\0';
     return g_pStdErrStart;
+}
+
+const char* mockFileIo_GetRegularFileData(void)
+{
+    *g_pRegularCurr = '\0';
+    return g_pRegularStart;
 }
 
 void mockFileIo_SetLSeekToFail(int result, int err)
@@ -256,6 +278,9 @@ void mockFileIo_Uninit(void)
     g_pStdOutStart = g_pStdOutCurr = g_pStdOutEnd = NULL;
     free(g_pStdErrStart);
     g_pStdErrStart = g_pStdErrCurr = g_pStdErrEnd = NULL;
+    free(g_pRegularStart);
+    g_pRegularStart = g_pRegularCurr = g_pRegularEnd = NULL;
     g_readResult = 0;
+    g_writeResult = 0;
     mockFileIo_SetCloseToFail(0, 0);
 }

@@ -41,12 +41,11 @@ TEST(mockFileIo, ReadStdIn_SetupNoDataToRead_ShouldReturnZero)
     CHECK_EQUAL(0, result);
 }
 
-TEST(mockFileIo, ReadRegularFile_ShouldReturnNegativeOne)
+TEST(mockFileIo, ReadRegularFile_SetupNoDataToRead_ShouldReturnZeroAsWell)
 {
     char buffer[1];
     ssize_t result = read(4, buffer, sizeof(buffer));
-    CHECK_EQUAL(-1, result);
-    CHECK_EQUAL(EBADF, errno);
+    CHECK_EQUAL(0, result);
 }
 
 TEST(mockFileIo, ReadTwoBytes_SetupOneByteOfData_ShouldReturnOneByte)
@@ -64,6 +63,16 @@ TEST(mockFileIo, ReadTwoBytes_SetupTwoBytesOfData_ShouldReturnTwoBytes)
     char buffer[2];
     mockFileIo_SetReadData("xy", 2);
     ssize_t result = read(STDIN_FILENO, buffer, sizeof(buffer));
+    CHECK_EQUAL(2, result);
+    CHECK_EQUAL('x', buffer[0]);
+    CHECK_EQUAL('y', buffer[1]);
+}
+
+TEST(mockFileIo, ReadTwoBytesFromRegularFile_SetupTwoBytesOfData_ShouldReturnTwoBytes)
+{
+    char buffer[2];
+    mockFileIo_SetReadData("xy", 2);
+    ssize_t result = read(4, buffer, sizeof(buffer));
     CHECK_EQUAL(2, result);
     CHECK_EQUAL('x', buffer[0]);
     CHECK_EQUAL('y', buffer[1]);
@@ -99,11 +108,10 @@ TEST(mockFileIo, WriteStdOut_SetupNoOutputBuffer_ShouldReturnZero)
     CHECK_EQUAL(0, result);
 }
 
-TEST(mockFileIo, WriteRegularFile_ShouldReturnNegativeOne)
+TEST(mockFileIo, WriteRegularFile_SetupNoOutputBuffer_ShouldReturnZero)
 {
     ssize_t result = write(4, "a", 1);
-    CHECK_EQUAL(-1, result);
-    CHECK_EQUAL(EBADF, errno);
+    CHECK_EQUAL(0, result);
 }
 
 TEST(mockFileIo, WriteStdOut_SetupOneByteOutputBuffer_WriteOneByte)
@@ -120,6 +128,14 @@ TEST(mockFileIo, WriteStdErr_SetupOneByteOutputBuffer_WriteOneByte)
     ssize_t result = write(STDERR_FILENO, "a", 1);
     CHECK_EQUAL(1, result);
     STRCMP_EQUAL("a", mockFileIo_GetStdErrData());
+}
+
+TEST(mockFileIo, WriteRegular_SetupOneByteOutputBuffer_WriteOneByte)
+{
+    mockFileIo_CreateWriteBuffer(1);
+    ssize_t result = write(4, "a", 1);
+    CHECK_EQUAL(1, result);
+    STRCMP_EQUAL("a", mockFileIo_GetRegularFileData());
 }
 
 TEST(mockFileIo, WriteStdOut_SetupOneByteOutputBuffer_AttemptToWriteTwoBytes)
@@ -153,6 +169,28 @@ TEST(mockFileIo, WriteToBothStdOutAndStdErr_ShouldLogSeparately)
     CHECK_EQUAL(5, result);
     STRCMP_EQUAL("Test1", mockFileIo_GetStdOutData());
     STRCMP_EQUAL("Test2", mockFileIo_GetStdErrData());
+}
+
+TEST(mockFileIo, WriteToBothStdOutAndRegularFile_ShouldLogSeparately)
+{
+    mockFileIo_CreateWriteBuffer(5);
+    ssize_t result = write(STDOUT_FILENO, "Test1", 5);
+    CHECK_EQUAL(5, result);
+    STRCMP_EQUAL("Test1", mockFileIo_GetStdOutData());
+
+    result = write(4, "Test2", 5);
+    CHECK_EQUAL(5, result);
+    STRCMP_EQUAL("Test1", mockFileIo_GetStdOutData());
+    STRCMP_EQUAL("Test2", mockFileIo_GetRegularFileData());
+}
+
+TEST(mockFileIo, SetWriteCallToFail)
+{
+    char buffer[2] = {0, 0};
+    mockFileIo_SetWriteToFail(-1, EFAULT);
+    ssize_t result = write(STDOUT_FILENO, buffer, 2);
+    CHECK_EQUAL(-1, result);
+    CHECK_EQUAL(EFAULT, errno);
 }
 
 TEST(mockFileIo, SetOpenCallToFail)
