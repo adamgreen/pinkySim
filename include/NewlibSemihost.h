@@ -34,13 +34,14 @@
 
 #include <stdint.h>
 
-typedef struct NewlibStat
+/* The more common struct stat fields that will be transferred from host to target. */
+typedef struct CommonStat
 {
     uint32_t mode;
     uint32_t size;
     uint32_t blksize;
     uint32_t blocks;
-} NewlibStat;
+} CommonStat;
 
 #endif /* !__ASSEMBLER__ */
 #endif /* _NEWLIB_SEMIHOST_H_ */

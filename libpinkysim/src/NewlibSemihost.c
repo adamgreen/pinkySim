@@ -31,7 +31,7 @@ static void writeToFile(PlatformSemihostParameters* pSemihostParameters);
 static int isGdbConnected(void);
 static int isConsoleInput(uint32_t fileDescriptor);
 static void readFromFile(PlatformSemihostParameters* pSemihostParameters);
-static void copyHostStatToTargetStat(NewlibStat* pTarget, const struct stat* pHost);
+static void copyHostStatToCommonStat(CommonStat* pTarget, const struct stat* pHost);
 
 
 int handleNewlibSemihostWriteRequest(PlatformSemihostParameters* pSemihostParameters)
@@ -191,11 +191,11 @@ int handleNewlibSemihostFStatRequest(PlatformSemihostParameters* pSemihostParame
     __try
     {
         struct stat hostStat;
-        NewlibStat* pTargetStat = MemorySim_MapSimulatedAddressToHostAddressForWrite(mri4simGetContext()->pMemory,
+        CommonStat* pTargetStat = MemorySim_MapSimulatedAddressToHostAddressForWrite(mri4simGetContext()->pMemory,
                                                                                      fileStatAddress,
                                                                                      sizeof(*pTargetStat));
         int fstatResult = fstat(file, &hostStat);
-        copyHostStatToTargetStat(pTargetStat, &hostStat);
+        copyHostStatToCommonStat(pTargetStat, &hostStat);
         SetSemihostReturnValues(fstatResult, errno);
     }
     __catch
@@ -217,11 +217,11 @@ int handleNewlibSemihostStatRequest(PlatformSemihostParameters* pSemihostParamet
         struct stat hostStat;
         const void* pFilename = MemorySim_MapSimulatedAddressToHostAddressForRead(mri4simGetContext()->pMemory,
                                                                                   filenameAddress, filenameLength);
-        NewlibStat* pTargetStat = MemorySim_MapSimulatedAddressToHostAddressForWrite(mri4simGetContext()->pMemory,
+        CommonStat* pTargetStat = MemorySim_MapSimulatedAddressToHostAddressForWrite(mri4simGetContext()->pMemory,
                                                                                      fileStatAddress,
                                                                                      sizeof(*pTargetStat));
         int statResult = hook_stat(pFilename, &hostStat);
-        copyHostStatToTargetStat(pTargetStat, &hostStat);
+        copyHostStatToCommonStat(pTargetStat, &hostStat);
         SetSemihostReturnValues(statResult, errno);
     }
     __catch
@@ -232,7 +232,7 @@ int handleNewlibSemihostStatRequest(PlatformSemihostParameters* pSemihostParamet
     return 1;
 }
 
-static void copyHostStatToTargetStat(NewlibStat* pTarget, const struct stat* pHost)
+static void copyHostStatToCommonStat(CommonStat* pTarget, const struct stat* pHost)
 {
     pTarget->mode = pHost->st_mode;
     pTarget->size = pHost->st_size;

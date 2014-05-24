@@ -410,12 +410,12 @@ TEST(semihostTests, UnlinkCall_AttemptToUseInvalidFilenamePointer_ShouldFail)
 
 TEST(semihostTests, StatCall_VerifyReturnValueAndOutputStructure)
 {
-    NewlibStat  newlibStat;
+    CommonStat  commonStat;
     struct stat hostStat;
 
     const char testFilename[] = "foo.bar";
     m_pContext->R[0] = INITIAL_SP - sizeof(testFilename);
-    m_pContext->R[1] = INITIAL_SP - sizeof(testFilename) - sizeof(newlibStat);
+    m_pContext->R[1] = INITIAL_SP - sizeof(testFilename) - sizeof(commonStat);
     m_pContext->R[2] = sizeof(testFilename);
     copyBufferToSimulator(m_pContext->R[0], testFilename, m_pContext->R[2]);
     hostStat.st_mode = 0x1234;
@@ -431,16 +431,16 @@ TEST(semihostTests, StatCall_VerifyReturnValueAndOutputStructure)
         mri4simRun(mockIComm_Get(), FALSE);
     STRCMP_EQUAL("", mockIComm_GetTransmittedData());
     CHECK_EQUAL(0, m_pContext->R[0]);
-    NewlibStat expected = {0x1234, 0xbaadf00d, 0x87654321, 0xfeedfeed};
-    validateBytesInSimulator(INITIAL_SP - sizeof(testFilename) - sizeof(newlibStat), &expected, sizeof(expected));
+    CommonStat expected = {0x1234, 0xbaadf00d, 0x87654321, 0xfeedfeed};
+    validateBytesInSimulator(INITIAL_SP - sizeof(testFilename) - sizeof(commonStat), &expected, sizeof(expected));
 }
 
 TEST(semihostTests, StatCall_VerifyErrorReturnsInR0andR1)
 {
-    NewlibStat newlibStat;
+    CommonStat commonStat;
     const char testFilename[] = "foo.bar";
     m_pContext->R[0] = INITIAL_SP - sizeof(testFilename);
-    m_pContext->R[1] = INITIAL_SP - sizeof(testFilename) - sizeof(newlibStat);
+    m_pContext->R[1] = INITIAL_SP - sizeof(testFilename) - sizeof(commonStat);
     m_pContext->R[2] = sizeof(testFilename);
     copyBufferToSimulator(m_pContext->R[0], testFilename, m_pContext->R[2]);
     mockFileIo_SetStatCallResults(-1, EIO, NULL);
@@ -457,9 +457,9 @@ TEST(semihostTests, StatCall_VerifyErrorReturnsInR0andR1)
 
 TEST(semihostTests, StatCall_WithInvalidFilenamePointer_ShouldFail)
 {
-    NewlibStat newlibStat;
+    CommonStat commonStat;
     m_pContext->R[0] = 0xFFFFFFF0;
-    m_pContext->R[1] = INITIAL_SP - sizeof(newlibStat);
+    m_pContext->R[1] = INITIAL_SP - sizeof(commonStat);
     m_pContext->R[2] = 4;
     mockFileIo_SetStatCallResults(0, 0, NULL);
 
@@ -494,11 +494,11 @@ TEST(semihostTests, StatCall_WithInvalidBufferPointer_ShouldFail)
 
 TEST(semihostTests, FStatCall_VerifyReturnValueAndOutputStructure)
 {
-    NewlibStat  newlibStat;
+    CommonStat  commonStat;
     struct stat hostStat;
 
     m_pContext->R[0] = 4;
-    m_pContext->R[1] = INITIAL_SP - sizeof(newlibStat);
+    m_pContext->R[1] = INITIAL_SP - sizeof(commonStat);
     hostStat.st_mode = 0x1234;
     hostStat.st_size = 0xbaadf00d;
     hostStat.st_blksize = 0x87654321;
@@ -512,15 +512,15 @@ TEST(semihostTests, FStatCall_VerifyReturnValueAndOutputStructure)
         mri4simRun(mockIComm_Get(), FALSE);
     STRCMP_EQUAL("", mockIComm_GetTransmittedData());
     CHECK_EQUAL(0, m_pContext->R[0]);
-    NewlibStat expected = {0x1234, 0xbaadf00d, 0x87654321, 0xfeedfeed};
-    validateBytesInSimulator(INITIAL_SP - sizeof(newlibStat), &expected, sizeof(expected));
+    CommonStat expected = {0x1234, 0xbaadf00d, 0x87654321, 0xfeedfeed};
+    validateBytesInSimulator(INITIAL_SP - sizeof(commonStat), &expected, sizeof(expected));
 }
 
 TEST(semihostTests, FStatCall_VerifyErrorReturnsInR0andR1)
 {
-    NewlibStat newlibStat;
+    CommonStat commonStat;
     m_pContext->R[0] = 4;
-    m_pContext->R[1] = INITIAL_SP - sizeof(newlibStat);
+    m_pContext->R[1] = INITIAL_SP - sizeof(commonStat);
     mockFileIo_SetFStatCallResults(-1, EIO, NULL);
 
     emitBKPT(NEWLIB_FSTAT);

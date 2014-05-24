@@ -105,7 +105,7 @@ semihostUnlink:
 
     .global semihostStat
     .type semihostStat, function
-    /* extern "C" int semihostStat(const char *pFilename, struct stat *pStat);
+    /* extern "C" int semihostStat(const char *pFilename, CommonStat *pStat);
        Issues stat call to PC via GDB.
     */
 semihostStat:
@@ -140,7 +140,7 @@ semihostClose:
 
     .global semihostFStat
     .type semihostFStat, function
-    /* extern "C" int semihostFStat(int file, struct stat *pStat);
+    /* extern "C" int semihostFStat(int file, CommonStat *pStat);
        Issues stat call to PC via GDB.
     */
 semihostFStat:

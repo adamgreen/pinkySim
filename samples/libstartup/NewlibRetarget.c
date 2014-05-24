@@ -24,7 +24,7 @@ extern int errno;
 extern uint32_t __end__[1];
 
 
-static void copyStat(struct stat* pStat, const NewlibStat* pNewlibStat);
+static void copyCommonStatToNewlibStat(struct stat* pStat, const CommonStat* pNewlibStat);
 
 
 /* File system related syscalls. */
@@ -45,14 +45,14 @@ int _unlink(const char *pFilename)
 
 int _stat(const char *pFilename, struct stat *pStat)
 {
-    NewlibStat newlibStat;
-    int result = semihostStat(pFilename, &newlibStat);
+    CommonStat commonStat;
+    int result = semihostStat(pFilename, &commonStat);
     if (result == 0)
-        copyStat(pStat, &newlibStat);
+        copyCommonStatToNewlibStat(pStat, &commonStat);
     return result;
 }
 
-static void copyStat(struct stat* pStat, const NewlibStat* pNewlibStat)
+static void copyCommonStatToNewlibStat(struct stat* pStat, const CommonStat* pNewlibStat)
 {
     pStat->st_mode = pNewlibStat->mode;
     pStat->st_size = pNewlibStat->size;
@@ -91,10 +91,10 @@ int _close(int file)
 
 int _fstat(int file, struct stat *st)
 {
-    NewlibStat newlibStat;
-    int result = semihostFStat(file, &newlibStat);
+    CommonStat commonStat;
+    int result = semihostFStat(file, &commonStat);
     if (result == 0)
-        copyStat(st, &newlibStat);
+        copyCommonStatToNewlibStat(st, &commonStat);
     return result;
 }
 

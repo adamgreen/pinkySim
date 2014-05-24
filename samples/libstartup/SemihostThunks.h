@@ -22,10 +22,10 @@ int semihostRead(int file, char *ptr, int len);
 int semihostOpen(const char *pFilename, int flags, int mode);
 int semihostRename(const char *pOldFilename, const char *pNewFilename);
 int semihostUnlink(const char *pFilename);
-int semihostStat(const char *pFilename, NewlibStat *pStat);
+int semihostStat(const char *pFilename, CommonStat *pStat);
 int semihostLSeek(int file, int offset, int whence);
 int semihostClose(int file);
-int semihostFStat(int file, NewlibStat *pStat);
+int semihostFStat(int file, CommonStat *pStat);
 void semihostExit(int code);
 
 
