@@ -855,3 +855,66 @@ TEST(MemorySim, GetMemoryMapXML_OneFlashAndOneRamRegion)
                         "<memory type=\"ram\" start=\"0x10000000\" length=\"0x8000\"></memory>"
                         "</memory-map>");
 }
+
+
+TEST(MemorySim, MapSimulatedAddressForWrite_AttemptToMapWithNoRegions_ShouldThrow)
+{
+    __try_and_catch( MemorySim_MapSimulatedAddressToHostAddressForWrite(m_pMemory, 0, 4) );
+    validateExceptionThrown(busErrorException);
+}
+
+TEST(MemorySim, MapSimulatedAddressForWrite_MapValidAddressRegion)
+{
+    static const uint32_t testAddress = 0x00000004;
+    MemorySim_CreateRegion(m_pMemory, testAddress, 4);
+    IMemory_Write32(m_pMemory, testAddress, 0x11111111);
+        void* pvHostAddress = MemorySim_MapSimulatedAddressToHostAddressForWrite(m_pMemory, testAddress, sizeof(uint32_t));
+    CHECK_EQUAL(0x11111111, *(uint32_t*)pvHostAddress);
+}
+
+TEST(MemorySim, MapSimulatedAddressForWrite_AttemptToMapAddressBeforeAndAfterValidRegion_ShouldThrow)
+{
+    static const uint32_t testAddress = 0x00000004;
+    MemorySim_CreateRegion(m_pMemory, testAddress, 4);
+
+    __try_and_catch( MemorySim_MapSimulatedAddressToHostAddressForWrite(m_pMemory, testAddress - 4, sizeof(uint32_t)) );
+    validateExceptionThrown(busErrorException);
+    __try_and_catch( MemorySim_MapSimulatedAddressToHostAddressForWrite(m_pMemory, testAddress + 4, sizeof(uint32_t)) );
+    validateExceptionThrown(busErrorException);
+}
+
+TEST(MemorySim, MapSimulatedAddressForWrite_AttemptToMapAddressThatOverflowRegions_ShouldThrow)
+{
+    static const uint32_t testAddress = 0x00000004;
+    MemorySim_CreateRegion(m_pMemory, testAddress, 4);
+
+    __try_and_catch( MemorySim_MapSimulatedAddressToHostAddressForWrite(m_pMemory, testAddress, 5) );
+    validateExceptionThrown(busErrorException);
+}
+
+TEST(MemorySim, MapSimulatedAddressForWrite_AttemptToMapAddressForWriteThatIsReadOnly_ShouldThrow)
+{
+    static const uint32_t testAddress = 0x00000004;
+    MemorySim_CreateRegion(m_pMemory, testAddress, 4);
+    MemorySim_MakeRegionReadOnly(m_pMemory, testAddress);
+
+    __try_and_catch( MemorySim_MapSimulatedAddressToHostAddressForWrite(m_pMemory, testAddress, 4) );
+    validateExceptionThrown(busErrorException);
+}
+
+TEST(MemorySim, MapSimulatedAddressForRead_ReadFromReadOnlyRegion)
+{
+    static const uint32_t testAddress = 0x00000004;
+    MemorySim_CreateRegion(m_pMemory, testAddress, 4);
+    MemorySim_MakeRegionReadOnly(m_pMemory, testAddress);
+
+    const void* pAddress = MemorySim_MapSimulatedAddressToHostAddressForRead(m_pMemory, testAddress, 4);
+    CHECK(pAddress != NULL);
+    CHECK_EQUAL(0, *(const uint32_t*)pAddress);
+}
+
+TEST(MemorySim, MapSimulatedAddressForRead_AttemptToMapAddressToInvalidRegion_ShouldThrow)
+{
+    __try_and_catch( MemorySim_MapSimulatedAddressToHostAddressForRead(m_pMemory, 4, 4) );
+    validateExceptionThrown(busErrorException);
+}

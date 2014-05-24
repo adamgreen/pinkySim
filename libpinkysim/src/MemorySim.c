@@ -23,7 +23,12 @@
 #define AccessType WatchpointType
 #define READING    WATCHPOINT_READ
 #define WRITING    WATCHPOINT_WRITE
+/* Even though loading data into FLASH is a write operation, we don't want bus exceptions generated. */
+#define LOADING    WATCHPOINT_READ
 
+/* Should this memory access be checked for break/watchpoints? */
+#define ENABLE_WATCHPOINT_CHECK     1
+#define DISABLE_WATCHPOINT_CHECK    0
 
 static const char g_xmlHeader[] = "<?xml version=\"1.0\"?>"
                                 "<!DOCTYPE memory-map PUBLIC \"+//IDN gnu.org//DTD GDB Memory Map V1.0//EN\" \"http://sourceware.org/gdb/gdb-memory-map.dtd\">"
@@ -56,7 +61,6 @@ static void addRegionToTail(MemorySim* pThis, MemoryRegion* pRegion);
 static MemoryRegion* findMatchingRegion(MemorySim* pThis, uint32_t address, uint32_t size);
 static void load32(IMemory* pMemory, uint32_t address, uint32_t value);
 static void load8(IMemory* pMemory, uint32_t address, uint8_t value);
-static void* getLoadPointer(MemorySim* pThis, uint32_t address, uint32_t size);
 static void freeLastRegion(MemorySim* pThis);
 static size_t countRegions(MemorySim* pThis);
 static void allocateMemoryMapXML(MemorySim* pThis, size_t allocSize);
@@ -69,7 +73,7 @@ static int compareWatchpoints(const void* pvKey, const void* pvCurr);
 static int watchpointsMatch(const Watchpoint* p1, const Watchpoint* p2);
 static void growWatchpointArrayIfNeeded(MemoryRegion* pRegion, uint32_t requiredSize);
 static void clearWatchpoint(IMemory* pMemory, uint32_t address, uint32_t size, WatchpointType type);
-static void* getDataPointer(MemorySim* pThis, uint32_t address, uint32_t size, AccessType type);
+static void* getDataPointer(MemorySim* pThis, uint32_t address, uint32_t size, AccessType type, int checkWatchpoints);
 static void checkForBreakWatchPoint(MemorySim* pThis,
                                     MemoryRegion* pRegion,
                                     uint32_t address, uint32_t size, AccessType type);
@@ -260,19 +264,12 @@ __throws void MemorySim_LoadFromFlashImage(IMemory* pMemory, const void* pFlashI
 
 static void load32(IMemory* pMemory, uint32_t address, uint32_t value)
 {
-    *(uint32_t*)getLoadPointer((MemorySim*)pMemory, address, sizeof(uint32_t)) = value;
+    *(uint32_t*)getDataPointer((MemorySim*)pMemory, address, sizeof(uint32_t), LOADING, DISABLE_WATCHPOINT_CHECK) = value;
 }
 
 static void load8(IMemory* pMemory, uint32_t address, uint8_t value)
 {
-    *(uint8_t*)getLoadPointer((MemorySim*)pMemory, address, sizeof(uint8_t)) = value;
-}
-
-static void* getLoadPointer(MemorySim* pThis, uint32_t address, uint32_t size)
-{
-    MemoryRegion* pRegion = findMatchingRegion(pThis, address, size);
-    uint32_t regionOffset = address - pRegion->baseAddress;
-    return pRegion->pData + regionOffset;
+    *(uint8_t*)getDataPointer((MemorySim*)pMemory, address, sizeof(uint8_t), LOADING, DISABLE_WATCHPOINT_CHECK) = value;
 }
 
 static void freeLastRegion(MemorySim* pThis)
@@ -369,6 +366,18 @@ static void appendMemoryMapXmlTrailer(MemorySim* pThis, SizedBuffer* pBuffer)
     memcpy(pBuffer->pBuffer, g_xmlTrailer, sizeof(g_xmlTrailer));
     pBuffer->pBuffer += sizeof(g_xmlTrailer);
     pBuffer->size -= sizeof(g_xmlTrailer);
+}
+
+
+__throws void* MemorySim_MapSimulatedAddressToHostAddressForWrite(IMemory* pMemory, uint32_t address, uint32_t size)
+{
+    return getDataPointer((MemorySim*)pMemory, address, size, WRITING, DISABLE_WATCHPOINT_CHECK);
+}
+
+
+__throws const void* MemorySim_MapSimulatedAddressToHostAddressForRead(IMemory* pMemory, uint32_t address, uint32_t size)
+{
+    return getDataPointer((MemorySim*)pMemory, address, size, READING, DISABLE_WATCHPOINT_CHECK);
 }
 
 
@@ -497,42 +506,43 @@ int  MemorySim_WasWatchpointEncountered(IMemory* pMemory)
 /* IMemory interface methods */
 static uint32_t read32(IMemory* pMemory, uint32_t address)
 {
-    return *(uint32_t*)getDataPointer((MemorySim*)pMemory, address, sizeof(uint32_t), READING);
+    return *(uint32_t*)getDataPointer((MemorySim*)pMemory, address, sizeof(uint32_t), READING, ENABLE_WATCHPOINT_CHECK);
 }
 
 static uint16_t read16(IMemory* pMemory, uint32_t address)
 {
-    return *(uint16_t*)getDataPointer((MemorySim*)pMemory, address, sizeof(uint16_t), READING);
+    return *(uint16_t*)getDataPointer((MemorySim*)pMemory, address, sizeof(uint16_t), READING, ENABLE_WATCHPOINT_CHECK);
 }
 
 static uint8_t read8(IMemory* pMemory, uint32_t address)
 {
-    return *(uint8_t*)getDataPointer((MemorySim*)pMemory, address, sizeof(uint8_t), READING);
+    return *(uint8_t*)getDataPointer((MemorySim*)pMemory, address, sizeof(uint8_t), READING, ENABLE_WATCHPOINT_CHECK);
 }
 
 static void write32(IMemory* pMemory, uint32_t address, uint32_t value)
 {
-    *(uint32_t*)getDataPointer((MemorySim*)pMemory, address, sizeof(uint32_t), WRITING) = value;
+    *(uint32_t*)getDataPointer((MemorySim*)pMemory, address, sizeof(uint32_t), WRITING, ENABLE_WATCHPOINT_CHECK) = value;
 }
 
 static void write16(IMemory* pMemory, uint32_t address, uint16_t value)
 {
-    *(uint16_t*)getDataPointer((MemorySim*)pMemory, address, sizeof(uint16_t), WRITING) = value;
+    *(uint16_t*)getDataPointer((MemorySim*)pMemory, address, sizeof(uint16_t), WRITING, ENABLE_WATCHPOINT_CHECK) = value;
 }
 
 static void write8(IMemory* pMemory, uint32_t address, uint8_t value)
 {
-    *(uint8_t*)getDataPointer((MemorySim*)pMemory, address, sizeof(uint8_t), WRITING) = value;
+    *(uint8_t*)getDataPointer((MemorySim*)pMemory, address, sizeof(uint8_t), WRITING, ENABLE_WATCHPOINT_CHECK) = value;
 }
 
 
-static void* getDataPointer(MemorySim* pThis, uint32_t address, uint32_t size, AccessType type)
+static void* getDataPointer(MemorySim* pThis, uint32_t address, uint32_t size, AccessType type, int checkWatchpoints)
 {
     MemoryRegion* pRegion = findMatchingRegion(pThis, address, size);
     uint32_t regionOffset = address - pRegion->baseAddress;
     if (type == WRITING && pRegion->readOnly)
         __throw(busErrorException);
-    checkForBreakWatchPoint(pThis, pRegion, address, size, type);
+    if (checkWatchpoints)
+        checkForBreakWatchPoint(pThis, pRegion, address, size, type);
     return pRegion->pData + regionOffset;
 }
 

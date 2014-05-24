@@ -38,6 +38,8 @@ void                 MemorySim_MakeRegionReadOnly(IMemory* pMemory, uint32_t bas
 __throws void        MemorySim_LoadFromFlashImage(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize);
 __throws void        MemorySim_CreateRegionsFromFlashImage(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize);
 __throws const char* MemorySim_GetMemoryMapXML(IMemory* pMemory);
+__throws void*       MemorySim_MapSimulatedAddressToHostAddressForWrite(IMemory* pMemory, uint32_t address, uint32_t size);
+__throws const void* MemorySim_MapSimulatedAddressToHostAddressForRead(IMemory* pMemory, uint32_t address, uint32_t size);
 
 __throws void MemorySim_SetHardwareBreakpoint(IMemory* pMemory, uint32_t address, uint32_t size);
 __throws void MemorySim_ClearHardwareBreakpoint(IMemory* pMemory, uint32_t address, uint32_t size);
