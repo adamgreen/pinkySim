@@ -13,6 +13,7 @@
 #ifndef _SEMIHOST_THUNKS_H_
 #define _SEMIHOST_THUNKS_H_
 
+#include <NewlibSemihost.h>
 #include <sys/stat.h>
 
 
@@ -21,10 +22,10 @@ int semihostRead(int file, char *ptr, int len);
 int semihostOpen(const char *pFilename, int flags, int mode);
 int semihostRename(const char *pOldFilename, const char *pNewFilename);
 int semihostUnlink(const char *pFilename);
-int semihostStat(const char *pFilename, struct stat *pStat);
+int semihostStat(const char *pFilename, NewlibStat *pStat);
 int semihostLSeek(int file, int offset, int whence);
 int semihostClose(int file);
-int semihostFStat(int file, struct stat *pStat);
+int semihostFStat(int file, NewlibStat *pStat);
 void semihostExit(int code);
 
 

@@ -13,7 +13,6 @@
 #ifndef _NEWLIB_SEMIHOST_H_
 #define _NEWLIB_SEMIHOST_H_
 
-
 /* Newlib APIs are semihosted to GDB by issuing appropriate BKPT instructions.  The following list gives the immediate
    constant to be used with BKPT for each operation. */
 #define NEWLIB_EXIT     0xFF
@@ -30,10 +29,18 @@
 #define NEWLIB_MIN      0xF6
 #define NEWLIB_MAX      0xFF
 
-
 /* Definitions only required from C code. */
 #if !__ASSEMBLER__
 
+#include <stdint.h>
+
+typedef struct NewlibStat
+{
+    uint32_t mode;
+    uint32_t size;
+    uint32_t blksize;
+    uint32_t blocks;
+} NewlibStat;
 
 #endif /* !__ASSEMBLER__ */
 #endif /* _NEWLIB_SEMIHOST_H_ */

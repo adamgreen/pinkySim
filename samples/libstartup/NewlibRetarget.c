@@ -24,6 +24,9 @@ extern int errno;
 extern uint32_t __end__[1];
 
 
+static void copyStat(struct stat* pStat, const NewlibStat* pNewlibStat);
+
+
 /* File system related syscalls. */
 int _open(const char *pFilename, int flags, int mode)
 {
@@ -42,7 +45,19 @@ int _unlink(const char *pFilename)
 
 int _stat(const char *pFilename, struct stat *pStat)
 {
-    return semihostStat(pFilename, pStat);
+    NewlibStat newlibStat;
+    int result = semihostStat(pFilename, &newlibStat);
+    if (result == 0)
+        copyStat(pStat, &newlibStat);
+    return result;
+}
+
+static void copyStat(struct stat* pStat, const NewlibStat* pNewlibStat)
+{
+    pStat->st_mode = pNewlibStat->mode;
+    pStat->st_size = pNewlibStat->size;
+    pStat->st_blocks = pNewlibStat->blocks;
+    pStat->st_blksize = pNewlibStat->blksize;
 }
 
 
@@ -76,7 +91,11 @@ int _close(int file)
 
 int _fstat(int file, struct stat *st)
 {
-    return semihostFStat(file, st);
+    NewlibStat newlibStat;
+    int result = semihostFStat(file, &newlibStat);
+    if (result == 0)
+        copyStat(st, &newlibStat);
+    return result;
 }
 
 

@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 
 
 int main(void)
@@ -69,8 +70,33 @@ int main(void)
         return 1;
     }
 
+    struct stat statStruct;
+    int fstatResults = fstat(fileno(fp), &statStruct);
+    if (statStruct.st_size != 256)
+    {
+        fprintf(stderr, "fstat() returned wrong file size of %ld\n", statStruct.st_size);
+        return 1;
+    }
+    if (fstatResults != 0)
+    {
+        perror("Failed fstat() call.");
+        return 1;
+    }
+
     fclose(fp);
     fp = NULL;
+
+    int statResults = stat(Filename, &statStruct);
+    if (statStruct.st_size != 256)
+    {
+        fprintf(stderr, "stat() returned wrong file size of %ld\n", statStruct.st_size);
+        return 1;
+    }
+    if (statResults != 0)
+    {
+        perror("Failed sstat() call.");
+        return 1;
+    }
 
     // Can delete the file now that we are done with it.
     remove(Filename);

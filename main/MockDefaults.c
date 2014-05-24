@@ -10,9 +10,11 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 */
+#include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 
@@ -28,8 +30,15 @@ long   (*hook_ftell)(FILE* stream) = ftell;
 size_t (*hook_fwrite)(const void* ptr, size_t size, size_t nitems, FILE* stream) = fwrite;
 size_t (*hook_fread)(void* ptr, size_t size, size_t nitems, FILE* stream) = fread;
 
+int     (*hook_open)(const char *path, int oflag, ...) = open;
 ssize_t (*hook_read)(int fildes, void *buf, size_t nbyte) = read;
 ssize_t (*hook_write)(int fildes, const void *buf, size_t nbyte) = write;
+off_t   (*hook_lseek)(int fildes, off_t offset, int whence) = lseek;
+int     (*hook_close)(int fildes) = close;
+int     (*hook_unlink)(const char *path) = unlink;
+int     (*hook_rename)(const char *oldPath, const char *newPath) = rename;
+int     (*hook_fstat)(int fildes, struct stat *buf) = fstat;
+int     (*hook_stat)(const char* path, struct stat* buf) = stat;
 
 int (*hook_socket)(int domain, int type, int protocol) = socket;
 int (*hook_setsockopt)(int socket,
@@ -45,6 +54,5 @@ int (*hook_select)(int nfds,
                    fd_set* writefds,
                    fd_set* errorfds,
                    struct timeval* timeout) = select;
-int (*hook_close)(int fildes) = close;
 ssize_t (*hook_recv)(int socket, void *buffer, size_t length, int flags) = recv;
 ssize_t (*hook_send)(int socket, const void *buffer, size_t length, int flags) = send;

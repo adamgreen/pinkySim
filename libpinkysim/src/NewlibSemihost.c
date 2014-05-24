@@ -15,8 +15,11 @@
 #include <core.h>
 #include <errno.h>
 #include <MallocFailureInject.h>
+#include <MemorySim.h>
 #include <mockFileIo.h>
 #include <mri.h>
+#include <mri4sim.h>
+#include <NewlibSemihost.h>
 #include <platforms.h>
 #include <semihost.h>
 #include <string.h>
@@ -24,31 +27,27 @@
 
 
 static int isConsoleOutput(uint32_t fileDescriptor);
-static void writeToConsole(PlatformSemihostParameters* pSemihostParameters);
+static void writeToFile(PlatformSemihostParameters* pSemihostParameters);
+static int isGdbConnected(void);
 static int isConsoleInput(uint32_t fileDescriptor);
-static void readFromConsole(PlatformSemihostParameters* pSemihostParameters);
-static int isConsoleFile(uint32_t fileDescriptor);
+static void readFromFile(PlatformSemihostParameters* pSemihostParameters);
+static void copyHostStatToTargetStat(NewlibStat* pTarget, const struct stat* pHost);
 
 
 int handleNewlibSemihostWriteRequest(PlatformSemihostParameters* pSemihostParameters)
 {
     TransferParameters parameters;
 
-    if (isConsoleOutput(pSemihostParameters->parameter1))
+    writeToFile(pSemihostParameters);
+    if (isConsoleOutput(pSemihostParameters->parameter1) && isGdbConnected())
     {
-        writeToConsole(pSemihostParameters);
-        if (Platform_CommIsWaitingForGdbToConnect())
-        {
-            FlagSemihostCallAsHandled();
-            return 1;
-        }
+        parameters.fileDescriptor = pSemihostParameters->parameter1;
+        parameters.bufferAddress = pSemihostParameters->parameter2;
+        parameters.bufferSize = pSemihostParameters->parameter3;
+        return IssueGdbFileWriteRequest(&parameters);
     }
-
-    parameters.fileDescriptor = pSemihostParameters->parameter1;
-    parameters.bufferAddress = pSemihostParameters->parameter2;
-    parameters.bufferSize = pSemihostParameters->parameter3;
-
-    return IssueGdbFileWriteRequest(&parameters);
+    FlagSemihostCallAsHandled();
+    return 1;
 }
 
 static int isConsoleOutput(uint32_t fileDescriptor)
@@ -56,37 +55,43 @@ static int isConsoleOutput(uint32_t fileDescriptor)
     return fileDescriptor == STDOUT_FILENO || fileDescriptor == STDERR_FILENO;
 }
 
-static void writeToConsole(PlatformSemihostParameters* pSemihostParameters)
+static int isGdbConnected(void)
+{
+    return !Platform_CommIsWaitingForGdbToConnect();
+}
+
+static void writeToFile(PlatformSemihostParameters* pSemihostParameters)
 {
     int32_t  file = pSemihostParameters->parameter1;
     uint32_t address = pSemihostParameters->parameter2;
     uint32_t size = pSemihostParameters->parameter3;
-    while (size)
+
+    __try
     {
-        uint8_t byte = Platform_MemRead8((void*)(size_t)address);
-        write(file, &byte, sizeof(byte));
-        address++;
-        size--;
+        const void* pBuffer = MemorySim_MapSimulatedAddressToHostAddressForRead(mri4simGetContext()->pMemory, address, size);
+        int writeResult = write(file, pBuffer, size);
+        SetSemihostReturnValues(writeResult, errno);
     }
-    SetSemihostReturnValues(pSemihostParameters->parameter3, 0);
+    __catch
+    {
+        SetSemihostReturnValues(-1, EFAULT);
+    }
 }
 
 int handleNewlibSemihostReadRequest(PlatformSemihostParameters* pSemihostParameters)
 {
     TransferParameters parameters;
 
-    if (isConsoleInput(pSemihostParameters->parameter1)  && Platform_CommIsWaitingForGdbToConnect())
+    if (isConsoleInput(pSemihostParameters->parameter1)  && isGdbConnected())
     {
-        readFromConsole(pSemihostParameters);
-        FlagSemihostCallAsHandled();
-        return 1;
+        parameters.fileDescriptor = pSemihostParameters->parameter1;
+        parameters.bufferAddress = pSemihostParameters->parameter2;
+        parameters.bufferSize = pSemihostParameters->parameter3;
+        return IssueGdbFileReadRequest(&parameters);
     }
-
-    parameters.fileDescriptor = pSemihostParameters->parameter1;
-    parameters.bufferAddress = pSemihostParameters->parameter2;
-    parameters.bufferSize = pSemihostParameters->parameter3;
-
-    return IssueGdbFileReadRequest(&parameters);
+    readFromFile(pSemihostParameters);
+    FlagSemihostCallAsHandled();
+    return 1;
 }
 
 static int isConsoleInput(uint32_t fileDescriptor)
@@ -94,122 +99,169 @@ static int isConsoleInput(uint32_t fileDescriptor)
     return fileDescriptor == STDIN_FILENO;
 }
 
-static void readFromConsole(PlatformSemihostParameters* pSemihostParameters)
+static void readFromFile(PlatformSemihostParameters* pSemihostParameters)
 {
     int32_t  file = pSemihostParameters->parameter1;
     uint32_t address = pSemihostParameters->parameter2;
     uint32_t size = pSemihostParameters->parameter3;
-    ssize_t  readResult = -1;
-    uint8_t* pBuffer;
-    uint8_t* pCurr;
 
-    pBuffer = malloc(size);
-    if (!pBuffer)
+    __try
     {
-        SetSemihostReturnValues(-1, ENOMEM);
-        return;
+        void* pBuffer = MemorySim_MapSimulatedAddressToHostAddressForWrite(mri4simGetContext()->pMemory, address, size);
+        ssize_t readResult = read(file, pBuffer, size);
+        SetSemihostReturnValues(readResult, errno);
     }
-    readResult = read(file, pBuffer, size);
-    if (readResult == -1)
+    __catch
     {
-        free(pBuffer);
-        SetSemihostReturnValues(-1, errno);
-        return;
+        SetSemihostReturnValues(-1, EFAULT);
     }
-
-    pCurr = pBuffer;
-    size = readResult;
-    while (size--)
-        Platform_MemWrite8((void*)(size_t)address++, *pCurr++);
-    SetSemihostReturnValues(readResult, 0);
-    free(pBuffer);
 }
 
 int handleNewlibSemihostOpenRequest(PlatformSemihostParameters* pSemihostParameters)
 {
-    OpenParameters parameters;
+    uint32_t filenameAddress = pSemihostParameters->parameter1;
+    uint32_t filenameLength = pSemihostParameters->parameter4;
+    uint32_t flags = pSemihostParameters->parameter2;
+    uint32_t mode = pSemihostParameters->parameter3;
+    __try
+    {
+        const void* pFilename = MemorySim_MapSimulatedAddressToHostAddressForRead(mri4simGetContext()->pMemory,
+                                                                                  filenameAddress,
+                                                                                  filenameLength);
 
-    parameters.filenameAddress = pSemihostParameters->parameter1;
-    parameters.filenameLength = pSemihostParameters->parameter4;
-    parameters.flags = pSemihostParameters->parameter2;
-    parameters.mode = pSemihostParameters->parameter3;
-
-    return IssueGdbFileOpenRequest(&parameters);
+        int openResult = open(pFilename, flags, mode);
+        SetSemihostReturnValues(openResult, errno);
+    }
+    __catch
+    {
+        SetSemihostReturnValues(-1, EFAULT);
+    }
+    FlagSemihostCallAsHandled();
+    return 1;
 }
 
 int handleNewlibSemihostUnlinkRequest(PlatformSemihostParameters* pSemihostParameters)
 {
-    RemoveParameters parameters;
+    uint32_t filenameAddress = pSemihostParameters->parameter1;
+    uint32_t filenameLength = pSemihostParameters->parameter2;
 
-    parameters.filenameAddress = pSemihostParameters->parameter1;
-    parameters.filenameLength = pSemihostParameters->parameter2;
+    __try
+    {
+        const void* pFilename = MemorySim_MapSimulatedAddressToHostAddressForRead(mri4simGetContext()->pMemory,
+                                                                                  filenameAddress, filenameLength);
+        int unlinkResult = unlink(pFilename);
+        SetSemihostReturnValues(unlinkResult, errno);
+    }
+    __catch
+    {
+        SetSemihostReturnValues(-1, EFAULT);
+    }
 
-    return IssueGdbFileUnlinkRequest(&parameters);
+    FlagSemihostCallAsHandled();
+    return 1;
 }
 
 int handleNewlibSemihostLSeekRequest(PlatformSemihostParameters* pSemihostParameters)
 {
-    SeekParameters parameters;
+    uint32_t fileDescriptor = pSemihostParameters->parameter1;
+    uint32_t offset = pSemihostParameters->parameter2;
+    uint32_t whence = pSemihostParameters->parameter3;
 
-    if (isConsoleFile(pSemihostParameters->parameter1))
-    {
-        SetSemihostReturnValues(-1, EBADF);
-        FlagSemihostCallAsHandled();
-        return 1;
-    }
-
-    parameters.fileDescriptor = pSemihostParameters->parameter1;
-    parameters.offset = pSemihostParameters->parameter2;
-    parameters.whence = pSemihostParameters->parameter3;
-
-    return IssueGdbFileSeekRequest(&parameters);
+    int lseekResult = lseek(fileDescriptor, offset, whence);
+    SetSemihostReturnValues(lseekResult, errno);
+    FlagSemihostCallAsHandled();
+    return 1;
 }
 
 int handleNewlibSemihostCloseRequest(PlatformSemihostParameters* pSemihostParameters)
 {
-    if (isConsoleFile(pSemihostParameters->parameter1))
-    {
-        SetSemihostReturnValues(0, 0);
-        FlagSemihostCallAsHandled();
-        return 1;
-    }
+    uint32_t fileDescriptor = pSemihostParameters->parameter1;
 
-    return IssueGdbFileCloseRequest(pSemihostParameters->parameter1);
+    int closeResult = close(fileDescriptor);
+    SetSemihostReturnValues(closeResult, errno);
+    FlagSemihostCallAsHandled();
+    return 1;
 }
 
 int handleNewlibSemihostFStatRequest(PlatformSemihostParameters* pSemihostParameters)
 {
-    if (isConsoleFile(pSemihostParameters->parameter1))
-    {
-        SetSemihostReturnValues(-1, 0);
-        FlagSemihostCallAsHandled();
-        return 1;
-    }
-    return IssueGdbFileFStatRequest(pSemihostParameters->parameter1, pSemihostParameters->parameter2);
-}
+    uint32_t file = pSemihostParameters->parameter1;
+    uint32_t fileStatAddress = pSemihostParameters->parameter2;
 
-static int isConsoleFile(uint32_t fileDescriptor)
-{
-    return isConsoleOutput(fileDescriptor) || isConsoleInput(fileDescriptor);
+    __try
+    {
+        struct stat hostStat;
+        NewlibStat* pTargetStat = MemorySim_MapSimulatedAddressToHostAddressForWrite(mri4simGetContext()->pMemory,
+                                                                                     fileStatAddress,
+                                                                                     sizeof(*pTargetStat));
+        int fstatResult = fstat(file, &hostStat);
+        copyHostStatToTargetStat(pTargetStat, &hostStat);
+        SetSemihostReturnValues(fstatResult, errno);
+    }
+    __catch
+    {
+        SetSemihostReturnValues(-1, EFAULT);
+    }
+    FlagSemihostCallAsHandled();
+    return 1;
 }
 
 int handleNewlibSemihostStatRequest(PlatformSemihostParameters* pSemihostParameters)
 {
-    StatParameters parameters;
+    uint32_t filenameAddress = pSemihostParameters->parameter1;
+    uint32_t filenameLength = pSemihostParameters->parameter3;
+    uint32_t fileStatAddress = pSemihostParameters->parameter2;
 
-    parameters.filenameAddress = pSemihostParameters->parameter1;
-    parameters.filenameLength = pSemihostParameters->parameter3;
-    parameters.fileStatBuffer = pSemihostParameters->parameter2;
-    return IssueGdbFileStatRequest(&parameters);
+    __try
+    {
+        struct stat hostStat;
+        const void* pFilename = MemorySim_MapSimulatedAddressToHostAddressForRead(mri4simGetContext()->pMemory,
+                                                                                  filenameAddress, filenameLength);
+        NewlibStat* pTargetStat = MemorySim_MapSimulatedAddressToHostAddressForWrite(mri4simGetContext()->pMemory,
+                                                                                     fileStatAddress,
+                                                                                     sizeof(*pTargetStat));
+        int statResult = hook_stat(pFilename, &hostStat);
+        copyHostStatToTargetStat(pTargetStat, &hostStat);
+        SetSemihostReturnValues(statResult, errno);
+    }
+    __catch
+    {
+        SetSemihostReturnValues(-1, EFAULT);
+    }
+    FlagSemihostCallAsHandled();
+    return 1;
+}
+
+static void copyHostStatToTargetStat(NewlibStat* pTarget, const struct stat* pHost)
+{
+    pTarget->mode = pHost->st_mode;
+    pTarget->size = pHost->st_size;
+    pTarget->blocks = pHost->st_blocks;
+    pTarget->blksize = pHost->st_blksize;
 }
 
 int handleNewlibSemihostRenameRequest(PlatformSemihostParameters* pSemihostParameters)
 {
-    RenameParameters parameters;
+    uint32_t origFilenameAddress = pSemihostParameters->parameter1;
+    uint32_t origFilenameLength = pSemihostParameters->parameter3;
+    uint32_t newFilenameAddress = pSemihostParameters->parameter2;
+    uint32_t newFilenameLength = pSemihostParameters->parameter4;
 
-    parameters.origFilenameAddress = pSemihostParameters->parameter1;
-    parameters.origFilenameLength = pSemihostParameters->parameter3;
-    parameters.newFilenameAddress = pSemihostParameters->parameter2;
-    parameters.newFilenameLength = pSemihostParameters->parameter4;
-    return IssueGdbFileRenameRequest(&parameters);
+    __try
+    {
+        const void* pOrigFilename = MemorySim_MapSimulatedAddressToHostAddressForRead(mri4simGetContext()->pMemory,
+                                                                                      origFilenameAddress,
+                                                                                      origFilenameLength);
+        const void* pNewFilename = MemorySim_MapSimulatedAddressToHostAddressForRead(mri4simGetContext()->pMemory,
+                                                                                     newFilenameAddress,
+                                                                                     newFilenameLength);
+        int renameResult = rename(pOrigFilename, pNewFilename);
+        SetSemihostReturnValues(renameResult, errno);
+    }
+    __catch
+    {
+        SetSemihostReturnValues(-1, EFAULT);
+    }
+    FlagSemihostCallAsHandled();
+    return 1;
 }
