@@ -4,6 +4,7 @@
 *_tests.exe
 *_tests_gcov.exe
 *_tests.txt
+*_output.txt
 *.o
 *.d
 *.a

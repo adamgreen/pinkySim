@@ -61,12 +61,16 @@ ARMV6M_ASFLAGS     := -mcpu=cortex-m0 -mthumb -x assembler-with-cpp -MMD -MP
 ARMV6M_DISASMFLAGS := -d -f -M reg-names-std --demangle
 
 # Output directories for intermediate object files.
+ARMV6M_OUTPUT := armv6m
+GCOV_OUTPUT   := gcov
 OBJDIR        := obj
-ARMV6M_OBJDIR := $(OBJDIR)
+ARMV6M_OBJDIR := $(ARMV6M_OUTPUT)/$(OBJDIR)
+GCOV_OBJDIR   := $(GCOV_OUTPUT)/$(OBJDIR)
 
 # Output directories for final libraries.
 LIBDIR        := lib
-ARMV6M_LIBDIR := $(LIBDIR)
+ARMV6M_LIBDIR := $(ARMV6M_OUTPUT)/$(LIBDIR)
+GCOV_LIBDIR   := $(GCOV_OUTPUT)/$(LIBDIR)
 
 # Start out with empty pre-req lists.  Add modules as we go.
 ALL_TARGETS  :=
@@ -77,7 +81,9 @@ DEPS :=
 # Useful macros.
 objs = $(addprefix $2/,$(addsuffix .o,$(basename $(wildcard $1/*.c $1/*.cpp $1/*.S))))
 armv6m_objs = $(call objs,$1,$(ARMV6M_OBJDIR))
-add_deps = $(patsubst %.o,%.d,$(ARMV6M_$1_OBJ))
+gcov_objs = $(call objs,$1,$(GCOV_OBJDIR))
+obj_to_gcda = $(patsubst %.o,%.gcda,$1)
+add_deps = $(patsubst %.o,%.d,$(ARMV6M_$1_OBJ) $(GCOV_$1_OBJ))
 includes = $(patsubst %,-I%,$1)
 define build_lib
 	@echo Building $@
@@ -88,6 +94,11 @@ define link_exe
 	@echo Building $@
 	$Q $(MAKEDIR)
 	$Q $($1_LD) $($1_LDFLAGS) $^ -o $@
+endef
+define link_gcov_exe
+	@echo Building $@
+	$Q $(MAKEDIR)
+	$Q $($1_LD) $($1_LDFLAGS) $^ -lgcov -o $@
 endef
 define disasm_exe
 	@echo Extracting disassembly to $@
@@ -102,25 +113,41 @@ endef
 define make_library # ,LIBRARY,src_dirs,libname.a,includes
     ARMV6M_$1_OBJ    := $(foreach i,$2,$(call armv6m_objs,$i))
     ARMV6M_$1_LIB    := $(ARMV6M_LIBDIR)/$3
+    GCOV_$1_OBJ      := $(foreach i,$2,$(call gcov_objs,$i))
+    GCOV_$1_LIB      := $(GCOV_LIBDIR)/$3
     DEPS             += $$(call add_deps,$1)
-    ALL_TARGETS      += $$(ARMV6M_$1_LIB)
+    ALL_TARGETS      += $$(ARMV6M_$1_LIB) $$(GCOV_$1_LIB)
     $$(ARMV6M_$1_LIB) : INCLUDES := $4
+    $$(GCOV_$1_LIB)   : INCLUDES := $4
     $$(ARMV6M_$1_LIB) : $$(ARMV6M_$1_OBJ)
+		$$(call build_lib,ARMV6M)
+    $$(GCOV_$1_LIB) : $$(GCOV_$1_OBJ)
 		$$(call build_lib,ARMV6M)
 endef
 define make_sample # ,APP2BUILD,app_src_dirs,includes,other_libs
     ARMV6M_$1_APP_OBJ    := $(foreach i,$2,$(call armv6m_objs,$i))
-    ARMV6M_$1_APP_ELF    := $(ARMV6M_OBJDIR)/$1.elf
-    ARMV6M_$1_APP_DISASM := $(ARMV6M_OBJDIR)/$1.disasm
+    ARMV6M_$1_APP_ELF    := $(ARMV6M_OUTPUT)/$1.elf
+    ARMV6M_$1_APP_DISASM := $(ARMV6M_OUTPUT)/$1.disasm
     ARMV6M_$1_APP_BIN    := $1.bin
+    GCOV_$1_APP_OBJ      := $(foreach i,$2,$(call gcov_objs,$i))
+    GCOV_$1_APP_ELF      := $(GCOV_OUTPUT)/$1.elf
+    GCOV_$1_APP_DISASM   := $(GCOV_OUTPUT)/$1.disasm
+    GCOV_$1_APP_BIN      := $1_gcov.bin
     DEPS                 += $$(call add_deps,$1_APP)
-    ALL_TARGETS += $$(ARMV6M_$1_APP_DISASM) $$(ARMV6M_$1_APP_BIN)
+    ALL_TARGETS += $$(ARMV6M_$1_APP_DISASM) $$(ARMV6M_$1_APP_BIN) $$(GCOV_$1_APP_DISASM) $$(GCOV_$1_APP_BIN)
     $$(ARMV6M_$1_APP_ELF) : INCLUDES := $3
-    $$(ARMV6M_$1_APP_ELF) : $$(ARMV6M_$1_APP_OBJ) $4
+    $$(GCOV_$1_APP_ELF)   : INCLUDES := $3
+    $$(ARMV6M_$1_APP_ELF) : $$(ARMV6M_$1_APP_OBJ) $(addprefix $(ARMV6M_LIBDIR)/,libstartup.a $4)
 		$$(call link_exe,ARMV6M)
     $$(ARMV6M_$1_APP_DISASM) : $$(ARMV6M_$1_APP_ELF)
 		$$(call disasm_exe,ARMV6M)
     $$(ARMV6M_$1_APP_BIN) : $$(ARMV6M_$1_APP_ELF)
+		$$(call create_bin,ARMV6M)
+    $$(GCOV_$1_APP_ELF) : $$(GCOV_$1_APP_OBJ) $(addprefix $(GCOV_LIBDIR)/,libstartup.a $4)
+		$$(call link_gcov_exe,ARMV6M)
+    $$(GCOV_$1_APP_DISASM) : $$(GCOV_$1_APP_ELF)
+		$$(call disasm_exe,ARMV6M)
+    $$(GCOV_$1_APP_BIN) : $$(GCOV_$1_APP_ELF)
 		$$(call create_bin,ARMV6M)
 endef
 
@@ -131,15 +158,15 @@ $(eval $(call make_library,LIBSTARTUP,libstartup,libstartup.a,../include))
 
 #######################################
 # FileTest_Sample
-$(eval $(call make_sample,FileTest_Sample,FileTest,include,$(ARMV6M_LIBSTARTUP_LIB)))
+$(eval $(call make_sample,FileTest_Sample,FileTest,include,))
 
 #######################################
 # CommandLine_Sample
-$(eval $(call make_sample,CommandLine_Sample,CommandLine,include,$(ARMV6M_LIBSTARTUP_LIB)))
+$(eval $(call make_sample,CommandLine_Sample,CommandLine,include,))
 
 #######################################
 # StdIO_Sample
-$(eval $(call make_sample,StdIO_Sample,StdIO,include,$(ARMV6M_LIBSTARTUP_LIB)))
+$(eval $(call make_sample,StdIO_Sample,StdIO,include,))
 
 
 #######################################
@@ -149,8 +176,8 @@ all : $(ALL_TARGETS)
 
 clean :
 	@echo Cleaning samples
-	$Q $(REMOVE_DIR) $(OBJDIR) $(QUIET)
-	$Q $(REMOVE_DIR) $(LIBDIR) $(QUIET)
+	$Q $(REMOVE_DIR) $(ARMV6M_OUTPUT) $(QUIET)
+	$Q $(REMOVE_DIR) $(GCOV_OUTPUT) $(QUIET)
 	$Q $(REMOVE) *.bin $(QUIET)
 
 
@@ -160,7 +187,29 @@ $(ARMV6M_OBJDIR)/%.o : %.c
 	$Q $(MAKEDIR)
 	$Q $(ARMV6M_GCC) $(ARMV6M_GCCFLAGS) $(call includes,$(INCLUDES)) -c $< -o $@
 
+$(ARMV6M_OBJDIR)/%.o : %.cpp
+	@echo Compiling $<
+	$Q $(MAKEDIR)
+	$Q $(ARMV6M_GPP) $(ARMV6M_GPPFLAGS) $(call includes,$(INCLUDES)) -c $< -o $@
+
 $(ARMV6M_OBJDIR)/%.o : %.S
+	@echo Assembling $<
+	$Q $(MAKEDIR)
+	$Q $(ARMV6M_AS) $(ARMV6M_ASFLAGS) $(call includes,$(INCLUDES)) -c $< -o $@
+
+$(GCOV_OBJDIR)/%.o : %.c
+	@echo Compiling $<
+	$Q $(MAKEDIR)
+	$Q $(REMOVE) $(call obj_to_gcda,$@) $(QUIET)
+	$Q $(ARMV6M_GCC) $(ARMV6M_GCCFLAGS) -fprofile-arcs -ftest-coverage $(call includes,$(INCLUDES)) -c $< -o $@
+
+$(GCOV_OBJDIR)/%.o : %.cpp
+	@echo Compiling $<
+	$Q $(MAKEDIR)
+	$Q $(REMOVE) $(call obj_to_gcda,$@) $(QUIET)
+	$Q $(ARMV6M_GPP) $(ARMV6M_GPPFLAGS) -fprofile-arcs -ftest-coverage $(call includes,$(INCLUDES)) -c $< -o $@
+
+$(GCOV_OBJDIR)/%.o : %.S
 	@echo Assembling $<
 	$Q $(MAKEDIR)
 	$Q $(ARMV6M_AS) $(ARMV6M_ASFLAGS) $(call includes,$(INCLUDES)) -c $< -o $@
