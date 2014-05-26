@@ -10,6 +10,7 @@
 [[https://github.com/adamgreen/pinkySim#unit-test-validation | Unit Test Validation]] \\
 [[https://github.com/adamgreen/pinkySim#important-notes | Important Notes]] \\
 [[https://github.com/adamgreen/pinkySim#samples | Samples]] \\
+[[https://github.com/adamgreen/pinkySim#cc-code-coverage-using-gcov | C/C++ Code Coverage using GCOV]] \\
 
 
 ==Overview
