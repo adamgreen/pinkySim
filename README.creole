@@ -154,7 +154,7 @@ Waiting for GDB to connect...
 Now the developer can attach GDB to pinkySim by issuing a {{{target remote localhost:3333}}} command as seen in this
 example debug session:
 {{{
-/depots/pinkySim/samples$ arm-none-eabi-gdb obj/FileTest_Sample.elf
+/depots/pinkySim/samples$ arm-none-eabi-gdb armv6m/FileTest_Sample.elf
 GNU gdb (GNU Tools for ARM Embedded Processors) 7.6.0.20140228-cvs
 Copyright (C) 2013 Free Software Foundation, Inc.
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
@@ -261,10 +261,92 @@ cd samples
 make all
 }}}
 
-The resulting binaries for simulation will be found in the samples directory.  The ELF, map, and disassembly for each sample can be found in the samples/obj directory.
+The resulting binaries for simulation will be found in the samples directory.  The binaries with the _gcov.bin suffix
+contain GCC instrumentation to record C/C++ code coverage results upon exit.  The ELF, map, and disassembly for each
+sample can be found in the samples/armv6m directory (samples/gcov for code coverage versions.)
 
 Key files used by the samples:
 | pinkySim.ld | Directs the linker to place code in a 256MB FLASH region starting at address 0x00000000 and variables in a 256MB (minus 32 bytes) RAM region staring at 0x10000000.  It also places the isr_vector array from libstartup/Reset.c at the beginning of FLASH where the simulator expects to find the initial stack pointer and reset address. |
-| libstartup/Reset.c | Contains the isr_vector array which contains the initial stack pointer value (pointing to the top of RAM) and the Reset_Handler function pointer.  It also contains the Reset_Handler() code which initializes the C runtime and then transfers control to the sample's main(). |
+| libstartup/Reset.c | Has the isr_vector array which contains the initial stack pointer value (pointing to the top of RAM) and the Reset_Handler function pointer.  It also contains the Reset_Handler() code which initializes the C runtime and then transfers control to the sample's main(). |
 | libstartup/NewlibRetarget.c | Contains the sys call implementations required by the newlib C standard library.  These sys calls are called from newlib when it needs to perform operations such as opening, reading, writing, and closing files on the target system. |
 | libstartup/SemihostThunks.s | These ARMV6-M assembly language thunks provide routines that can be called from the NewlibRetarget.c sys calls to transfer execution to pinkySim so that they can be performed on the host system.  A BKPT (breakpoint) instruction with a unique constant is used to signal pinkySim that a specific operation is being requested.  The include/NewlibSemihost.h header defines the BKPT operation constants supported by pinkySim. These thunks also take care of calculating the length of string arguments and setting {{{errno}}} upon return if an error was encountered by the host as it attempted to execute the sys call on behalf of the simulated program. |
+
+
+
+==C/C++ Code Coverage using GCOV
+It is possible for GCC to instrument the binaries it produces with code coverage instrumentation by adding the
+{{{-fprofile-arcs -ftest-coverage}}} flags to the compiler command line.  Linking with libgcov.a by adding {{{-lgcov}}}
+to the linker command line is also required.  ARMv6-M binaries with this instrumentation will successfully execute and
+log their code coverage results under pinkySim.
+
+After performing a build in the /samples directory of the pinkySim project you will be have two .bin files for each
+sample, the one with the _gcov.bin suffix will include the instrumentation.  Running these binaries under pinkySim will
+generate .gcda coverage results files in the gcov/obj directories next to the corresponding object files.  The
+run-gcov.sh script takes the name of a sample and extracts the code coverage information from these result files.  What
+follows is an example of building the samples, running the FileTest sample and then extracting the human readable
+results:
+{{{
+/depots/pinkySim/samples$ make
+Compiling libstartup/NewlibRetarget.c
+Compiling libstartup/Reset.c
+Assembling libstartup/SemihostThunks.S
+Building armv6m/lib/libstartup.a
+Compiling libstartup/NewlibRetarget.c
+Compiling libstartup/Reset.c
+Assembling libstartup/SemihostThunks.S
+Building gcov/lib/libstartup.a
+Compiling FileTest/main.c
+Building armv6m/FileTest_Sample.elf
+Extracting disassembly to armv6m/FileTest_Sample.disasm
+Extracting FileTest_Sample.bin
+Compiling FileTest/main.c
+Building gcov/FileTest_Sample.elf
+Extracting disassembly to gcov/FileTest_Sample.disasm
+Extracting FileTest_Sample_gcov.bin
+Compiling CommandLine/main.c
+Building armv6m/CommandLine_Sample.elf
+Extracting disassembly to armv6m/CommandLine_Sample.disasm
+Extracting CommandLine_Sample.bin
+Compiling CommandLine/main.c
+Building gcov/CommandLine_Sample.elf
+Extracting disassembly to gcov/CommandLine_Sample.disasm
+Extracting CommandLine_Sample_gcov.bin
+Compiling StdIO/main.c
+Building armv6m/StdIO_Sample.elf
+Extracting disassembly to armv6m/StdIO_Sample.disasm
+Extracting StdIO_Sample.bin
+Compiling StdIO/main.c
+Building gcov/StdIO_Sample.elf
+Extracting disassembly to gcov/StdIO_Sample.disasm
+Extracting StdIO_Sample_gcov.bin
+
+/depots/pinkySim/samples$ ../pinkySim FileTest_Sample_gcov.bin 
+Hello World
+
+Test completed
+
+/depots/pinkySim/samples$ ls -l gcov/obj/FileTest/
+total 144
+-rw-r--r--  1 adamgreen  wheel     42 May 25 22:41 main.d
+-rw-r--r--  1 adamgreen  wheel    476 May 25 22:42 main.gcda
+-rw-r--r--  1 adamgreen  wheel   3352 May 25 22:41 main.gcno
+-rw-r--r--  1 adamgreen  wheel  59064 May 25 22:41 main.o
+
+/depots/pinkySim/samples$ run-gcov.sh FileTest
+gcov/obj/libstartup/SemihostThunks.gcno:cannot open notes file
+ 40.00% of 10   Creating 'Reset.c
+ 60.00% of 45   Creating 'main.c
+ 62.26% of 53   Creating 'NewlibRetarget.c
+
+Detailed code coverage results can be found in gcov/FileTest
+
+/depots/pinkySim/samples$ ls -l gcov/FileTest
+total 48
+-rw-r--r--  1 adamgreen  wheel   111 May 25 22:42 FileTest_output.txt
+-rw-r--r--  1 adamgreen  wheel  6532 May 25 22:42 NewlibRetarget.c.gcov
+-rw-r--r--  1 adamgreen  wheel  3191 May 25 22:42 Reset.c.gcov
+-rw-r--r--  1 adamgreen  wheel  4835 May 25 22:42 main.c.gcov
+}}}
+
+The *.c.gcov files under the gcov/FileTest/ directory contain the source code with the left hand column used to indicate
+how many times each line was executed, flagging lines not covered with {{{#####}}}.
