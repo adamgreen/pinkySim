@@ -211,29 +211,32 @@ void Platform_LeavingDebugger(void)
 
 uint32_t Platform_MemRead32(const void* pv)
 {
+    uint32_t retVal = 0;
     __try
-        return IMemory_Read32(g_context.pMemory, (uint32_t)pv);
+        retVal = IMemory_Read32(g_context.pMemory, (uint32_t)pv);
     __catch
         g_memoryFaultEncountered++;
-    return 0;
+    return retVal;
 }
 
 uint16_t Platform_MemRead16(const void* pv)
 {
+    uint16_t retVal = 0;
     __try
-        return IMemory_Read16(g_context.pMemory, (uint32_t)pv);
+        retVal = IMemory_Read16(g_context.pMemory, (uint32_t)pv);
     __catch
         g_memoryFaultEncountered++;
-    return 0;
+    return retVal;
 }
 
 uint8_t Platform_MemRead8(const void* pv)
 {
+    uint8_t retVal = 0;
     __try
-        return IMemory_Read8(g_context.pMemory, (uint32_t)pv);
+        retVal = IMemory_Read8(g_context.pMemory, (uint32_t)pv);
     __catch
         g_memoryFaultEncountered++;
-    return 0;
+    return retVal;
 }
 
 void Platform_MemWrite32(void* pv, uint32_t value)
