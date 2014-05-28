@@ -30,16 +30,23 @@ typedef enum WatchpointType
     WATCHPOINT_READ_WRITE = 3
 } WatchpointType;
 
+typedef struct MemorySimReadCounts
+{
+    uint32_t*   pCounts;
+    uint32_t    length;
+} MemorySimReadCounts;
 
-IMemory*             MemorySim_Init(void);
-void                 MemorySim_Uninit(IMemory* pMemory);
-__throws void        MemorySim_CreateRegion(IMemory* pMemory, uint32_t baseAddress, uint32_t size);
-void                 MemorySim_MakeRegionReadOnly(IMemory* pMemory, uint32_t baseAddress);
-__throws void        MemorySim_LoadFromFlashImage(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize);
-__throws void        MemorySim_CreateRegionsFromFlashImage(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize);
-__throws const char* MemorySim_GetMemoryMapXML(IMemory* pMemory);
-__throws void*       MemorySim_MapSimulatedAddressToHostAddressForWrite(IMemory* pMemory, uint32_t address, uint32_t size);
-__throws const void* MemorySim_MapSimulatedAddressToHostAddressForRead(IMemory* pMemory, uint32_t address, uint32_t size);
+
+IMemory*                     MemorySim_Init(void);
+void                         MemorySim_Uninit(IMemory* pMemory);
+__throws void                MemorySim_CreateRegion(IMemory* pMemory, uint32_t baseAddress, uint32_t size);
+void                         MemorySim_MakeRegionReadOnly(IMemory* pMemory, uint32_t baseAddress);
+__throws void                MemorySim_LoadFromFlashImage(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize);
+__throws void                MemorySim_CreateRegionsFromFlashImage(IMemory* pMemory, const void* pFlashImage, uint32_t flashImageSize);
+__throws const char*         MemorySim_GetMemoryMapXML(IMemory* pMemory);
+__throws void*               MemorySim_MapSimulatedAddressToHostAddressForWrite(IMemory* pMemory, uint32_t address, uint32_t size);
+__throws const void*         MemorySim_MapSimulatedAddressToHostAddressForRead(IMemory* pMemory, uint32_t address, uint32_t size);
+__throws MemorySimReadCounts MemorySim_GetFlashReadCounts(IMemory* pMemory, uint32_t baseAddress);
 
 __throws void MemorySim_SetHardwareBreakpoint(IMemory* pMemory, uint32_t address, uint32_t size);
 __throws void MemorySim_ClearHardwareBreakpoint(IMemory* pMemory, uint32_t address, uint32_t size);

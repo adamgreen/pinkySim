@@ -305,8 +305,9 @@ TEST(MemorySim, CreateRegionsFromFlashImage_ShouldThrowIfOutOfMemory)
     // Each region has two allocations:
     // 1. The MemoryRegion structure which describes the region.
     // 2. The array of bytes used to simulate the memory.
-    // This API creates two regions (FLASH and RAM) so there are a total of 4 allocations.
-    static const size_t allocationsToFail = 4;
+    // The FLASH region has an additional allocation for the read count array.
+    // This API creates two regions (FLASH and RAM) so there are a total of 3 + 2 = 5 allocations.
+    static const size_t allocationsToFail = 5;
     uint32_t            flashBinary[2] = { 0x10000004, 0x00000200 };
     size_t              i;
 
@@ -328,8 +329,9 @@ TEST(MemorySim, CreateRegionsFromFlashImage_MakeSureItHandlesOutOfMemoryWhenTher
     // Each region has two allocations:
     // 1. The MemoryRegion structure which describes the region.
     // 2. The array of bytes used to simulate the memory.
-    // This API creates two regions (FLASH and RAM) so there are a total of 4 allocations.
-    static const size_t allocationsToFail = 4;
+    // The FLASH region has an additional allocation for the read count array.
+    // This API creates two regions (FLASH and RAM) so there are a total of 3 + 2 = 5 allocations.
+    static const size_t allocationsToFail = 5;
     uint32_t            flashBinary[2] = { 0x10000004, 0x00000200 };
     size_t              i;
 
@@ -917,4 +919,75 @@ TEST(MemorySim, MapSimulatedAddressForRead_AttemptToMapAddressToInvalidRegion_Sh
 {
     __try_and_catch( MemorySim_MapSimulatedAddressToHostAddressForRead(m_pMemory, 4, 4) );
     validateExceptionThrown(busErrorException);
+}
+
+
+
+TEST(MemorySim, GetReadCounts_OnNonExistentRegion_ShouldThrow)
+{
+    __try_and_catch( MemorySim_GetFlashReadCounts(m_pMemory, 0x00000000) );
+    validateExceptionThrown(busErrorException);
+}
+
+TEST(MemorySim, GetReadCounts_OnReadWriteRamRegion_ShouldThrow)
+{
+    static const uint32_t testAddress = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testAddress, 4);
+        __try_and_catch( MemorySim_GetFlashReadCounts(m_pMemory, testAddress) );
+    validateExceptionThrown(busErrorException);
+}
+
+TEST(MemorySim, GetReadCounts_OnFlashRegionWithInvalidBaseAddress_ShouldThrow)
+{
+    static const uint32_t testAddress = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testAddress, 4);
+    MemorySim_MakeRegionReadOnly(m_pMemory, testAddress);
+        __try_and_catch( MemorySim_GetFlashReadCounts(m_pMemory, testAddress + 2) );
+    validateExceptionThrown(busErrorException);
+}
+
+TEST(MemorySim, GetReadCounts_CheckFlashRegionWithNoReads_ShouldReadCountOfZero)
+{
+    static const uint32_t testAddress = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testAddress, 2);
+    MemorySim_MakeRegionReadOnly(m_pMemory, testAddress);
+        MemorySimReadCounts readCounts = MemorySim_GetFlashReadCounts(m_pMemory, testAddress);
+    CHECK_EQUAL(1, readCounts.length);
+    CHECK_EQUAL(0, readCounts.pCounts[0]);
+}
+
+TEST(MemorySim, GetReadCounts_CheckFlashRegionWithOneReads_ShouldReadCountOfOne)
+{
+    static const uint32_t testAddress = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testAddress, 2);
+    MemorySim_MakeRegionReadOnly(m_pMemory, testAddress);
+    IMemory_Read16(m_pMemory, testAddress);
+        MemorySimReadCounts readCounts = MemorySim_GetFlashReadCounts(m_pMemory, testAddress);
+    CHECK_EQUAL(1, readCounts.length);
+    CHECK_EQUAL(1, readCounts.pCounts[0]);
+}
+
+TEST(MemorySim, GetReadCounts_CheckFlashRegionWithTwoReads_ShouldReadCountOfTwo)
+{
+    static const uint32_t testAddress = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testAddress, 2);
+    MemorySim_MakeRegionReadOnly(m_pMemory, testAddress);
+    IMemory_Read16(m_pMemory, testAddress);
+    IMemory_Read16(m_pMemory, testAddress);
+        MemorySimReadCounts readCounts = MemorySim_GetFlashReadCounts(m_pMemory, testAddress);
+    CHECK_EQUAL(1, readCounts.length);
+    CHECK_EQUAL(2, readCounts.pCounts[0]);
+}
+
+TEST(MemorySim, GetReadCounts_CheckFlashRegionWithMultipleHalfWordOnlyReadFromOne_ShouldReadCountsOfZeroAnd1)
+{
+    static const uint32_t testAddress = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testAddress, 6);
+    MemorySim_MakeRegionReadOnly(m_pMemory, testAddress);
+    IMemory_Read16(m_pMemory, testAddress + 2);
+        MemorySimReadCounts readCounts = MemorySim_GetFlashReadCounts(m_pMemory, testAddress);
+    CHECK_EQUAL(3, readCounts.length);
+    CHECK_EQUAL(0, readCounts.pCounts[0]);
+    CHECK_EQUAL(1, readCounts.pCounts[1]);
+    CHECK_EQUAL(0, readCounts.pCounts[2]);
 }
