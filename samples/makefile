@@ -57,7 +57,7 @@ ARMV6M_GCCFLAGS    += -ffunction-sections -fdata-sections -fno-exceptions -fno-d
 ARMV6M_GPPFLAGS    := $(ARMV6M_GCCFLAGS) -fno-rtti
 ARMV6M_GCCFLAGS    += -std=gnu90
 ARMV6M_LDFLAGS      = -mcpu=cortex-m0 -mthumb -Wl,-Map=$(basename $@).map,--cref,--gc-sections -TpinkySim.ld -u _exit
-ARMV6M_ASFLAGS     := -mcpu=cortex-m0 -mthumb -x assembler-with-cpp -MMD -MP
+ARMV6M_ASFLAGS     := -mcpu=cortex-m0 -mthumb -g -x assembler-with-cpp -MMD -MP
 ARMV6M_DISASMFLAGS := -d -f -M reg-names-std --demangle
 
 # Output directories for intermediate object files.
