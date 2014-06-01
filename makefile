@@ -59,7 +59,7 @@ HOST_GCCFLAGS += -ffunction-sections -fdata-sections -fno-common
 HOST_GCCFLAGS += -include mri/CppUTest/include/CppUTest/MemoryLeakDetectorMallocMacros.h
 HOST_GPPFLAGS := $(HOST_GCCFLAGS) -include mri/CppUTest/include/CppUTest/MemoryLeakDetectorNewMacros.h
 HOST_GCCFLAGS += -std=gnu90
-HOST_ASFLAGS  := -x assembler-with-cpp -MMD -MP
+HOST_ASFLAGS  := -g -x assembler-with-cpp -MMD -MP
 
 # Output directories for intermediate object files.
 OBJDIR        := obj
