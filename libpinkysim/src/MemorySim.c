@@ -398,7 +398,7 @@ __throws const void* MemorySim_MapSimulatedAddressToHostAddressForRead(IMemory* 
 __throws uint32_t MemorySim_GetFlashReadCount(IMemory* pMemory, uint32_t address)
 {
     MemorySim*    pThis = (MemorySim*)pMemory;
-    MemoryRegion* pRegion = findMatchingRegion(pThis, address, 1);
+    MemoryRegion* pRegion = findMatchingRegion(pThis, address, 2);
     uint32_t      regionOffset = address - pRegion->baseAddress;
 
     if (!pRegion->readOnly)

@@ -936,6 +936,15 @@ TEST(MemorySim, GetReadCount_OnReadWriteRamRegion_ShouldThrow)
     validateExceptionThrown(busErrorException);
 }
 
+TEST(MemorySim, GetReadCount_AddressOfHalfWordOverflowingOutOfRegion_ShouldThrow)
+{
+    static const uint32_t testAddress = 0x00000000;
+    MemorySim_CreateRegion(m_pMemory, testAddress, 3);
+    MemorySim_MakeRegionReadOnly(m_pMemory, testAddress);
+        __try_and_catch( MemorySim_GetFlashReadCount(m_pMemory, testAddress + 2) );
+    validateExceptionThrown(busErrorException);
+}
+
 TEST(MemorySim, GetReadCount_CheckFlashRegionWithNoReads_ShouldReadCountOfZero)
 {
     static const uint32_t testAddress = 0x00000000;
