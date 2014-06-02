@@ -30,12 +30,6 @@ typedef enum WatchpointType
     WATCHPOINT_READ_WRITE = 3
 } WatchpointType;
 
-typedef struct MemorySimReadCounts
-{
-    uint32_t*   pCounts;
-    uint32_t    length;
-} MemorySimReadCounts;
-
 
 IMemory*                     MemorySim_Init(void);
 void                         MemorySim_Uninit(IMemory* pMemory);
@@ -46,7 +40,7 @@ __throws void                MemorySim_CreateRegionsFromFlashImage(IMemory* pMem
 __throws const char*         MemorySim_GetMemoryMapXML(IMemory* pMemory);
 __throws void*               MemorySim_MapSimulatedAddressToHostAddressForWrite(IMemory* pMemory, uint32_t address, uint32_t size);
 __throws const void*         MemorySim_MapSimulatedAddressToHostAddressForRead(IMemory* pMemory, uint32_t address, uint32_t size);
-__throws MemorySimReadCounts MemorySim_GetFlashReadCounts(IMemory* pMemory, uint32_t baseAddress);
+__throws uint32_t            MemorySim_GetFlashReadCount(IMemory* pMemory, uint32_t address);
 
 __throws void MemorySim_SetHardwareBreakpoint(IMemory* pMemory, uint32_t address, uint32_t size);
 __throws void MemorySim_ClearHardwareBreakpoint(IMemory* pMemory, uint32_t address, uint32_t size);

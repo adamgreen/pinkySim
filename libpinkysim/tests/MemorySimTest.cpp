@@ -922,72 +922,57 @@ TEST(MemorySim, MapSimulatedAddressForRead_AttemptToMapAddressToInvalidRegion_Sh
 }
 
 
-
-TEST(MemorySim, GetReadCounts_OnNonExistentRegion_ShouldThrow)
+TEST(MemorySim, GetReadCount_OnNonExistentRegion_ShouldThrow)
 {
-    __try_and_catch( MemorySim_GetFlashReadCounts(m_pMemory, 0x00000000) );
+    __try_and_catch( MemorySim_GetFlashReadCount(m_pMemory, 0x00000000) );
     validateExceptionThrown(busErrorException);
 }
 
-TEST(MemorySim, GetReadCounts_OnReadWriteRamRegion_ShouldThrow)
-{
-    static const uint32_t testAddress = 0x00000000;
-    MemorySim_CreateRegion(m_pMemory, testAddress, 4);
-        __try_and_catch( MemorySim_GetFlashReadCounts(m_pMemory, testAddress) );
-    validateExceptionThrown(busErrorException);
-}
-
-TEST(MemorySim, GetReadCounts_OnFlashRegionWithInvalidBaseAddress_ShouldThrow)
+TEST(MemorySim, GetReadCount_OnReadWriteRamRegion_ShouldThrow)
 {
     static const uint32_t testAddress = 0x00000000;
-    MemorySim_CreateRegion(m_pMemory, testAddress, 4);
-    MemorySim_MakeRegionReadOnly(m_pMemory, testAddress);
-        __try_and_catch( MemorySim_GetFlashReadCounts(m_pMemory, testAddress + 2) );
+    MemorySim_CreateRegion(m_pMemory, testAddress, 2);
+        __try_and_catch( MemorySim_GetFlashReadCount(m_pMemory, testAddress) );
     validateExceptionThrown(busErrorException);
 }
 
-TEST(MemorySim, GetReadCounts_CheckFlashRegionWithNoReads_ShouldReadCountOfZero)
+TEST(MemorySim, GetReadCount_CheckFlashRegionWithNoReads_ShouldReadCountOfZero)
 {
     static const uint32_t testAddress = 0x00000000;
     MemorySim_CreateRegion(m_pMemory, testAddress, 2);
     MemorySim_MakeRegionReadOnly(m_pMemory, testAddress);
-        MemorySimReadCounts readCounts = MemorySim_GetFlashReadCounts(m_pMemory, testAddress);
-    CHECK_EQUAL(1, readCounts.length);
-    CHECK_EQUAL(0, readCounts.pCounts[0]);
+        uint32_t readCount = MemorySim_GetFlashReadCount(m_pMemory, testAddress);
+    CHECK_EQUAL(0, readCount);
 }
 
-TEST(MemorySim, GetReadCounts_CheckFlashRegionWithOneReads_ShouldReadCountOfOne)
+TEST(MemorySim, GetReadCount_CheckFlashRegionWithOneReads_ShouldReadCountOfOne)
 {
     static const uint32_t testAddress = 0x00000000;
     MemorySim_CreateRegion(m_pMemory, testAddress, 2);
     MemorySim_MakeRegionReadOnly(m_pMemory, testAddress);
     IMemory_Read16(m_pMemory, testAddress);
-        MemorySimReadCounts readCounts = MemorySim_GetFlashReadCounts(m_pMemory, testAddress);
-    CHECK_EQUAL(1, readCounts.length);
-    CHECK_EQUAL(1, readCounts.pCounts[0]);
+        uint32_t readCount = MemorySim_GetFlashReadCount(m_pMemory, testAddress);
+    CHECK_EQUAL(1, readCount);
 }
 
-TEST(MemorySim, GetReadCounts_CheckFlashRegionWithTwoReads_ShouldReadCountOfTwo)
+TEST(MemorySim, GetReadCount_CheckFlashRegionWithTwoReads_ShouldReadCountOfTwo)
 {
     static const uint32_t testAddress = 0x00000000;
     MemorySim_CreateRegion(m_pMemory, testAddress, 2);
     MemorySim_MakeRegionReadOnly(m_pMemory, testAddress);
     IMemory_Read16(m_pMemory, testAddress);
     IMemory_Read16(m_pMemory, testAddress);
-        MemorySimReadCounts readCounts = MemorySim_GetFlashReadCounts(m_pMemory, testAddress);
-    CHECK_EQUAL(1, readCounts.length);
-    CHECK_EQUAL(2, readCounts.pCounts[0]);
+        uint32_t readCount = MemorySim_GetFlashReadCount(m_pMemory, testAddress);
+    CHECK_EQUAL(2, readCount);
 }
 
-TEST(MemorySim, GetReadCounts_CheckFlashRegionWithMultipleHalfWordOnlyReadFromOne_ShouldReadCountsOfZeroAnd1)
+TEST(MemorySim, GetReadCount_CheckFlashRegionWithMultipleHalfWordOnlyReadFromOne_ShouldReadCountsOfZeroAnd1)
 {
     static const uint32_t testAddress = 0x00000000;
     MemorySim_CreateRegion(m_pMemory, testAddress, 6);
     MemorySim_MakeRegionReadOnly(m_pMemory, testAddress);
     IMemory_Read16(m_pMemory, testAddress + 2);
-        MemorySimReadCounts readCounts = MemorySim_GetFlashReadCounts(m_pMemory, testAddress);
-    CHECK_EQUAL(3, readCounts.length);
-    CHECK_EQUAL(0, readCounts.pCounts[0]);
-    CHECK_EQUAL(1, readCounts.pCounts[1]);
-    CHECK_EQUAL(0, readCounts.pCounts[2]);
+    CHECK_EQUAL(0, MemorySim_GetFlashReadCount(m_pMemory, testAddress));
+    CHECK_EQUAL(1, MemorySim_GetFlashReadCount(m_pMemory, testAddress + 2));
+    CHECK_EQUAL(0, MemorySim_GetFlashReadCount(m_pMemory, testAddress + 4));
 }
