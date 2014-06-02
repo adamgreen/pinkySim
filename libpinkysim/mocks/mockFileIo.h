@@ -16,6 +16,7 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdio.h>
 #include <sys/stat.h>
 
 
@@ -29,6 +30,10 @@ extern int     (*hook_unlink)(const char *path);
 extern int     (*hook_rename)(const char *oldPath, const char *newPath);
 extern int     (*hook_fstat)(int fildes, struct stat *buf);
 extern int     (*hook_stat)(const char* path, struct stat* buf);
+extern FILE*   (*hook_popen)(const char *command, const char *mode);
+extern int     (*hook_pclose)(FILE *stream);
+extern int     (*hook_feof)(FILE *stream);
+extern char*   (*hook_fgets)(char * str, int size, FILE * stream);
 
 
 #undef  open
@@ -47,6 +52,14 @@ extern int     (*hook_stat)(const char* path, struct stat* buf);
 #define rename hook_rename
 #undef  fstat
 #define fstat hook_fstat
+#undef  popen
+#define popen hook_popen
+#undef  pclose
+#define pclose hook_pclose
+#undef  feof
+#define feof hook_feof
+#undef  fgets
+#define fgets hook_fgets
 
 
 void        mockFileIo_SetOpenToFail(int result, int err);
@@ -63,6 +76,9 @@ void        mockFileIo_SetUnlinkToFail(int result, int err);
 void        mockFileIo_SetRenameToFail(int result, int err);
 void        mockFileIo_SetFStatCallResults(int result, int err, struct stat* pStat);
 void        mockFileIo_SetStatCallResults(int result, int err, struct stat* pStat);
+void        mockFileIo_SetPOpenCallResult(FILE* pResult);
+void        mockFileIo_SetFEOFCallResult(int result);
+void        mockFileIo_SetFgetsData(const char** ppLines, size_t lineCount);
 void        mockFileIo_Uninit(void);
 
 

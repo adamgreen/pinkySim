@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdio.h>
 #include <sys/stat.h>
 
 static int     mock_open(const char *path, int oflag, ...);
@@ -24,6 +25,10 @@ static int     mock_unlink(const char *path);
 static int     mock_rename(const char *oldPath, const char *newPath);
 static int     mock_fstat(int fildes, struct stat *buf);
 static int     mock_stat(const char* path, struct stat* buf);
+static FILE*   mock_popen(const char *command, const char *mode);
+static int     mock_pclose(FILE *stream);
+static int     mock_feof(FILE *stream);
+static char*   mock_fgets(char * str, int size, FILE * stream);
 
 
 int     (*hook_open)(const char *path, int oflag, ...) = mock_open;
@@ -35,6 +40,10 @@ int     (*hook_unlink)(const char *path) = mock_unlink;
 int     (*hook_rename)(const char *oldPath, const char *newPath) = mock_rename;
 int     (*hook_fstat)(int fildes, struct stat *buf) = mock_fstat;
 int     (*hook_stat)(const char* path, struct stat* buf) = mock_stat;
+FILE*   (*hook_popen)(const char *command, const char *mode) = mock_popen;
+int     (*hook_pclose)(FILE *stream) = mock_pclose;
+int     (*hook_feof)(FILE *stream) = mock_feof;
+char*   (*hook_fgets)(char * str, int size, FILE * stream) = mock_fgets;
 
 
 typedef struct CallResult
@@ -74,6 +83,10 @@ static char*          g_pRegularEnd;
 static char*          g_pRegularCurr;
 static struct stat    g_fstatStructure;
 static struct stat    g_statStructure;
+static FILE*          g_popenResult;
+static int            g_feofResult;
+static const char**   g_ppFgetsEnd;
+static const char**   g_ppFgetsCurr;
 CALL_GLOBAL(open)
 CALL_GLOBAL(lseek)
 CALL_GLOBAL(close)
@@ -180,6 +193,31 @@ static int mock_stat(const char* path, struct stat* buf)
     return g_stat.result;
 }
 
+static FILE* mock_popen(const char *command, const char *mode)
+{
+    return g_popenResult;
+}
+
+static int mock_pclose(FILE *stream)
+{
+    return 0;
+}
+
+static int mock_feof(FILE *stream)
+{
+    return g_feofResult;
+}
+
+static char* mock_fgets(char * str, int size, FILE * stream)
+{
+    if (g_ppFgetsCurr >= g_ppFgetsEnd)
+        return NULL;
+
+    strncpy(str, *g_ppFgetsCurr++, size);
+    str[size-1] = '\0';
+    return str;
+}
+
 
 void mockFileIo_SetOpenToFail(int result, int err)
 {
@@ -269,6 +307,22 @@ void mockFileIo_SetStatCallResults(int result, int err, struct stat* pStat)
     g_stat.error = err;
     if (pStat)
         g_statStructure = *pStat;
+}
+
+void mockFileIo_SetPOpenCallResult(FILE* pResult)
+{
+    g_popenResult = pResult;
+}
+
+void mockFileIo_SetFEOFCallResult(int result)
+{
+    g_feofResult = result;
+}
+
+void mockFileIo_SetFgetsData(const char** ppLines, size_t lineCount)
+{
+    g_ppFgetsCurr = ppLines;
+    g_ppFgetsEnd = ppLines + lineCount;
 }
 
 void mockFileIo_Uninit(void)

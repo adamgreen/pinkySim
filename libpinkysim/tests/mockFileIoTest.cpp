@@ -16,6 +16,7 @@ extern "C"
 {
     #include <mockFileIo.h>
 }
+#include <common.h>
 
 // Include C++ headers for test harness.
 #include "CppUTest/TestHarness.h"
@@ -338,4 +339,73 @@ TEST(mockFileIo, SetStatCallResults_SucceedWithStatStructureWrite)
     CHECK_EQUAL(0, memcmp(&statExpected, &statActual, sizeof(statActual)));
     CHECK_EQUAL(0, result);
     CHECK_EQUAL(0, errno);
+}
+
+TEST(mockFileIo, SetPOpenCallResult_ReturnNull)
+{
+    mockFileIo_SetPOpenCallResult(NULL);
+    FILE* pResult = popen("foo", "r");
+    CHECK_EQUAL(NULL, pResult);
+}
+
+TEST(mockFileIo, SetPOpenCallResult_ReturnSuccessfulResult)
+{
+    mockFileIo_SetPOpenCallResult((FILE*)1);
+    FILE* pResult = popen("foo", "r");
+    CHECK_EQUAL((FILE*)1, pResult);
+}
+
+TEST(mockFileIo, PCloseCall_InvalidFilePointer_CallIgnored)
+{
+    FILE* pInvalidFile = (FILE*)1;
+    int result = pclose(pInvalidFile);
+    CHECK_EQUAL(0, result);
+}
+
+TEST(mockFileIo, SetFEOFCallResult_Return0)
+{
+    mockFileIo_SetFEOFCallResult(0);
+    int result = feof(NULL);
+    CHECK_EQUAL(0, result);
+}
+
+TEST(mockFileIo, SetFEOFCallResult_Return1)
+{
+    mockFileIo_SetFEOFCallResult(1);
+    int result = feof(NULL);
+    CHECK_EQUAL(1, result);
+}
+
+TEST(mockFileIo, CallFgetsOnInvalidPointerWithNoTestData_ShouldReturnNull)
+{
+    char buffer[2];
+    char* pResult = fgets(buffer, sizeof(buffer), NULL);
+    CHECK_EQUAL(NULL, pResult);
+}
+
+TEST(mockFileIo, SetFgetsData_OneLine)
+{
+    const char* ppTestData[] = { "Line1" };
+    char        buffer[16];
+    mockFileIo_SetFgetsData(ppTestData, ARRAY_SIZE(ppTestData));
+        char* pResult = fgets(buffer, sizeof(buffer), NULL);
+    CHECK_EQUAL(buffer, pResult);
+    STRCMP_EQUAL(ppTestData[0], buffer);
+        pResult = fgets(buffer, sizeof(buffer), NULL);
+    CHECK_EQUAL(NULL, pResult);
+}
+
+TEST(mockFileIo, SetFgetsData_TwoLines)
+{
+    const char* ppTestData[] = { "Line1", "Line2" };
+    char        buffer[16];
+    mockFileIo_SetFgetsData(ppTestData, ARRAY_SIZE(ppTestData));
+        char* pResult = fgets(buffer, sizeof(buffer), NULL);
+    CHECK_EQUAL(buffer, pResult);
+    STRCMP_EQUAL(ppTestData[0], buffer);
+        pResult = fgets(buffer, sizeof(buffer), NULL);
+    CHECK_EQUAL(buffer, pResult);
+    STRCMP_EQUAL(ppTestData[1], buffer);
+        pResult = fgets(buffer, sizeof(buffer), NULL);
+    CHECK_EQUAL(NULL, pResult);
 }
