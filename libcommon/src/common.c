@@ -10,20 +10,26 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 */
-/* Very rough exception handling like macros for C. */
-#ifndef _COMMON_H_
-#define _COMMON_H_
-
-#include <stdio.h>
-#include <try_catch.h>
+#include <common.h>
+#include <FileFailureInject.h>
 
 
-#define FALSE 0
-#define TRUE  1
+long GetFileSize(FILE* pFile)
+{
+    int    result = -1;
+    long   fileSize = 0;
 
-#define ARRAY_SIZE(X) (sizeof(X)/sizeof(X[0]))
+    result = fseek(pFile, 0, SEEK_END);
+    if (result == -1)
+        __throw(fileException);
 
-__throws long GetFileSize(FILE* pFile);
+    fileSize = ftell(pFile);
+    if (fileSize < 0)
+        __throw(fileException);
 
+    result = fseek(pFile, 0, SEEK_SET);
+    if (result == -1)
+        __throw(fileException);
 
-#endif /* _COMMON_H_ */
+    return fileSize;
+}

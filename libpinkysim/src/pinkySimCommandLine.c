@@ -10,6 +10,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 */
+#include <common.h>
 #include <FileFailureInject.h>
 #include <MemorySim.h>
 #include <MallocFailureInject.h>
@@ -65,7 +66,6 @@ static int parseGdbPortOption(pinkySimCommandLine* pThis, int argc, const char**
 static int parseFilenameArgument(pinkySimCommandLine* pThis, int index, int argc, const char* pArgument);
 static void throwIfRequiredArgumentNotSpecified(pinkySimCommandLine* pThis);
 static void loadImageFile(pinkySimCommandLine* pThis);
-static long getFileSize(FILE* pFile);
 
 
 __throws void pinkySimCommandLine_Init(pinkySimCommandLine* pThis, int argc, const char** argv)
@@ -197,7 +197,7 @@ static void loadImageFile(pinkySimCommandLine* pThis)
         pFile = fopen(pThis->pImageFilename, "r");
         if (!pFile)
             __throw(fileException);
-        fileSize = getFileSize(pFile);
+        fileSize = GetFileSize(pFile);
 
         pBuffer = malloc(fileSize);
         if (!pBuffer)
@@ -223,27 +223,6 @@ static void loadImageFile(pinkySimCommandLine* pThis)
         __rethrow;
     }
 }
-
-static long getFileSize(FILE* pFile)
-{
-    int    result = -1;
-    long   fileSize = 0;
-
-    result = fseek(pFile, 0, SEEK_END);
-    if (result == -1)
-        __throw(fileException);
-
-    fileSize = ftell(pFile);
-    if (fileSize < 0)
-        __throw(fileException);
-
-    result = fseek(pFile, 0, SEEK_SET);
-    if (result == -1)
-        __throw(fileException);
-
-    return fileSize;
-}
-
 
 void pinkySimCommandLine_Uninit(pinkySimCommandLine* pThis)
 {
