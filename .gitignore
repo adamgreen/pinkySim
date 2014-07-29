@@ -15,6 +15,8 @@
 *.elf
 *.map
 *.disasm
+*.cov
+summary.txt
 libthunk2real/realarm/debug
 libthunk2real/serial.log
 /pinkySim
