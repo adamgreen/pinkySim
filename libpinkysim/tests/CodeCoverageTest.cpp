@@ -289,6 +289,40 @@ TEST(CodeCoverage, OneLineInElf_SingleLineSource_ExecutedTwice_VerifyOutputFiles
     checkFileMatches("./CodeCoverageTest1.S.cov", "         2: Line 1\n");
 }
 
+TEST(CodeCoverage, TwoLinesInElf_FirstAddressExecutedMoreThanSecond_SingleLineSource_VerifyMinimumCountUsed)
+{
+    const char* lines[] = { "CU: CodeCoverageTest1.S:\n",
+                            "CodeCoverageTest1.S 1 0x4\n",
+                            "\n",
+                            "CodeCoverageTest1.S 1 0x8\n" };
+
+    mockFileIo_SetFgetsData(lines, ARRAY_SIZE(lines));
+    IMemory_Read16(m_pMemory, 0x4);
+    IMemory_Read16(m_pMemory, 0x4);
+    IMemory_Read16(m_pMemory, 0x8);
+    createSourceFile("CodeCoverageTest1.S", "Line 1");
+        CodeCoverage_Run("foo.elf", m_pMemory, ".", NULL, 0);
+    checkFileMatches("./summary.txt", "100.00%  CodeCoverageTest1.S\n");
+    checkFileMatches("./CodeCoverageTest1.S.cov", "         1: Line 1\n");
+}
+
+TEST(CodeCoverage, TwoLinesInElf_FirstAddressExecutedLessThanSecond_SingleLineSource_VerifyMinimumCountUsed)
+{
+    const char* lines[] = { "CU: CodeCoverageTest1.S:\n",
+                            "CodeCoverageTest1.S 1 0x4\n",
+                            "\n",
+                            "CodeCoverageTest1.S 1 0x8\n" };
+
+    mockFileIo_SetFgetsData(lines, ARRAY_SIZE(lines));
+    IMemory_Read16(m_pMemory, 0x4);
+    IMemory_Read16(m_pMemory, 0x8);
+    IMemory_Read16(m_pMemory, 0x8);
+    createSourceFile("CodeCoverageTest1.S", "Line 1");
+        CodeCoverage_Run("foo.elf", m_pMemory, ".", NULL, 0);
+    checkFileMatches("./summary.txt", "100.00%  CodeCoverageTest1.S\n");
+    checkFileMatches("./CodeCoverageTest1.S.cov", "         1: Line 1\n");
+}
+
 TEST(CodeCoverage, OneLineInElf_SingleLineSource_NotExecutable_VerifyOutputFiles)
 {
     const char* lines[] = { "CU: CodeCoverageTest1.S:\n",
