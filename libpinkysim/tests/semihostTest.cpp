@@ -578,3 +578,48 @@ TEST(semihostTests, CloseCall_VerifyReturnErrorsInR0andR1)
     CHECK_EQUAL((uint32_t)-1, m_pContext->R[0]);
     CHECK_EQUAL(EIO, m_pContext->R[1]);
 }
+
+TEST(semihostTests, CloseCall_AttemptToCloseStdIn_VerifyCallIsIgnored)
+{
+    m_pContext->R[0] = STDIN_FILENO;
+    mockFileIo_SetCloseToFail(-1, EIO);
+
+    emitBKPT(NEWLIB_CLOSE);
+    emitBKPT(0);
+
+    mockIComm_DelayReceiveData(2);
+        mri4simRun(mockIComm_Get(), FALSE);
+    STRCMP_EQUAL("", mockIComm_GetTransmittedData());
+    CHECK_EQUAL(0, m_pContext->R[0]);
+    CHECK_EQUAL(0, m_pContext->R[1]);
+}
+
+TEST(semihostTests, CloseCall_AttemptToCloseStdOut_VerifyCallIsIgnored)
+{
+    m_pContext->R[0] = STDOUT_FILENO;
+    mockFileIo_SetCloseToFail(-1, EIO);
+
+    emitBKPT(NEWLIB_CLOSE);
+    emitBKPT(0);
+
+    mockIComm_DelayReceiveData(2);
+        mri4simRun(mockIComm_Get(), FALSE);
+    STRCMP_EQUAL("", mockIComm_GetTransmittedData());
+    CHECK_EQUAL(0, m_pContext->R[0]);
+    CHECK_EQUAL(0, m_pContext->R[1]);
+}
+
+TEST(semihostTests, CloseCall_AttemptToCloseStdErr_VerifyCallIsIgnored)
+{
+    m_pContext->R[0] = STDERR_FILENO;
+    mockFileIo_SetCloseToFail(-1, EIO);
+
+    emitBKPT(NEWLIB_CLOSE);
+    emitBKPT(0);
+
+    mockIComm_DelayReceiveData(2);
+        mri4simRun(mockIComm_Get(), FALSE);
+    STRCMP_EQUAL("", mockIComm_GetTransmittedData());
+    CHECK_EQUAL(0, m_pContext->R[0]);
+    CHECK_EQUAL(0, m_pContext->R[1]);
+}

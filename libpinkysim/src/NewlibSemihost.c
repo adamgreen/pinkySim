@@ -176,8 +176,15 @@ int handleNewlibSemihostLSeekRequest(PlatformSemihostParameters* pSemihostParame
 int handleNewlibSemihostCloseRequest(PlatformSemihostParameters* pSemihostParameters)
 {
     uint32_t fileDescriptor = pSemihostParameters->parameter1;
+    int      closeResult = 0;
 
-    int closeResult = close(fileDescriptor);
+    if (isConsoleInput(fileDescriptor) || isConsoleOutput(fileDescriptor))
+    {
+        SetSemihostReturnValues(0, 0);
+        FlagSemihostCallAsHandled();
+        return 1;
+    }
+    closeResult = close(fileDescriptor);
     SetSemihostReturnValues(closeResult, errno);
     FlagSemihostCallAsHandled();
     return 1;
