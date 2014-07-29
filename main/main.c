@@ -11,6 +11,7 @@
     GNU General Public License for more details.
 */
 #include <assert.h>
+#include <CodeCoverage.h>
 #include <mri4sim.h>
 #include <pinkySimCommandLine.h>
 #include <SocketIComm.h>
@@ -25,6 +26,7 @@ static void copyCommandLineArgumentsToStack(PinkySimContext* pContext,
 static void copyStringToIMemory(IMemory* pMem, uint32_t destAddress, const char* pSrc);
 static uint32_t roundDownToNearestDoubleWord(uint32_t value);
 static void waitingForGdbToConnect(void);
+static void runCodeCoverageIfRequested(pinkySimCommandLine* pCommandLine);
 
 
 int main(int argc, const char** argv)
@@ -41,14 +43,14 @@ int main(int argc, const char** argv)
         copyCommandLineArgumentsToStack(mri4simGetContext(), argc-1, argv+1, commandLine.argIndexOfImageFilename);
         mri4simRun(pComm, commandLine.breakOnStart);
         returnValue = mri4simGetContext()->R[0];
+        runCodeCoverageIfRequested(&commandLine);
     }
     __catch
     {
         if (getExceptionCode() == fileException)
             fprintf(stderr, "Failed to open %s\n", commandLine.pImageFilename);
-        returnValue = 255;
+        returnValue = -1;
     }
-
     SocketIComm_Uninit(pComm);
     pinkySimCommandLine_Uninit(&commandLine);
 
@@ -110,4 +112,30 @@ static uint32_t roundDownToNearestDoubleWord(uint32_t value)
 static void waitingForGdbToConnect(void)
 {
     printf("\nWaiting for GDB to connect...\n");
+}
+
+static void runCodeCoverageIfRequested(pinkySimCommandLine* pCommandLine)
+{
+    if (!pCommandLine->pCoverageElfFilename)
+        return;
+
+    __try
+    {
+        CodeCoverage_Run(pCommandLine->pCoverageElfFilename,
+                         pCommandLine->pMemory,
+                         pCommandLine->pCoverageResultsDirectory,
+                         pCommandLine->ppCoverageRestrictPaths,
+                         pCommandLine->coverageRestrictPathCount);
+        printf("\nCode coverage results can be found in %s.\n", pCommandLine->pCoverageResultsDirectory);
+    }
+    __catch
+    {
+        fprintf(stderr, "\n");
+        if (getExceptionCode() == outOfMemoryException)
+            fprintf(stderr, "Failed to allocate memory for processing code coverage results.\n");
+        else
+            fprintf(stderr, "%s\n", CodeCoverage_GetErrorText());
+        fprintf(stderr, "Failed to successfully process code coverage results.\n");
+        __throw(coverageException);
+    }
 }

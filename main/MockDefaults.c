@@ -39,6 +39,10 @@ int     (*hook_unlink)(const char *path) = unlink;
 int     (*hook_rename)(const char *oldPath, const char *newPath) = rename;
 int     (*hook_fstat)(int fildes, struct stat *buf) = fstat;
 int     (*hook_stat)(const char* path, struct stat* buf) = stat;
+int     (*hook_feof)(FILE *stream) = feof;
+char*   (*hook_fgets)(char * str, int size, FILE * stream) = fgets;
+FILE*   (*hook_popen)(const char *command, const char *mode) = popen;
+int     (*hook_pclose)(FILE *stream) = pclose;
 
 int (*hook_socket)(int domain, int type, int protocol) = socket;
 int (*hook_setsockopt)(int socket,
