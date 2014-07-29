@@ -411,6 +411,30 @@ TEST(CodeCoverage, TwoLinesInElf_TwoSourceFiles_MixOfExecutedAndNotExecuted_Veri
     checkFileMatches("./CodeCoverageTest2.S.cov", "         1: Line 1\n");
 }
 
+TEST(CodeCoverage, TwoSourceFiles_FragmentOneOfTheSourceFiles_VerifyOutputFiles)
+{
+    const char* lines[] = { "CU: CodeCoverageTest1.S:\n",
+                            "CodeCoverageTest1.S 1 0x4\n",
+                            "\n",
+                            "CU: CodeCoverageTest2.S:\n",
+                            "CodeCoverageTest2.S 1 0xc\n",
+                            "\n",
+                            "CU: CodeCoverageTest1.S:\n",
+                            "CodeCoverageTest1.S 2 0x8\n",
+                             };
+
+    mockFileIo_SetFgetsData(lines, ARRAY_SIZE(lines));
+    createSourceFile("CodeCoverageTest1.S", "Line 1\n"
+                                            "Line 2\n");
+    createSourceFile("CodeCoverageTest2.S", "Line 1\n");
+        CodeCoverage_Run("foo.elf", m_pMemory, ".", NULL, 0);
+    checkFileMatches("./summary.txt", "  0.00%  CodeCoverageTest1.S\n"
+                                      "  0.00%  CodeCoverageTest2.S\n");
+    checkFileMatches("./CodeCoverageTest1.S.cov", "     #####: Line 1\n"
+                                                  "     #####: Line 2\n");
+    checkFileMatches("./CodeCoverageTest2.S.cov", "     #####: Line 1\n");
+}
+
 TEST(CodeCoverage, RestrictToOnlyProcessOneSourceFileOfTwoPossibleFiles_VerifyOutputFiles)
 {
     const char* lines[] = { "CU: CodeCoverageTest1.S:\n",

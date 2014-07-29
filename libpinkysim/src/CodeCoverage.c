@@ -299,7 +299,7 @@ static int isTwoCharacterLineTerminator(char previous, char current)
 static int doesCurrentSourceLineMatchCurrentElfLine(PrivateData* pData)
 {
     return  pData->currentElfLine < pData->pLines->lineCount &&
-            pData->pLines->pLines[pData->currentElfLine].pFilename == pData->pSourceFilename &&
+            0 == strcmp(pData->pLines->pLines[pData->currentElfLine].pFilename, pData->pSourceFilename) &&
             pData->pLines->pLines[pData->currentElfLine].lineNumber == pData->currentSourceLine;
 }
 
