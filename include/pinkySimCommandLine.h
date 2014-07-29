@@ -19,12 +19,16 @@
 
 typedef struct pinkySimCommandLine
 {
-    const char* pImageFilename;
-    IMemory*    pMemory;
-    int         breakOnStart;
-    int         manualMemoryRegions;
-    int         argIndexOfImageFilename;
-    uint16_t    gdbPort;
+    const char*  pImageFilename;
+    const char*  pCoverageElfFilename;
+    const char*  pCoverageResultsDirectory;
+    const char** ppCoverageRestrictPaths;
+    IMemory*     pMemory;
+    int          breakOnStart;
+    int          manualMemoryRegions;
+    int          argIndexOfImageFilename;
+    uint32_t     coverageRestrictPathCount;
+    uint16_t     gdbPort;
 } pinkySimCommandLine;
 
 

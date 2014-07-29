@@ -70,7 +70,11 @@ TEST_GROUP(pinkySimCommandLine)
     void validateParamsAndNoErrorMessage(const char* pImageFilename,
                                          int argIndexOfImageFilename = 0,
                                          int breakOnStart = 0,
-                                         uint16_t gdbPort = SOCKET_ICOMM_DEFAULT_PORT)
+                                         uint16_t gdbPort = SOCKET_ICOMM_DEFAULT_PORT,
+                                         const char* pCoverageElfFilename = NULL,
+                                         const char* pCoverageResultsDirectory = NULL,
+                                         const char** ppCoverageRestrictPaths = NULL,
+                                         uint32_t coverageRestrictPathCount = 0)
     {
         STRCMP_EQUAL("", printfSpy_GetLastOutput());
         STRCMP_EQUAL(pImageFilename, m_commandLine.pImageFilename);
@@ -78,6 +82,37 @@ TEST_GROUP(pinkySimCommandLine)
         CHECK_EQUAL(argIndexOfImageFilename, m_commandLine.argIndexOfImageFilename);
         CHECK_EQUAL(breakOnStart, m_commandLine.breakOnStart);
         CHECK_EQUAL(gdbPort, m_commandLine.gdbPort);
+        if (!pCoverageElfFilename)
+        {
+            CHECK_EQUAL(NULL, m_commandLine.pCoverageElfFilename);
+        }
+        else
+        {
+            CHECK(m_commandLine.pCoverageElfFilename != NULL);
+            STRCMP_EQUAL(pCoverageElfFilename, m_commandLine.pCoverageElfFilename);
+        }
+        if (!pCoverageResultsDirectory)
+        {
+            CHECK_EQUAL(NULL, m_commandLine.pCoverageResultsDirectory);
+        }
+        else
+        {
+            CHECK(m_commandLine.pCoverageResultsDirectory != NULL);
+            STRCMP_EQUAL(pCoverageResultsDirectory, m_commandLine.pCoverageResultsDirectory);
+        }
+
+        CHECK_EQUAL(coverageRestrictPathCount, m_commandLine.coverageRestrictPathCount);
+        if (!ppCoverageRestrictPaths)
+        {
+            CHECK_EQUAL(NULL, m_commandLine.ppCoverageRestrictPaths);
+        }
+        else
+        {
+            for (size_t i = 0 ; i < coverageRestrictPathCount ; i++)
+            {
+                CHECK_EQUAL(ppCoverageRestrictPaths[i], m_commandLine.ppCoverageRestrictPaths[i]);
+            }
+        }
     }
 
     void validateExceptionThrownAndUsageStringDisplayed(int expectedException = invalidArgumentException)
@@ -104,6 +139,10 @@ TEST(pinkySimCommandLine, NoParameters)
     CHECK(m_commandLine.pMemory == NULL);
     CHECK_FALSE(m_commandLine.breakOnStart);
     CHECK_EQUAL(SOCKET_ICOMM_DEFAULT_PORT, m_commandLine.gdbPort);
+    CHECK_EQUAL(NULL, m_commandLine.pCoverageElfFilename);
+    CHECK_EQUAL(NULL, m_commandLine.pCoverageResultsDirectory);
+    CHECK_EQUAL(0, m_commandLine.coverageRestrictPathCount);
+    CHECK_EQUAL(NULL, m_commandLine.ppCoverageRestrictPaths);
 }
 
 TEST(pinkySimCommandLine, OneImageFilename_CheckRegions)
@@ -342,4 +381,81 @@ TEST(pinkySimCommandLine, SpecifyOptionalArgumentsAfterImageFilename)
     createTestImageFile();
         pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv);
     validateParamsAndNoErrorMessage(g_imageFilename, 0);
+}
+
+TEST(pinkySimCommandLine, CodeCovOptionWithBothArgsMissing_ShouldThrow)
+{
+    addArg("--codecov");
+        __try_and_catch( pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv) );
+    validateExceptionThrownAndUsageStringDisplayed();
+}
+
+TEST(pinkySimCommandLine, CodeCovOptionWithSecondArgMissing_ShouldThrow)
+{
+    addArg("--codecov");
+    addArg("filename.elf");
+        __try_and_catch( pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv) );
+    validateExceptionThrownAndUsageStringDisplayed();
+}
+
+TEST(pinkySimCommandLine, CodeCovOptionWithTwoValidArguments)
+{
+    addArg("--codecov");
+    addArg("filename.elf");
+    addArg("resultsDirectory");
+    addArg(g_imageFilename);
+    createTestImageFile();
+        pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv);
+    validateParamsAndNoErrorMessage(g_imageFilename, 3,
+                                    0, SOCKET_ICOMM_DEFAULT_PORT,
+                                    "filename.elf", "resultsDirectory");
+}
+
+TEST(pinkySimCommandLine, RestrictOptionWithArgMissing_ShouldThrow)
+{
+    addArg("--restrict");
+        __try_and_catch( pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv) );
+    validateExceptionThrownAndUsageStringDisplayed();
+}
+
+TEST(pinkySimCommandLine, RestrictOptionWithValidArgument)
+{
+    static const char* expectedRestrictPaths[] = { "testPath" };
+
+    addArg("--restrict");
+    addArg("testPath");
+    addArg(g_imageFilename);
+    createTestImageFile();
+        pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv);
+    validateParamsAndNoErrorMessage(g_imageFilename, 2,
+                                    0, SOCKET_ICOMM_DEFAULT_PORT,
+                                    NULL, NULL,
+                                    expectedRestrictPaths, ARRAY_SIZE(expectedRestrictPaths));
+}
+
+TEST(pinkySimCommandLine, TwoRestrictOptionWithValidArgument)
+{
+    static const char* expectedRestrictPaths[] = { "testPath1", "testPath2" };
+
+    addArg("--restrict");
+    addArg("testPath1");
+    addArg("--restrict");
+    addArg("testPath2");
+    addArg(g_imageFilename);
+    createTestImageFile();
+        pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv);
+    validateParamsAndNoErrorMessage(g_imageFilename, 4,
+                                    0, SOCKET_ICOMM_DEFAULT_PORT,
+                                    NULL, NULL,
+                                    expectedRestrictPaths, ARRAY_SIZE(expectedRestrictPaths));
+}
+
+TEST(pinkySimCommandLine, RestrictPathOption_FailMemoryAllocation_ShouldThrow)
+{
+    addArg("--restrict");
+    addArg("testPath");
+    addArg(g_imageFilename);
+    MallocFailureInject_FailAllocation(1);
+        __try_and_catch( pinkySimCommandLine_Init(&m_commandLine, m_argc, m_argv) );
+    validateExceptionThrownAndUsageStringDisplayed(outOfMemoryException);
 }
