@@ -204,18 +204,15 @@ $(eval $(call make_tests,LIBPINKYSIM, \
                          libpinkysim/tests libpinkysim/mocks,include mri/include libpinkysim/mocks, \
                          $(HOST_LIBCOMMON_LIB) \
                          $(HOST_LIBMOCKS_LIB) \
-                         $(HOST_LIBMRICORE_LIB) \
-                         $(HOST_LIBMEMSIM_LIB)))
+                         $(HOST_LIBMRICORE_LIB)))
 $(eval $(call run_gcov,LIBPINKYSIM))
 
 #######################################
 # pinkSim Executable
 $(eval $(call make_app,pinkySim,main,include,$(HOST_LIBCOMMON_LIB) \
                                              $(HOST_LIBMRICORE_LIB) \
-                                             $(HOST_LIBMEMSIM_LIB) \
                                              $(HOST_LIBPINKYSIM_LIB) \
-                                             $(HOST_LIBMRI4SIM_LIB) \
-                                             $(HOST_LIBCOMMSOCK_LIB)))
+                                             $(HOST_LIBMRI4SIM_LIB)))
 
 #######################################
 # libgdbremote.a
