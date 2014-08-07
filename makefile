@@ -154,6 +154,7 @@ define make_tests # ,LIB2TEST,test_src_dirs,includes,other_libs
 		$$(call gcov_link_exe,HOST)
     GCOV_RUN_$1_TESTS : $$(GCOV_HOST_$1_TESTS_EXE)
 		@echo Runnning $$^
+		$Q $(REMOVE) $(call obj_to_gcda,$(GCOV_HOST_$1_OBJ)) $(QUIET)
 		$Q $$^
 endef
 define make_app # ,APP2BUILD,app_src_dirs,includes,other_libs
