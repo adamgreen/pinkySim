@@ -196,9 +196,10 @@ static void* throwingZeroedMalloc(size_t size)
 static void addRegionToTail(MemorySim* pThis, MemoryRegion* pRegion)
 {
     if (!pThis->pTailRegion)
-        pThis->pHeadRegion = pThis->pTailRegion = pRegion;
+        pThis->pHeadRegion = pRegion;
     else
         pThis->pTailRegion->pNext = pRegion;
+    pThis->pTailRegion = pRegion;
 }
 
 
@@ -298,9 +299,10 @@ static void freeLastRegion(MemorySim* pThis)
         pCurr = pCurr->pNext;
     }
     if (!pPrev)
-        pThis->pHeadRegion = pThis->pTailRegion = NULL;
+        pThis->pHeadRegion = NULL;
     else
         pPrev->pNext = NULL;
+    pThis->pTailRegion = pPrev;
     freeRegion(pCurr);
 }
 

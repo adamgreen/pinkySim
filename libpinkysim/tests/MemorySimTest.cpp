@@ -248,6 +248,23 @@ TEST(MemorySim, SimulateTwoMemoryRegions)
     CHECK_EQUAL(0x22222222, IMemory_Read32(m_pMemory, region2));
 }
 
+TEST(MemorySim, SimulateThreeMemoryRegions)
+{
+    static const uint32_t region1 = 0x00000000;
+    static const uint32_t region2 = 0x10000000;
+    static const uint32_t region3 = 0x20000000;
+    MemorySim_CreateRegion(m_pMemory, region1, 4);
+    MemorySim_CreateRegion(m_pMemory, region2, 4);
+    MemorySim_CreateRegion(m_pMemory, region3, 4);
+
+    IMemory_Write32(m_pMemory, region1, 0x11111111);
+    CHECK_EQUAL(0x11111111, IMemory_Read32(m_pMemory, region1));
+    IMemory_Write32(m_pMemory, region2, 0x22222222);
+    CHECK_EQUAL(0x22222222, IMemory_Read32(m_pMemory, region2));
+    IMemory_Write32(m_pMemory, region3, 0x33333333);
+    CHECK_EQUAL(0x33333333, IMemory_Read32(m_pMemory, region3));
+}
+
 TEST(MemorySim, LoadFromFlashImage)
 {
     uint32_t flashBinary[2] = { 0x10000004, 0x00000200 };
